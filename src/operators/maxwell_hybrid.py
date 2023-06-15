@@ -1,10 +1,8 @@
-from . import basic_operators
 from .system_operators import SystemOperators
 from src.problems.problem import Problem
 import firedrake as fdrk
 from ufl.tensors import ListTensor 
 from firedrake.petsc import PETSc
-
 
 class MaxwellHybrid(SystemOperators):
 
@@ -40,13 +38,13 @@ class MaxwellHybrid(SystemOperators):
                 self.mixedspace_local = self.broken_NED_space * self.broken_RT_space, \
                     * self.brokenfacet_NED_space 
             
-            self.hybridspace = self.mixedspace_local * self.space_global
+            self.fullspace = self.mixedspace_local * self.space_global
 
         elif self.domain.geometric_dimension()==2:
             raise NotImplementedError("Maxwell works only in 3D")
 
 
-    def assign_initial_conditions(self, electric_field, magnetic_field):
+    def get_initial_conditions(self, electric_field, magnetic_field):
         electric_hybrid = fdrk.project(electric_field, self.mixedspace_local.sub(0))
         magnetic_hybrid = fdrk.project(magnetic_field, self.mixedspace_local.sub(1))
 
@@ -65,20 +63,24 @@ class MaxwellHybrid(SystemOperators):
 
     
 
-    def get_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
+    def essential_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         global_element = str(self.space_global.ufl_element())
         assert "N1curl" + str(self.pol_degree) in global_element
         
         bc_essential = []
 
-        bc_dictionary, electric_value, magnetic_value = problem.get_boundary_conditions(time)
+        bc_dictionary = problem.get_boundary_conditions(time)
         if self.type=="primal":
-            list_id_magnetic = bc_dictionary["magnetic"]
+            tuple_magnetic = bc_dictionary["magnetic"]
+            list_id_magnetic = tuple_magnetic[0]
+            magnetic_value = tuple_magnetic[1]
             for id in list_id_magnetic:
                 bc_essential.append(fdrk.DirichletBC(self.space_global, magnetic_value, id))
 
         elif self.type=="dual":
-            list_id_electric = bc_dictionary["electric"]
+            tuple_electric = bc_dictionary["electric"]
+            list_id_electric = tuple_electric[0]
+            electric_value = tuple_electric[1]
             for id in list_id_electric:
                 bc_essential.append(fdrk.DirichletBC(self.space_global,
                                                       electric_value, id))
@@ -88,7 +90,7 @@ class MaxwellHybrid(SystemOperators):
         return bc_essential
     
     
-    def operator_dynamics(self, testfunctions, functions):
+    def dynamics(self, testfunctions, functions):
 
         test_electric, test_magnetic, test_normaltrace, test_tangtrace = testfunctions
         electric_field, magnetic_field, normaltrace_field, tangtrace_field = functions
@@ -102,7 +104,7 @@ class MaxwellHybrid(SystemOperators):
                                     fdrk.cross(normaltrace_field, self.normal_versor))
 
         if self.type=="primal":
-            interconnection = fdrk.dot(test_electric, fdrk.curl(magnetic_field)) * fdrk.dx \
+            interconnection_local = fdrk.dot(test_electric, fdrk.curl(magnetic_field)) * fdrk.dx \
                 - fdrk.dot(fdrk.curl(test_magnetic), electric_field) * fdrk.dx
 
             control_local = fdrk.inner(fdrk.cross(test_magnetic, self.normal_versor), \
@@ -111,19 +113,17 @@ class MaxwellHybrid(SystemOperators):
                                            fdrk.cross(magnetic_field, self.normal_versor))
 
             constr_local = (control_local('+') + control_local('-')) * fdrk.dS \
-                  + control_local * fdrk.ds \
-                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS \
-                   + control_local_adj * fdrk.ds)
-            
+                        + control_local * fdrk.ds \
+                        - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS \
+                        + control_local_adj * fdrk.ds)
             
             constr_global = (control_global('+') + control_global('-')) * fdrk.dS \
                         + control_global * fdrk.ds \
                         - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS \
                         + control_global_adj * fdrk.ds)
-            
-    
+                    
         if self.type=="dual":
-            interconnection = fdrk.dot(fdrk.curl(test_electric), magnetic_field) * fdrk.dx \
+            interconnection_local = fdrk.dot(fdrk.curl(test_electric), magnetic_field) * fdrk.dx \
                 - fdrk.dot(test_magnetic, fdrk.curl(electric_field)) * fdrk.dx
             
             control_loc = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), \
@@ -141,12 +141,14 @@ class MaxwellHybrid(SystemOperators):
                         + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS \
                         - control_global_adj * fdrk.ds)
 
-        return mass, interconnection, constr_local, constr_global
+        dynamics = interconnection_local + constr_local + constr_global
+    
+        return mass, dynamics
     
  
-    def operator_control(self, testfunctions, control):
+    def control(self, testfunctions, control):
         """
-        Returns the operators for maxwell equations
+        Returns the forms for maxwell equations
         Parameters
             testfunctions (TestFunctions) : a mixed test function from the appropriate function space
             control (Function) : a control function from the appropriate function space
@@ -159,6 +161,7 @@ class MaxwellHybrid(SystemOperators):
             natural_control = -fdrk.dot(fdrk.cross(test_tangtrace, control), self.normal_versor) * fdrk.ds
 
         return natural_control
+
     
 
     def project_NED_facetbroken(self, variable_to_project):

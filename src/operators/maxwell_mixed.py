@@ -1,4 +1,3 @@
-from . import basic_operators
 from .system_operators import SystemOperators
 from src.problems.problem import Problem
 import firedrake as fdrk
@@ -22,49 +21,53 @@ class MaxwellMixed(SystemOperators):
             if self.type == "primal":
                 # The electric field is discretized using broken Raviart-Thomas elements 
                 # whereas the magnetic field uses Nedelec elements
-                self.mixedspace = self.broken_RT_space * self.NED_space
+                self.fullspace = self.broken_RT_space * self.NED_space
             else:
-                self.mixedspace = self.NED_space * broken_RT_element
+                self.fullspace = self.NED_space * broken_RT_element
         elif self.domain.geometric_dimension()==2:
             raise NotImplementedError("Maxwell works only in 3D")
 
 
-    def assign_initial_conditions(self, electric_field, magnetic_field):
+    def get_initial_conditions(self, electric_field, magnetic_field):
         if self.type == "primal":
 
-            electric_mixed = fdrk.project(electric_field, self.mixedspace.sub(0))
-            magnetic_mixed = fdrk.interpolate(magnetic_field, self.mixedspace.sub(1))
+            electric_mixed = fdrk.project(electric_field, self.fullspace.sub(0))
+            magnetic_mixed = fdrk.interpolate(magnetic_field, self.fullspace.sub(1))
         elif self.type == "dual":
 
-            electric_mixed = fdrk.interpolate(electric_field, self.mixedspace.sub(0))
-            magnetic_mixed = fdrk.project(magnetic_field, self.mixedspace.sub(1))
+            electric_mixed = fdrk.interpolate(electric_field, self.fullspace.sub(0))
+            magnetic_mixed = fdrk.project(magnetic_field, self.fullspace.sub(1))
         else:
             raise SyntaxError("Only primal or dual representation")
         
         return (electric_mixed, magnetic_mixed)
     
 
-    def get_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
+    def essential_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         
         bc_essential = []
 
-        bc_dictionary, electric_value, magnetic_value = problem.get_boundary_conditions(time)
+        bc_dictionary = problem.get_boundary_conditions(time)
         if self.type=="primal":
-            element_NED_mixed = self.mixedspace.sub(1).ufl_element()
+            element_NED_mixed = self.fullspace.sub(1).ufl_element()
             assert "N1curl" + str(self.pol_degree) in element_NED_mixed
 
-            list_id_magnetic = bc_dictionary["magnetic"]
+            tuple_magnetic = bc_dictionary["magnetic"]
+            list_id_magnetic = tuple_magnetic[0]
+            magnetic_value = tuple_magnetic[1]
             for id in list_id_magnetic:
-                bc_essential.append(fdrk.DirichletBC(self.mixedspace(1),
+                bc_essential.append(fdrk.DirichletBC(self.fullspace(1),
                                                       magnetic_value, id))
 
         elif self.type=="dual":
-            element_NED_mixed = self.mixedspace.sub(0).ufl_element()
+            element_NED_mixed = self.fullspace.sub(0).ufl_element()
             assert "N1curl" + str(self.pol_degree) in element_NED_mixed
             
-            list_id_electric = bc_dictionary["electric"]
+            tuple_electric = bc_dictionary["electric"]
+            list_id_electric = tuple_electric[0]
+            electric_value = tuple_electric[1]
             for id in list_id_electric:
-                bc_essential.append(fdrk.DirichletBC(self.mixedspace(0),
+                bc_essential.append(fdrk.DirichletBC(self.fullspace(0),
                                                       electric_value, id))
             
         else:
@@ -73,7 +76,7 @@ class MaxwellMixed(SystemOperators):
         return bc_essential
     
   
-    def operator_dynamics(self, testfunctions, functions):
+    def dynamics(self, testfunctions, functions):
 
         test_electric, test_magnetic = testfunctions
         electric_field, magnetic_field = functions
@@ -89,9 +92,10 @@ class MaxwellMixed(SystemOperators):
             interconnection = fdrk.dot(fdrk.curl(test_electric), magnetic_field) * fdrk.dx \
                 - fdrk.dot(test_magnetic, fdrk.curl(electric_field)) * fdrk.dx
             
+        
         return mass, interconnection
     
-    def operator_control(self, testfunctions, control):
+    def control(self, testfunctions, control):
         """
         Returns the operators for maxwell equations
         Parameters
@@ -108,8 +112,7 @@ class MaxwellMixed(SystemOperators):
 
         return natural_control
     
- 
-        
+
 
     def __str__(self) -> str:
         return f"Maxwell Mixed Operators. Type {self.type}"

@@ -4,7 +4,7 @@ import firedrake as fdrk
 
 class EigensolutionMaxwell3D(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="electric"):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -20,13 +20,12 @@ class EigensolutionMaxwell3D(Problem):
                                         ny=n_elements_y, \
                                         nz=n_elements_z)
         self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
+
+        self.bc_type = bc_type
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om_x = 1
-        om_y = 1
-        om_z = 1
-
+        om_x, om_y, om_z = 1, 1, 1
         om_t = fdrk.sqrt(om_x ** 2 + om_y ** 2 + om_z ** 2)
 
         ft = fdrk.sin(om_t * time) / om_t
@@ -36,9 +35,7 @@ class EigensolutionMaxwell3D(Problem):
         g_y = fdrk.Constant(0.0)
         g_z = fdrk.sin(om_x * self.x) * fdrk.sin(om_y * self.y) * fdrk.cos(om_z * self.z)
 
-        g_fun = fdrk.as_vector([g_x,
-                                g_y,
-                                g_z])
+        g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
         curl_g = fdrk.as_vector([om_y * fdrk.sin(om_x * self.x) * fdrk.cos(om_y * self.y) \
                                   * fdrk.cos(om_z * self.z),
@@ -59,23 +56,24 @@ class EigensolutionMaxwell3D(Problem):
         return (electric_field, magnetic_field)
 
 
-    def get_boundary_conditions(self, time: fdrk.Constant, case="mixed"):
+    def get_boundary_conditions(self, time: fdrk.Constant):
         """
         Parameters:
-            case (string): type of boundary condition ("electric, magnetic, mixed")
+            time: time variable for inhomogeneous bcs
 
         Returns:
             bd_dict : dictionary of boundary conditions for the problem at hand
         """
         exact_electric, exact_magnetic = self.get_exact_solution(time)
-        if case == "electric":
-            bd_dict = {"electric": ["on_boundary"], "magnetic":[]} 
-        elif case == "magnetic":
-            bd_dict = {"electric": [], "magnetic": ["on_boundary"]}
-        elif case == "mixed":
-            bd_dict = {"electric": [2,4,6], "magnetic":[1,3,5]}
+        if self.bc_type == "electric":
+            bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], None)} 
+        elif self.bc_type == "magnetic":
+            bd_dict = {"electric": ([], None), "magnetic": (["on_boundary"], None)}
+        elif self.bc_type == "mixed":
+            bd_dict = {"electric": ([2,4,6], exact_electric), \
+                       "magnetic": ([1,3,5], exact_magnetic)}
         
-        return bd_dict, exact_electric, exact_magnetic
+        return bd_dict
 
 
     def __str__(self):
