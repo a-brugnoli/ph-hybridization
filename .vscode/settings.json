@@ -1,0 +1,10 @@
+{
+    "python.defaultInterpreterPath": "/home/andrea/Sources/firedrake/bin/python",
+    "terminal.integrated.env.linux": {"PYTHONPATH": "${workspaceFolder}"},
+    "terminal.integrated.enablePersistentSessions": true,
+    "terminal.integrated.environmentChangesRelaunch": true,
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    }
+}

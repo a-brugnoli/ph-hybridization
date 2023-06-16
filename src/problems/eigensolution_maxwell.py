@@ -65,10 +65,12 @@ class EigensolutionMaxwell3D(Problem):
             bd_dict : dictionary of boundary conditions for the problem at hand
         """
         exact_electric, exact_magnetic = self.get_exact_solution(time)
+
+        null_bc = fdrk.Constant((0,0,0))
         if self.bc_type == "electric":
-            bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], None)} 
+            bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], null_bc)} 
         elif self.bc_type == "magnetic":
-            bd_dict = {"electric": ([], None), "magnetic": (["on_boundary"], None)}
+            bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], null_bc)}
         elif self.bc_type == "mixed":
             bd_dict = {"electric": ([2,4,6], exact_electric), \
                        "magnetic": ([1,3,5], exact_magnetic)}
