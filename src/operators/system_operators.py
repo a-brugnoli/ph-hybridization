@@ -86,6 +86,5 @@ class SystemOperators(ABC):
         
         return rhs_functional
     
-    @abstractmethod
     def __str__(self) -> str:
-        pass
+        return f"Discretization {self.type_discretization}, Formulation {self.type_formulation}"

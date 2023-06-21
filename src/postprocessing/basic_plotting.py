@@ -13,9 +13,9 @@ plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
 plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+plt.rc('text', usetex= True) 
 
 rcParams.update({'figure.autolayout': True})
-rcParams['text.usetex'] = True
 rcParams['text.latex.preamble']=r"\usepackage{amsmath}\usepackage{bm}"
 rcParams["legend.loc"] = 'best'
 
@@ -51,3 +51,18 @@ def plot_signal(t_vec, signal_vec, title=None, save_path=None):
         plt.title(title)
     if save_path is not None:
         plt.savefig(save_path, dpi='figure', format='eps')
+
+
+
+def plot_signals(t_vec, *signals_vec, **options):
+    plt.figure()
+    for count, signal in enumerate(signals_vec):
+        if "legend" in options:
+            plt.plot(t_vec, signal, label=options["legend"][count])
+    plt.grid(color='0.8', linestyle='-', linewidth=.5)
+    plt.xlabel(r'Time')
+    plt.legend()
+    if "title" in options:
+        plt.title(options["title"])
+    if "save_path" in options:
+        plt.savefig(options["save_path"], dpi='figure', format='eps')

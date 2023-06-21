@@ -70,11 +70,12 @@ class EigensolutionMaxwell3D(Problem):
         if self.bc_type == "electric":
             bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], null_bc)} 
         elif self.bc_type == "magnetic":
-            bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], null_bc)}
+            bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], exact_magnetic)}
         elif self.bc_type == "mixed":
-            bd_dict = {"electric": ([2,4,6], exact_electric), \
-                       "magnetic": ([1,3,5], exact_magnetic)}
-        
+            bd_dict = {"electric": ([2,4,6], exact_electric), "magnetic": ([1,3,5], exact_magnetic)}
+        # elif self.bc_type == "periodic":
+        #     bd_dict = {"electric": ([], null_bc), "magnetic": ([], null_bc)}
+
         return bd_dict
 
 

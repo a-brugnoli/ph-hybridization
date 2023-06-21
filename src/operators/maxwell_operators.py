@@ -45,9 +45,9 @@ class MaxwellOperators(SystemOperators):
 
 
     def get_initial_conditions(self, expression_initial: tuple):
-        electric_field_exp = expression_initial[0]
-        magnetic_field_exp = expression_initial[1]
+        electric_field_exp, magnetic_field_exp = expression_initial
 
+        
         if self.type_discretization=="hybrid":
             electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
@@ -134,52 +134,38 @@ class MaxwellOperators(SystemOperators):
                     + fdrk.inner(test_magnetic, magnetic_field) * fdrk.dx
         
         if self.type_formulation=="primal":
-                interconnection = fdrk.dot(test_electric, fdrk.curl(magnetic_field)) * fdrk.dx \
-                - fdrk.dot(fdrk.curl(test_magnetic), electric_field) * fdrk.dx
+            interconnection = fdrk.dot(test_electric, fdrk.curl(magnetic_field)) * fdrk.dx \
+            - fdrk.dot(fdrk.curl(test_magnetic), electric_field) * fdrk.dx
         else:
             interconnection = fdrk.dot(fdrk.curl(test_electric), magnetic_field) * fdrk.dx \
-                    - fdrk.dot(test_magnetic, fdrk.curl(electric_field)) * fdrk.dx
+                - fdrk.dot(test_magnetic, fdrk.curl(electric_field)) * fdrk.dx
         
         dynamics = interconnection
 
         if self.type_discretization=="hybrid":
-            control_global = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), \
-                                        fdrk.cross(tangtrace_field, self.normal_versor))
-            control_global_adj = fdrk.inner(fdrk.cross(test_tangtrace, self.normal_versor), \
-                                        fdrk.cross(normaltrace_field, self.normal_versor))
+            control_global = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(tangtrace_field, self.normal_versor))
+            control_global_adj = fdrk.inner(fdrk.cross(test_tangtrace, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
 
             if self.type_formulation=="primal":
                 
-                control_local = fdrk.inner(fdrk.cross(test_magnetic, self.normal_versor), \
-                                        fdrk.cross(normaltrace_field, self.normal_versor))
-                control_local_adj = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), \
-                                            fdrk.cross(magnetic_field, self.normal_versor))
+                control_local = fdrk.inner(fdrk.cross(test_magnetic, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
+                control_local_adj = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(magnetic_field, self.normal_versor))
 
-                constr_local = (control_local('+') + control_local('-')) * fdrk.dS \
-                            + control_local * fdrk.ds \
-                            - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS \
-                            + control_local_adj * fdrk.ds)
+                constr_local = (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
+                             - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
                 
-                constr_global = (control_global('+') + control_global('-')) * fdrk.dS \
-                            + control_global * fdrk.ds \
-                            - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS \
-                            + control_global_adj * fdrk.ds)
+                constr_global = (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
+                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             else:   
-                control_loc = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), \
-                                        fdrk.cross(normaltrace_field, self.normal_versor))
-                control_local_adj = -fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), \
-                                        fdrk.cross(electric_field, self.normal_versor))
+                control_loc = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
+                control_local_adj = -fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(electric_field, self.normal_versor))
 
-                constr_local = (control_loc('+') + control_loc('-')) * fdrk.dS \
-                    + control_loc * fdrk.ds \
-                    - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS \
-                    + control_local_adj * fdrk.ds)
+                constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS + control_loc * fdrk.ds) \
+                             - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
                 
-                constr_global = -(control_global('+') + control_global('-')) * fdrk.dS \
-                            - control_global * fdrk.ds \
-                            + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS \
-                            - control_global_adj * fdrk.ds)
+                constr_global = -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
+                                + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             dynamics += constr_local + constr_global
         
@@ -203,9 +189,9 @@ class MaxwellOperators(SystemOperators):
 
 
         if self.type_formulation == "primal":
-            natural_control = fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
+            natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
         else: 
-            natural_control =-fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
+            natural_control = - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
 
         return natural_control
 
@@ -238,6 +224,6 @@ class MaxwellOperators(SystemOperators):
         
 
     def __str__(self) -> str:
-        return f"Maxwell Operators. Dicsretization {self.type_discretization}, Formulation {self.type_formulation}"
+        return f"Maxwell Operators. Discretization {self.type_discretization}, Formulation {self.type_formulation}"
 
     

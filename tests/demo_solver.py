@@ -1,3 +1,4 @@
+import firedrake as fdrk
 from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 
@@ -6,10 +7,6 @@ from src.postprocessing import basic_plotting
 from src.postprocessing.directory_figures import directories_problem
 import math
 from tqdm import tqdm
-import firedrake as fdrk
-
-save_fig = True
-debug = True
 
 n_elements = 2**3
 pol_degree = 1

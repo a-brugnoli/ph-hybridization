@@ -142,7 +142,7 @@ class HamiltonianWaveSolver(Solver):
         lambda_h = fdrk.Function(global_space)
         fdrk.solve(Smat, lambda_h, Evec, solver_parameters=self.solver_parameters)
 
-
+        
         # Intermediate expressions
         Lambda = fdrk.AssembledVector(lambda_h)  # Local coefficient vector for Λ
         # Local solve expressions
