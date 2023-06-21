@@ -73,9 +73,9 @@ class EigensolutionMaxwell3D(Problem):
             bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], exact_magnetic)}
         elif self.bc_type == "mixed":
             bd_dict = {"electric": ([2,4,6], exact_electric), "magnetic": ([1,3,5], exact_magnetic)}
-        # elif self.bc_type == "periodic":
-        #     bd_dict = {"electric": ([], null_bc), "magnetic": ([], null_bc)}
-
+        else:
+            raise ValueError(f"{self.bc_type} is not a valid value for bc")
+        
         return bd_dict
 
 

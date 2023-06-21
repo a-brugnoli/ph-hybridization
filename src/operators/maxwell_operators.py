@@ -53,8 +53,7 @@ class MaxwellOperators(SystemOperators):
             magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
             if self.type_formulation == "primal":
                 variable_normaltrace = self.project_NED_facetbroken(electric_field_exp)
-                variable_tangentialtrace = fdrk.interpolate(magnetic_field_exp, self.space_global)
-            
+                variable_tangentialtrace = fdrk.interpolate(magnetic_field_exp, self.space_global)            
             else:
                 variable_normaltrace = self.project_NED_facetbroken(magnetic_field_exp)
                 variable_tangentialtrace = fdrk.interpolate(electric_field_exp, self.space_global)
