@@ -47,27 +47,31 @@ class MaxwellOperators(SystemOperators):
     def get_initial_conditions(self, expression_initial: tuple):
         electric_field_exp, magnetic_field_exp = expression_initial
 
-        
+        # Interpolation on broken spacs has been fixed in recent versions of firedrake
+        electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
+        magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
+
         if self.type_discretization=="hybrid":
-            electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
-            magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
             if self.type_formulation == "primal":
-                variable_normaltrace = self.project_NED_facetbroken(electric_field_exp)
-                variable_tangentialtrace = fdrk.interpolate(magnetic_field_exp, self.space_global)            
+                # Previous implementation (not necessary anymore)
+                # electric = fdrk.project(fdrk.interpolate(electric_field_exp, self.RT_space), self.fullspace.sub(0))
+                # magnetic = fdrk.project(fdrk.interpolate(magnetic_field_exp, self.NED_space), self.fullspace.sub(1))
+
+                exact_normaltrace = electric_field_exp
+                exact_tangtrace = magnetic_field_exp                            
             else:
-                variable_normaltrace = self.project_NED_facetbroken(magnetic_field_exp)
-                variable_tangentialtrace = fdrk.interpolate(electric_field_exp, self.space_global)
+                # Previous implementation (not necessary anymore)
+                # electric = fdrk.project(fdrk.interpolate(electric_field_exp, self.NED_space), self.fullspace.sub(0))
+                # magnetic = fdrk.project(fdrk.interpolate(magnetic_field_exp, self.RT_space), self.fullspace.sub(1))
+
+                exact_normaltrace = magnetic_field_exp
+                exact_tangtrace = electric_field_exp 
+
+            variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
+            variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
             
             return (electric, magnetic, variable_normaltrace, variable_tangentialtrace)
-
         else:
-            if self.type_formulation == "primal":
-                electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
-                magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
-            else:
-                electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
-                magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
-
             return (electric, magnetic)
 
     
@@ -97,7 +101,7 @@ class MaxwellOperators(SystemOperators):
                 space_bc = self.fullspace.sub(0)
         
         global_element = str(space_bc.ufl_element())
-        assert "N1curl" + str(self.pol_degree) in global_element
+        assert f"N1curl{str(self.pol_degree)}" in global_element
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]

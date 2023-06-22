@@ -149,6 +149,7 @@ class HamiltonianWaveSolver(Solver):
         x_h = fdrk.assemble(A[:n_block_loc, :n_block_loc].inv *
                         (F[:n_block_loc] - A[:n_block_loc, n_block_loc] * Lambda))
 
+        # Alternative equivalent way
         # x_sys = A[:n_block_loc, :n_block_loc].solve(F[:n_block_loc] - A[:n_block_loc, n_block_loc] * Lambda,\
         #                                             decomposition="PartialPivLU")
         # x_h = Function(mixed_local_space)  # Function to store the result: x_loc

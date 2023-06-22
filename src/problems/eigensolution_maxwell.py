@@ -4,7 +4,7 @@ import firedrake as fdrk
 
 class EigensolutionMaxwell3D(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="electric"):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed"):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -22,6 +22,9 @@ class EigensolutionMaxwell3D(Problem):
         self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
 
         self.bc_type = bc_type
+
+        self.normal_versor = fdrk.FacetNormal(self.domain)
+
         
 
     def get_exact_solution(self, time: fdrk.Constant):

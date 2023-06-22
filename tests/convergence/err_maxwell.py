@@ -47,3 +47,5 @@ def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, comm=MPI.COMM
     hybrid_electric_dual, hybrid_magnetic_dual = hybridsolver_dual.state_old.subfunctions[0:2]
 
     exact_electric, exact_magnetic = problem.get_exact_solution(fdrk.Constant(actual_time))
+
+    

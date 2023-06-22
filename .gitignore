@@ -134,3 +134,6 @@ dmypy.json
 
 # PyCharm
 .idea/*
+
+# cpython files
+*.cpy

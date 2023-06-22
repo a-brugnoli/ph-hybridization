@@ -36,6 +36,7 @@ def deRhamElements(domain, pol_degree):
                      "discontinuous": disc_element}
     return dict_elements
 
+
 def deRhamSpaces(domain, pol_degree):
 
     cont_element, tang_cont_element, nor_cont_element, disc_element = \
