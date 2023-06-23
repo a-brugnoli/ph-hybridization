@@ -1,7 +1,5 @@
 from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
-
-from src.postprocessing.directory_figures import directories_problem
 import math
 from tqdm import tqdm
 import firedrake as fdrk
@@ -15,8 +13,6 @@ def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, comm=MPI.COMM
     n_time_iter = math.ceil(t_end/time_step)
 
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
-
-    directory_figures_problem, directory_figures_problem_matplotlib, directory_figures_problem_paraview = directories_problem(str(problem))
    
     solver_params = {}
 

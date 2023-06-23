@@ -73,6 +73,9 @@ class HamiltonianWaveSolver(Solver):
         for counter, field in enumerate(tuple_initial_conditions):
             self.state_old.sub(counter).assign(field)
 
+        self.state_midpoint.assign(self.state_old)
+        self.state_new.assign(self.state_old)
+
         PETSc.Sys.Print(f"System {self.operators.type_discretization} {self.operators.type_formulation}: inital conditions set")
 
 
@@ -110,9 +113,10 @@ class HamiltonianWaveSolver(Solver):
 
             solver.solve()
         else:
-            self.state_new = self.solve_hybrid(A_operator, b_functional, bcs=self.essential_bcs, \
+            self.solve_hybrid(A_operator, b_functional, self.state_new, bcs=self.essential_bcs, \
                                                global_space=self.operators.space_global,
                                                mixed_local_space=self.operators.mixedspace_local)
+            
 
         self.state_midpoint.assign(0.5*(self.state_new + self.state_old))
         self.actual_time.assign(self.time_new)
@@ -123,9 +127,7 @@ class HamiltonianWaveSolver(Solver):
         self.time_old.assign(self.actual_time)
 
 
-
-
-    def solve_hybrid(self, a_form, b_form, bcs, global_space: fdrk.FunctionSpace, mixed_local_space : fdrk.MixedFunctionSpace):
+    def solve_hybrid(self, a_form, b_form, solution, bcs, global_space: fdrk.FunctionSpace, mixed_local_space : fdrk.MixedFunctionSpace):
 
         n_block_loc = mixed_local_space.num_sub_spaces()
         _A = fdrk.Tensor(a_form)
@@ -142,24 +144,39 @@ class HamiltonianWaveSolver(Solver):
         lambda_h = fdrk.Function(global_space)
         fdrk.solve(Smat, lambda_h, Evec, solver_parameters=self.solver_parameters)
 
-        
         # Intermediate expressions
         Lambda = fdrk.AssembledVector(lambda_h)  # Local coefficient vector for Λ
         # Local solve expressions
         x_h = fdrk.assemble(A[:n_block_loc, :n_block_loc].inv *
                         (F[:n_block_loc] - A[:n_block_loc, n_block_loc] * Lambda))
 
-        # Alternative equivalent way
-        # x_sys = A[:n_block_loc, :n_block_loc].solve(F[:n_block_loc] - A[:n_block_loc, n_block_loc] * Lambda,\
-        #                                             decomposition="PartialPivLU")
-        # x_h = Function(mixed_local_space)  # Function to store the result: x_loc
-        # assemble(x_sys, x_h)
-
-        sol = fdrk.Function(self.space_operators)
         for ii in range(n_block_loc):
-            sol.sub(ii).assign(x_h.sub(ii))
-        sol.sub(n_block_loc).assign(lambda_h)
+            solution.sub(ii).assign(x_h.sub(ii))
+        solution.sub(n_block_loc).assign(lambda_h)
 
-        return sol
+
+    def dofs_essential_natural_bcs(self):
+        """
+        Extract dofs of essential and boundary conditions in Hybrid schemes
+        """
+        import numpy as np
+        dofs_essential = []
+
+        if self.operators.type_discretization=="mixed":
+            raise ValueError(f" Function to extract dofs not defined for mixed discretization")
+            
+
+        for bc in self.essential_bcs:
+            nodes_ess = bc.nodes
+
+            dofs_essential = dofs_essential + list(nodes_ess)
+
+        dofs_essential = list(set(dofs_essential))
+        dofs_natural = list(set(self.operators.space_global.boundary_nodes("on_boundary")).difference(set(dofs_essential)))
+
+        dofs_essential_offset = self.operators.mixedspace_local.dim() + np.array(dofs_essential)
+        dofs_natural_offset = self.operators.mixedspace_local.dim() + np.array(dofs_natural)
+
+        return dofs_essential_offset, dofs_natural_offset
 
 
