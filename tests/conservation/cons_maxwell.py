@@ -63,7 +63,11 @@ discrete_energyrate = 1/time_step * (fdrk.dot(electric_dual_midpoint, electric_p
                             + fdrk.dot(magnetic_primal_midpoint, magnetic_dual_new - magnetic_dual_old) * fdrk.dx)
 
 if rank==0:
-    directory_results_problem = os.path.dirname(os.path.abspath(__file__)) + '/'
+    directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+    # Check if the directory exists
+    if not os.path.exists(directory_results):
+        # If it doesn't exist, create it
+        os.makedirs(directory_results)
 
     time_vec = np.linspace(time_step, time_step * n_time_iter, n_time_iter)
 
@@ -109,19 +113,19 @@ if rank==0:
 
     basic_plotting.plot_signal(time_vec, error_exact_inter_powerbalance,
                                         title=r"Error numerical and exact boundary flow",
-                                        save_path=f"{directory_results_problem}error_bdflow_maxwell")
+                                        save_path=f"{directory_results}error_bdflow_maxwell")
 
     basic_plotting.plot_signal(time_vec, powerbalance_conservation,
                                         title=r"Power balance conservation",
-                                        save_path=f"{directory_results_problem}power_balance_maxwell")
+                                        save_path=f"{directory_results}power_balance_maxwell")
 
     basic_plotting.plot_signal(time_vec, div_electric_field, 
                                         title=r"Norm of the divergence $E_h^2$",
-                                        save_path=f"{directory_results_problem}div_electric")
+                                        save_path=f"{directory_results}div_electric")
     
     basic_plotting.plot_signal(time_vec, div_magnetic_field,  
                                         title=r"Norm of the divergence $H^2_h$",
-                                        save_path=f"{directory_results_problem}div_magnetic")
+                                        save_path=f"{directory_results}div_magnetic")
 
     
     plt.show()

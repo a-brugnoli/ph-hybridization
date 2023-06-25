@@ -1,10 +1,11 @@
 import firedrake as fdrk
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import rcParams
 
-SMALL_SIZE = 16
-MEDIUM_SIZE = 18
-BIGGER_SIZE = 20
+SMALL_SIZE = 20
+MEDIUM_SIZE = 22
+BIGGER_SIZE = 24
 
 plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)  # fontsize of the axes title
@@ -66,3 +67,24 @@ def plot_signals(t_vec, *signals_vec, **options):
         plt.title(options["title"])
     if "save_path" in options:
         plt.savefig(options["save_path"], dpi='figure', format='eps')
+
+
+def plot_convergence(h_list, variable_list, **options):
+    
+    max_degree = len(h_list)+1
+    plt.figure()
+    for count, deg in enumerate(range(1, max_degree)):
+        h_deg = h_list[count]
+        variable_list_deg = variable_list[count]
+        plt.plot(np.log(h_deg), np.log(variable_list_deg), '-.+', label=r'RT$_' + str(deg) + '$')
+        plt.plot(np.log(h_deg), np.log(h_deg ** deg) + \
+                + 1.1 * (np.log(variable_list_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
+        
+        plt.xlabel(r'$\log(h)$')
+
+        if "title" in options:
+            plt.title(options["title"])
+        if "ylabel" in options:
+            plt.ylabel(options["ylabel"])
+
+        plt.legend()

@@ -10,6 +10,8 @@ from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
+from firedrake.petsc import PETSc
+
 
 n_elements = 4
 pol_degree = 3
@@ -42,8 +44,13 @@ hybridsolver_dual = HamiltonianWaveSolver(problem = eigen_maxwell, pol_degree=po
                                     type_discretization="hybrid", \
                                     type_formulation="dual")
 
+PETSc.Sys.Print(f"Size Mixed: {mixedsolver_primal.space_operators.dim()}. Size Hybrid {hybridsolver_primal.space_operators.dim()}")
+
 if rank==0:
-    directory_results_problem = os.path.dirname(os.path.abspath(__file__)) + '/'
+    directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+    if not os.path.exists(directory_results):
+        # If it doesn't exist, create it
+        os.makedirs(directory_results)
 
     time_vec = np.linspace(time_step, time_step * n_time_iter, n_time_iter)
 
@@ -131,19 +138,19 @@ if rank==0:
 
     basic_plotting.plot_signal(time_vec, error_electric_primal,
                                         title=r"$||E^2_{\mathrm{mix}} - E^2_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results_problem}equiv_mixedhybrid_maxwell_E2")
+                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E2")
 
     basic_plotting.plot_signal(time_vec, error_magnetic_primal,
                                         title=r"$||H^1_{\mathrm{mix}} - H^1_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results_problem}equiv_mixedhybrid_maxwell_H1")
+                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H1")
 
     basic_plotting.plot_signal(time_vec, error_electric_dual,
                                         title=r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results_problem}equiv_mixedhybrid_maxwell_E1")
+                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E1")
 
     basic_plotting.plot_signal(time_vec, error_magnetic_dual,
                                         title=r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results_problem}equiv_mixedhybrid_maxwell_H2")
+                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H2")
 
     basic_plotting.plot_signals(time_vec, value_mixed_electric_primal, value_hybrid_electric_primal,\
                                         value_mixed_electric_dual, value_hybrid_electric_dual, value_exact_electric, \
@@ -162,6 +169,6 @@ if rank==0:
                                                 r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
                                                 r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$"],  
                                         title=r"Equivalence mixed/hybrid Maxwell",
-                                        save_path=f"{directory_results_problem}equiv_mixedhybrid_maxwell")
+                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell")
 
     plt.show()

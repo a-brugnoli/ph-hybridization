@@ -2,15 +2,15 @@ import numpy as np
 import pandas as pd
 from mpi4py import MPI
 import os
-from err_maxwell import compute_error
+from tests.convergence.compute_error import compute_error
 
 def make_convergence_csv(pol_degree, comm):
     rank = comm.Get_rank()
 
     if pol_degree==1:
-        n_elem_vector = [1, 2, 4] 
+        n_elem_vector = [1, 2, 4, 8, 16] 
     elif pol_degree==2:
-        n_elem_vector = [1, 2, 4]
+        n_elem_vector = [1, 2, 4, 8]
     elif pol_degree==3:
         n_elem_vector = [1, 2, 4]
 
@@ -24,7 +24,9 @@ def make_convergence_csv(pol_degree, comm):
             list_dict_result.append(dict_result)
     
     if rank==0:
-        directory_results_problem = os.path.dirname(os.path.abspath(__file__)) + '/'
+        directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+        if not os.path.exists(directory_results):
+            os.makedirs(directory_results)
 
         # get list of error dictionaries and store in pandas DataFrame
         df = pd.DataFrame(list_dict_result, index=n_elem_vector)
@@ -41,7 +43,7 @@ def make_convergence_csv(pol_degree, comm):
         df.loc[rows_to_divide, columns_to_divide] = df.loc[rows_to_divide, columns_to_divide].div(delta_logN, axis=0)
 
         fileresults = f"convergence_maxwell_r={pol_degree}.csv"
-        df.to_csv(directory_results_problem + fileresults, na_rep='---')
+        df.to_csv(directory_results + fileresults, na_rep='---')
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()

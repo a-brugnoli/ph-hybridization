@@ -23,6 +23,7 @@ class SystemOperators(ABC):
         self.domain = domain
         self.pol_degree = pol_degree
         self.normal_versor = fdrk.FacetNormal(self.domain)
+        self.cell_diameter = fdrk.CellDiameter(self.domain)
 
         self.CG_element, self.NED_element, self.RT_element, self.DG_element = \
             deRhamElements(domain, pol_degree).values()
