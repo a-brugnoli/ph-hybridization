@@ -4,11 +4,12 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
+directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{bc_case}/"
 
 deg_vec  = [1]
 
-h_dict = []
+h_list = []
 
 # Errors
 
@@ -57,7 +58,7 @@ for count, deg in enumerate(deg_vec):
     errors_rate = df.columns[df.columns.str.contains('error')]
     columns_rate = df.columns[df.columns.str.contains('rate')]
 
-    h_dict.append(h_elements)
+    h_list.append(h_elements)
 
     error_L2_electric_primal.append(df["error_L2_electric_primal"].values)
 
@@ -67,20 +68,12 @@ for count, deg in enumerate(deg_vec):
     #     for value in df[column]:
     #         print(value)
 
-
-plt.figure()
-for count, deg in enumerate(deg_vec):
-    h_deg = h_dict[count]
-    error_L2_electric_primal_deg = error_L2_electric_primal[count]
-    plt.plot(np.log(h_deg), np.log(error_L2_electric_primal_deg), '-.+', label=r'RT$_' + str(deg) + '$')
-    plt.plot(np.log(h_deg), np.log(h_deg ** deg) + \
-             + 1.1 * (np.log(error_L2_electric_primal_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
-    
-plt.xlabel(r'$\log(h)$')
-plt.ylabel(r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$')
-plt.title(r'Error $\widehat{E}^2_h$')
-
-plt.legend()
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{E}^2_h$', 
+                                save_path=f"{directory_results}error_L2_electric_primal")
+                                
 
 plt.show()
 

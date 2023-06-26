@@ -76,15 +76,20 @@ def plot_convergence(h_list, variable_list, **options):
     for count, deg in enumerate(range(1, max_degree)):
         h_deg = h_list[count]
         variable_list_deg = variable_list[count]
-        plt.plot(np.log(h_deg), np.log(variable_list_deg), '-.+', label=r'RT$_' + str(deg) + '$')
+        if "label" in options:
+            plt.plot(np.log(h_deg), np.log(variable_list_deg), '-.+', label=f'{options["label"]}$_{deg}$')
+        else:
+            plt.plot(np.log(h_deg), np.log(variable_list_deg), '-.+')
         plt.plot(np.log(h_deg), np.log(h_deg ** deg) + \
                 + 1.1 * (np.log(variable_list_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
         
+        plt.legend()
         plt.xlabel(r'$\log(h)$')
 
         if "title" in options:
             plt.title(options["title"])
         if "ylabel" in options:
             plt.ylabel(options["ylabel"])
+        if "save_path" in options:
+            plt.savefig(options["save_path"], dpi='figure', format='eps')
 
-        plt.legend()

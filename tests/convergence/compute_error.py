@@ -6,11 +6,11 @@ import firedrake as fdrk
 from firedrake.petsc import PETSc
 
 
-def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, type_system="Maxwell"):
+def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, type_system="Maxwell", bc_type="mixed"):
     n_time_iter = math.ceil(t_end/time_step)
 
     if type_system=="Maxwell":
-        problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
+        problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type=bc_type)
         
         hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree,
                                                     type_system="Maxwell", 
