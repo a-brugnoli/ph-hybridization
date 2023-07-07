@@ -16,12 +16,20 @@ h_list = []
 # Primal
 error_L2_electric_primal = []
 error_L2_magnetic_primal = []
+
+error_Hdiv_electric_primal = []
+error_Hcurl_magnetic_primal = []
+
 error_normal_primal = []
 error_tangential_primal = []
 
 # Dual
 error_L2_electric_dual = []
 error_L2_magnetic_dual = []
+
+error_Hcurl_electric_dual = []
+error_Hdiv_magnetic_dual = []
+
 error_normal_dual = []
 error_tangential_dual = []
 
@@ -29,23 +37,27 @@ error_tangential_dual = []
 error_electric_df = []
 error_magnetic_df = []
 
-# Orders
+# rates
 
 # Primal
-order_L2_electric_primal = []
-order_L2_magnetic_primal = []
-order_normal_primal = []
-order_tangential_primal = []
+rate_L2_electric_primal = []
+rate_L2_magnetic_primal = []
+
+rate_Hdiv_electric_primal = []
+rate_Hcurl_magnetic_primal = []
+
+rate_normal_primal = []
+rate_tangential_primal = []
 
 # Dual
-order_L2_electric_dual = []
-order_L2_magnetic_dual = []
-order_normal_dual = []
-order_tangential_dual = []
+rate_L2_electric_dual = []
+rate_L2_magnetic_dual = []
+rate_normal_dual = []
+rate_tangential_dual = []
 
 # Dual field
-order_electric_df = []
-order_magnetic_df = []
+rate_electric_df = []
+rate_magnetic_df = []
 
 for count, deg in enumerate(deg_vec):
     file = f"convergence_maxwell_r={deg}.csv"
@@ -60,189 +72,135 @@ for count, deg in enumerate(deg_vec):
 
     h_list.append(h_elements)
 
+    # Primal
     error_L2_electric_primal.append(df["error_L2_electric_primal"].values)
+    error_L2_magnetic_primal.append(df["error_L2_magnetic_primal"].values)
+
+    error_Hdiv_electric_primal.append(df["error_Hdiv_electric_primal"].values)
+    error_Hcurl_magnetic_primal.append(df["error_Hcurl_magnetic_primal"].values)
+
+    error_normal_primal.append(df["error_normal_primal"].values)
+    error_tangential_primal.append(df["error_tangential_primal"].values)
+
+    # Dual
+    error_L2_electric_dual.append(df["error_L2_electric_dual"].values)
+    error_L2_magnetic_dual.append(df["error_L2_magnetic_dual"].values)
+
+    error_Hcurl_electric_dual.append(df["error_Hcurl_electric_dual"].values)
+    error_Hdiv_magnetic_dual.append(df["error_Hdiv_magnetic_dual"].values)
+
+    error_normal_dual.append(df["error_normal_dual"].values)
+    error_tangential_dual.append(df["error_tangential_dual"].values)
+
+
+    # Primal/Dual
+    error_electric_df.append(df["error_L2_electric_df"].values)
+    error_magnetic_df.append(df["error_L2_magnetic_df"].values)
+
+
+    # rate_L2_electric_primal.append(df["rate_L2_electric_primal"].values)
+    # rate_L2_magnetic_primal.append(df["rate_L2_magnetic_primal"].values)
+
+    # rate_Hdiv_electric_primal.append(df["rate_Hdiv_electric_primal"].values)
+    # rate_Hcurl_magnetic_primal.append(df["rate_Hcurl_magnetic_primal"].values)
+
+    # rate_normal_primal.append(df["rate_normal_primal"].values)
+    # rate_tangential_primal.append(df["rate_tangential_primal"].values)
+
 
     # # Print the columns
-    # for column in columns_rate:
-    #     print(column)
-    #     for value in df[column]:
-    #         print(value)
+    for column in columns_rate:
+        print(column)
+        for value in df[column]:
+            print(value)
 
+# Plot primal
 basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_primal, 
                                 label="RT", 
                                 ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$',
                                 title=r'Error $\widehat{E}^2_h$', 
                                 save_path=f"{directory_results}error_L2_electric_primal")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_primal, 
+                                label="NED", 
+                                ylabel=r'$\log||\widehat{H}^1_h - \widehat{H}^1_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{H}^1_h$', 
+                                save_path=f"{directory_results}error_L2_magnetic_primal")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_electric_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
+                                title=r'Error $\widehat{E}^2_h$', 
+                                save_path=f"{directory_results}error_Hdiv_electric_primal")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_magnetic_primal, 
+                                label="NED", 
+                                ylabel=r'$\log||\widehat{H}^1_h - \widehat{H}^1_{\mathrm{ex}}||_{H^{\mathrm{curl}}}$',
+                                title=r'Error $\widehat{H}^1_h$', 
+                                save_path=f"{directory_results}error_Hcurl_magnetic_primal")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_primal, 
+                                label="NED",
+                                ylabel=r'$\log|||\widehat{E}^{1, \bm{n}}_h - P_h \widehat{E}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                title=r'Error $\widehat{E}^{1, \bm{n}}_h$', 
+                                save_path=f"{directory_results}error_normal_primal")
                                 
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_primal, 
+                                label="NED", 
+                                ylabel=r'$\log|||\widehat{H}^{1, \bm{t}}_h - \widehat{H}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                title=r'Error $\widehat{H}^{1, \bm{t}}_h$', 
+                                save_path=f"{directory_results}error_tangential_primal")
+    
+
+# Plot dual
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_dual, 
+                                label="RT", 
+                                ylabel=r'$\log||{E}^1_h - {E}^1_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error ${E}^1_h$', 
+                                save_path=f"{directory_results}error_L2_electric_dual")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_dual, 
+                                label="NED", 
+                                ylabel=r'$\log||{H}^2_h -   {H}^2_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error ${H}^2_h$', 
+                                save_path=f"{directory_results}error_L2_magnetic_dual")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_electric_dual, 
+                                label="RT", 
+                                ylabel=r'$\log||{E}^1_h - {E}^1_{\mathrm{ex}}||_{H^{\mathrm{curl}}}$',
+                                title=r'Error ${E}^1_h$', 
+                                save_path=f"{directory_results}error_Hcurl_electric_dual")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_magnetic_dual, 
+                                label="NED", 
+                                ylabel=r'$\log||{H}^2_h - {H}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
+                                title=r'Error ${H}^2_h$', 
+                                save_path=f"{directory_results}error_Hdiv_magnetic_dual")
+
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_dual, 
+                                label="NED",
+                                ylabel=r'$\log|||{H}^{1, \bm{n}}_h - P_h {H}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                title=r'Error ${H}^{1, \bm{n}}_h$', 
+                                save_path=f"{directory_results}error_normal_dual")
+                                
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_dual, 
+                                label="NED", 
+                                ylabel=r'$\log|||{E}^{1, \bm{t}}_h - {E}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                title=r'Error ${E}^{1, \bm{t}}_h$', 
+                                save_path=f"{directory_results}error_tangential_dual")
+    
+# Plot primal/dual
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_electric_df, 
+                                label="",
+                                ylabel=r'$\log|| {E}^1_h - \widehat{E}^2_{h} ||_{\mathcal{T}_h}$',
+                                title=r'Error ${E}^1_h - \widehat{E}^2_{h}$', 
+                                save_path=f"{directory_results}error_electric_df")
+                                
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_electric_df, 
+                                label="", 
+                                ylabel=r'$\log|| \widehat{H}^1_h - {H}^2_{h} ||_{\mathcal{T}_h}$',
+                                title=r'Error $\widehat{H}^1_h - {H}^2_{h}$', 
+                                save_path=f"{directory_results}error_magnetic_df")
+    
 
 plt.show()
-
-# if save_plots:
-#     plt.savefig(path_fig + "E_2" + geo_case + bc_case + ".pdf", format="pdf")
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_H1 = err_H1_dict[ii][:, 0]
-#     plt.plot(np.log(h), np.log(errL2_H1), '-.+', label=r'NED$^1_' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.1*(np.log(errL2_H1)[-1] - np.log(h**ii)[-1]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log||\widehat{H}^1_h - \widehat{H}^1_{\mathrm{ex}}||_{L^2}$')
-# plt.title(r'Error $\widehat{H}^1_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "H_1" + geo_case + bc_case + ".pdf", format="pdf")
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_E1nor = err_E1nor_dict[ii][:]
-#     plt.plot(np.log(h), np.log(errL2_E1nor), '-.+', label=r'NED$^1_' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**(ii)) + \
-#              + 1.3*(np.log(errL2_E1nor)[0] - np.log(h**(ii))[0]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log|||\widehat{E}^{1, \bm{n}}_h - P_h \widehat{E}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$')
-# plt.title(r'Error $\widehat{E}^{1, \bm{n}}_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "E_1nor" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_H1tan = err_H1tan_dict[ii][:]
-#     plt.plot(np.log(h), np.log(errL2_H1tan), '-.+', label=r'NED$^1_' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.3*(np.log(errL2_H1tan)[-1] - 0.95*np.log(h**ii)[-1]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log|||\widehat{H}^{1, \bm{t}}_h - \widehat{H}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$')
-# plt.title(r'Error $\widehat{H}^{1, \bm{t}}_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "H_1tan" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# # E1H2 system
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_E1 = err_E1_dict[ii][:, 0]
-#     plt.plot(np.log(h), np.log(errL2_E1), '-.+', label=r'NED$^1_' + str(ii)+ '$')
-#     plt.plot(np.log(h), np.log(h**(ii)) + \
-#              + 1.1*(np.log(errL2_E1)[0] - np.log(h**(ii))[0]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log||E^1_h - E^1_{\mathrm{ex}}||_{L^2}$')
-# plt.title(r'Error $E^1_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "E_1" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_H2 = err_H2_dict[ii][:, 0]
-#     plt.plot(np.log(h), np.log(errL2_H2), '-.+', label=r'RT$^1_' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.3*(np.log(errL2_H2)[-1] - np.log(h**ii)[-1]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log||H^2_h - H^2_{\mathrm{ex}}||_{L^2}$')
-# plt.title(r'Error $H^2_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "H_2" + geo_case + bc_case + ".pdf", format="pdf")
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_H1nor = err_H1nor_dict[ii][:]
-#     plt.plot(np.log(h), np.log(errL2_H1nor), '-.+', label=r'NED$^1_' + str(ii) + '$')
-
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#         + 1.5*(np.log(errL2_H1nor)[-1] - np.log(h**ii)[-1]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log|||H^{1, \bm{n}}_h - P_h H^{1,\bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$')
-# plt.title(r'Error $H^{1, \bm{n}}_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "H_1nor" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_E1tan = err_E1tan_dict[ii][:]
-#     plt.plot(np.log(h), np.log(errL2_E1tan), '-.+', label=r'NED$^1_' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.3*(np.log(errL2_E1tan)[0] - np.log(h**ii)[0]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log|||E^{1, \bm{t}}_h - E^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$')
-# plt.title(r'Error $E^{1, \bm{t}}_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "E_1tan" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# # Dual Field
-# #
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_E12 = err_E12_dict[ii]
-#     plt.plot(np.log(h), np.log(errL2_E12), '-.+', label=r'$s=' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.1*(np.log(errL2_E12)[0] - np.log(h**ii)[0]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log||\widehat{E}^2_h - E^1_h||_{L^2}$')
-# plt.title(r'Error between $\widehat{E}^2$ and $E^1$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "E_12" + geo_case + bc_case + ".pdf", format="pdf")
-
-# plt.figure()
-# for ii in deg_vec:
-#     h = h_dict[ii]
-#     errL2_H12 = err_H12_dict[ii]
-#     plt.plot(np.log(h), np.log(errL2_H12), '-.+', label=r'$s=' + str(ii) + '$')
-#     plt.plot(np.log(h), np.log(h**ii) + \
-#              + 1.25*(np.log(errL2_H12)[-1] - np.log(h**ii)[-1]), '-v', label=r'$h^' + str(ii) + '$')
-
-# plt.xlabel(r'$\log(h)$')
-# plt.ylabel(r'$\log||H^2_h - \widehat{H}^1_h||_{L^2}$')
-# plt.title(r'Error between $H^2_h$ and $\widehat{H}^1_h$')
-
-# plt.legend()
-
-# if save_plots:
-#     plt.savefig(path_fig + "H_12" + geo_case + bc_case + ".pdf", format="pdf")
-
-
-# plt.show()
