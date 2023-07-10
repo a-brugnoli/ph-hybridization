@@ -6,7 +6,7 @@ import firedrake as fdrk
 from firedrake.petsc import PETSc
 
 
-def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, type_system="Maxwell", bc_type="mixed"):
+def compute_error(n_elements, pol_degree, bc_type, time_step=0.01, t_end=1, type_system="Maxwell"):
     n_time_iter = math.ceil(t_end/time_step)
 
     if type_system=="Maxwell":
@@ -34,7 +34,7 @@ def compute_error(n_elements, pol_degree, time_step=0.01, t_end=1, type_system="
         hybridsolver_primal.update_variables()
         hybridsolver_dual.update_variables()
     
-    PETSc.Sys.Print(f"Solution with {n_elements} elements and degree {pol_degree} computed")
+    PETSc.Sys.Print(f"Solution with {n_elements} elements, pol degree {pol_degree} and bcs {bc_type} computed")
 
     state_exact = problem.get_exact_solution(fdrk.Constant(actual_time))
 
@@ -48,11 +48,9 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
         # Error primal
     electric_primal, magnetic_primal, electric_normal_primal, magnetic_tangential_primal = solver_primal.state_old.subfunctions
 
-    error_L2_electric_primal = fdrk.norm(exact_electric - electric_primal)
-    error_L2_magnetic_primal = fdrk.norm(exact_magnetic - magnetic_primal)
+    error_L2_electric_primal = fdrk.norm(exact_electric-electric_primal)
+    error_L2_magnetic_primal = fdrk.norm(exact_magnetic-magnetic_primal)
 
-    # errorHdiv_electric_primal = fdrk.errornorm(exact_electric, electric_primal, norm_type="Hdiv")
-    # errorHcurl_magnetic_primal = fdrk.errornorm(exact_magnetic, magnetic_primal, norm_type="Hcurl")
     error_Hdiv_electric_primal = fdrk.norm(exact_electric-electric_primal, norm_type="Hdiv")
     error_Hcurl_magnetic_primal = fdrk.norm(exact_magnetic-magnetic_primal, norm_type="Hcurl")
 
@@ -66,10 +64,9 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     error_L2_electric_dual = fdrk.norm(exact_electric - electric_dual)
     error_L2_magnetic_dual = fdrk.norm(exact_magnetic - magnetic_dual)
 
-    # errorHcurl_electric_dual = fdrk.errornorm(exact_electric, electric_dual, norm_type="Hcurl")
-    # errorHdiv_magnetic_dual = fdrk.errornorm(exact_magnetic, magnetic_primal, norm_type="Hdiv")
     error_Hcurl_electric_dual = fdrk.norm(exact_electric-electric_dual, norm_type="Hcurl")
-    error_Hdiv_magnetic_dual = fdrk.norm(exact_magnetic-magnetic_primal, norm_type="Hdiv")
+    error_Hdiv_magnetic_dual = fdrk.norm(exact_magnetic-magnetic_dual, norm_type="Hdiv")
+
     error_tangential_dual = solver_dual.operators.trace_norm(exact_electric-electric_tangential_dual)
     projected_exact_magnetic = solver_dual.operators.project_NED_facetbroken(exact_magnetic)
     error_normal_dual = solver_dual.operators.trace_norm(projected_exact_magnetic-magnetic_normal_dual)

@@ -16,7 +16,7 @@ from firedrake.petsc import PETSc
 n_elements = 4
 pol_degree = 3
 time_step = 0.01
-t_end = 100*time_step
+t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
 
 comm = MPI.COMM_WORLD
@@ -116,7 +116,7 @@ for ii in tqdm(range(n_time_iter)):
         error_electric_dual[ii] = errorvalue_electric_dual
         error_magnetic_dual[ii] = errorvalue_magnetic_dual
 
-        point = (1/2, 1/2, 1/2)
+        point = (1/7, 1/10, 2/3)
         value_mixed_electric_primal[ii] = mixed_electric_primal.at(point)[0]
         value_hybrid_electric_primal[ii] = hybrid_electric_primal.at(point)[0]
 
@@ -136,21 +136,21 @@ for ii in tqdm(range(n_time_iter)):
 
 if rank==0:
 
-    basic_plotting.plot_signal(time_vec, error_electric_primal,
-                                        title=r"$||E^2_{\mathrm{mix}} - E^2_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E2")
+    # basic_plotting.plot_signal(time_vec, error_electric_primal,
+    #                                     title=r"$||E^2_{\mathrm{mix}} - E^2_{\mathrm{hyb}}||_{L^2}$",
+    #                                     save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E2")
 
-    basic_plotting.plot_signal(time_vec, error_magnetic_primal,
-                                        title=r"$||H^1_{\mathrm{mix}} - H^1_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H1")
+    # basic_plotting.plot_signal(time_vec, error_magnetic_primal,
+    #                                     title=r"$||H^1_{\mathrm{mix}} - H^1_{\mathrm{hyb}}||_{L^2}$",
+    #                                     save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H1")
 
-    basic_plotting.plot_signal(time_vec, error_electric_dual,
-                                        title=r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E1")
+    # basic_plotting.plot_signal(time_vec, error_electric_dual,
+    #                                     title=r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
+    #                                     save_path=f"{directory_results}equiv_mixedhybrid_maxwell_E1")
 
-    basic_plotting.plot_signal(time_vec, error_magnetic_dual,
-                                        title=r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$",
-                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H2")
+    # basic_plotting.plot_signal(time_vec, error_magnetic_dual,
+    #                                     title=r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$",
+    #                                     save_path=f"{directory_results}equiv_mixedhybrid_maxwell_H2")
 
     basic_plotting.plot_signals(time_vec, value_mixed_electric_primal, value_hybrid_electric_primal,\
                                         value_mixed_electric_dual, value_hybrid_electric_dual, value_exact_electric, \
@@ -160,15 +160,15 @@ if rank==0:
                                         value_mixed_magnetic_dual, value_hybrid_magnetic_dual, value_exact_magnetic,\
                                         legend=["mixed primal", "hybrid primal", "mixed dual", "hybrid dual", "exact"],  title="H at point")
 
-    basic_plotting.plot_signals(time_vec, error_electric_primal,
-                                        error_magnetic_primal, 
-                                        error_electric_dual, 
-                                        error_magnetic_dual,
-                                        legend=[r"$||E^2_{\mathrm{mix}} - E^2_{\mathrm{hyb}}||_{L^2}$", 
-                                                r"$||H^1_{\mathrm{mix}} - H^1_{\mathrm{hyb}}||_{L^2}$",
-                                                r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
-                                                r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$"],  
-                                        title=r"Equivalence mixed/hybrid Maxwell",
-                                        save_path=f"{directory_results}equiv_mixedhybrid_maxwell")
+    # basic_plotting.plot_signals(time_vec, error_electric_primal,
+    #                                     error_magnetic_primal, 
+    #                                     error_electric_dual, 
+    #                                     error_magnetic_dual,
+    #                                     legend=[r"$||E^2_{\mathrm{mix}} - E^2_{\mathrm{hyb}}||_{L^2}$", 
+    #                                             r"$||H^1_{\mathrm{mix}} - H^1_{\mathrm{hyb}}||_{L^2}$",
+    #                                             r"$||E^1_{\mathrm{mix}} - E^1_{\mathrm{hyb}}||_{L^2}$",
+    #                                             r"$||H^2_{\mathrm{mix}} - H^2_{\mathrm{hyb}}||_{L^2}$"],  
+    #                                     title=r"Equivalence mixed/hybrid Maxwell",
+    #                                     save_path=f"{directory_results}equiv_mixedhybrid_maxwell")
 
     plt.show()

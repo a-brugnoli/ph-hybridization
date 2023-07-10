@@ -4,7 +4,7 @@ import firedrake as fdrk
 
 class EigensolutionMaxwell3D(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed"):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="electric"):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -28,7 +28,7 @@ class EigensolutionMaxwell3D(Problem):
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om_x, om_y, om_z = 1, 1, 1
+        om_x, om_y, om_z = pi, pi, pi
         om_t = fdrk.sqrt(om_x ** 2 + om_y ** 2 + om_z ** 2)
 
         ft = fdrk.sin(om_t * time) / om_t
@@ -40,12 +40,9 @@ class EigensolutionMaxwell3D(Problem):
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
-        curl_g = fdrk.as_vector([om_y * fdrk.sin(om_x * self.x) * fdrk.cos(om_y * self.y) \
-                                  * fdrk.cos(om_z * self.z),
-                            -(om_x + om_z) * fdrk.cos(om_x * self.x) \
-                                * fdrk.sin(om_y * self.y) * fdrk.cos(om_z * self.z),
-                            om_y * fdrk.cos(om_x * self.x) * fdrk.cos(om_y * self.y) \
-                                * fdrk.sin(om_z * self.z)])
+        curl_g = fdrk.as_vector([om_y * fdrk.sin(om_x * self.x) * fdrk.cos(om_y * self.y) * fdrk.cos(om_z * self.z),
+                               -(om_x + om_z) * fdrk.cos(om_x * self.x) * fdrk.sin(om_y * self.y) * fdrk.cos(om_z * self.z),
+                                 om_y * fdrk.cos(om_x * self.x) * fdrk.cos(om_y * self.y) * fdrk.sin(om_z * self.z)])
         # curl_g = curl(g_fun)
 
         exact_electric = g_fun * dft

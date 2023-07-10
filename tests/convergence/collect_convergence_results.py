@@ -19,7 +19,7 @@ def make_convergence_csv(pol_degree, bc_case, comm):
         list_dict_result = []
 
     for n_elem in n_elem_vector:
-        dict_result = compute_error(n_elem, pol_degree)
+        dict_result = compute_error(n_elem, pol_degree, bc_type=bc_case)
 
         if rank==0:
             list_dict_result.append(dict_result)
@@ -46,6 +46,7 @@ def make_convergence_csv(pol_degree, bc_case, comm):
         fileresults = f"convergence_maxwell_r={pol_degree}.csv"
         df.to_csv(directory_results + fileresults, na_rep='---')
 
+
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
@@ -53,9 +54,10 @@ size = comm.Get_size()
 pol_degree_test = None
 if rank == 0:
     pol_degree_test = int(input("Enter the polynomial degree: "))
-    bc_case= "mixed" # input("Enter the boundary conditions (electric, magnetic, mixed):")
+    bc_case= "electric" # input("Enter the boundary conditions (electric, magnetic, mixed):")
 
 pol_degree_test = comm.bcast(pol_degree_test, root=0)
 bc_case = comm.bcast(bc_case, root=0)
 
 make_convergence_csv(pol_degree_test, bc_case, comm)
+
