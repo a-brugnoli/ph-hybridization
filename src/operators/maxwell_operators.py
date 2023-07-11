@@ -61,8 +61,8 @@ class MaxwellOperators(SystemOperators):
                 exact_normaltrace = electric_field_exp
                 exact_tangtrace = magnetic_field_exp                    
 
-                norm_div_electric = fdrk.norm(fdrk.div(electric))
-                PETSc.Sys.Print(f"Norm divergence electric field primal: {norm_div_electric}")     
+                # norm_div_electric = fdrk.norm(fdrk.div(electric))
+                # PETSc.Sys.Print(f"Norm divergence electric field primal: {norm_div_electric}")     
             else:
                 # Previous implementation (not necessary anymore)
                 # electric = fdrk.project(fdrk.interpolate(electric_field_exp, self.NED_space), self.fullspace.sub(0))
@@ -71,8 +71,8 @@ class MaxwellOperators(SystemOperators):
                 exact_normaltrace = magnetic_field_exp
                 exact_tangtrace = electric_field_exp 
 
-                norm_div_magnetic = fdrk.norm(fdrk.div(magnetic))
-                PETSc.Sys.Print(f"Norm divergence magnetic field dual: {norm_div_magnetic}")   
+                # norm_div_magnetic = fdrk.norm(fdrk.div(magnetic))
+                # PETSc.Sys.Print(f"Norm divergence magnetic field dual: {norm_div_magnetic}")   
 
             variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)

@@ -31,7 +31,7 @@ class EigensolutionMaxwell3D(Problem):
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om = pi
+        om = 1
         om_t = fdrk.sqrt(3*om ** 2)
 
         ft = fdrk.sin(om_t * time) / om_t
