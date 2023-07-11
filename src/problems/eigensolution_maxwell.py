@@ -1,6 +1,7 @@
 from src.problems.problem import Problem
 from math import pi
 import firedrake as fdrk
+from firedrake.petsc import PETSc
 
 class EigensolutionMaxwell3D(Problem):
     "Maxwell eigenproblem"
@@ -25,24 +26,26 @@ class EigensolutionMaxwell3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
+        PETSc.Sys.Print(str(self))
+
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om_x, om_y, om_z = pi, pi, pi
-        om_t = fdrk.sqrt(om_x ** 2 + om_y ** 2 + om_z ** 2)
+        om = pi
+        om_t = fdrk.sqrt(3*om ** 2)
 
         ft = fdrk.sin(om_t * time) / om_t
         dft = fdrk.cos(om_t * time)
 
-        g_x = -fdrk.cos(om_x * self.x) * fdrk.sin(om_y * self.y) * fdrk.sin(om_z * self.z)
+        g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
         g_y = fdrk.Constant(0.0)
-        g_z = fdrk.sin(om_x * self.x) * fdrk.sin(om_y * self.y) * fdrk.cos(om_z * self.z)
+        g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
-        curl_g = fdrk.as_vector([om_y * fdrk.sin(om_x * self.x) * fdrk.cos(om_y * self.y) * fdrk.cos(om_z * self.z),
-                               -(om_x + om_z) * fdrk.cos(om_x * self.x) * fdrk.sin(om_y * self.y) * fdrk.cos(om_z * self.z),
-                                 om_y * fdrk.cos(om_x * self.x) * fdrk.cos(om_y * self.y) * fdrk.sin(om_z * self.z)])
+        curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
+                               -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
+                                 om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
         # curl_g = curl(g_fun)
 
         exact_electric = g_fun * dft
@@ -80,4 +83,4 @@ class EigensolutionMaxwell3D(Problem):
 
 
     def __str__(self):
-        return "EigensolutionMaxwell3D"
+        return f"Eigensolution Maxwell 3D. Boundary conditions {self.bc_type}"

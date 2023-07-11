@@ -7,6 +7,9 @@ from firedrake.petsc import PETSc
 
 
 def compute_error(n_elements, pol_degree, bc_type, time_step=0.01, t_end=1, type_system="Maxwell"):
+    """
+    Returns the Linfinity norm in time of the error
+    """
     n_time_iter = math.ceil(t_end/time_step)
 
     if type_system=="Maxwell":
@@ -25,6 +28,9 @@ def compute_error(n_elements, pol_degree, bc_type, time_step=0.01, t_end=1, type
     else:
         raise NotImplementedError("Not implemented for wave")
 
+    state_exact = problem.get_exact_solution(fdrk.Constant(0))
+    error_dict = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
+
     for ii in tqdm(range(n_time_iter)):
         actual_time = (ii+1)*time_step
 
@@ -33,19 +39,27 @@ def compute_error(n_elements, pol_degree, bc_type, time_step=0.01, t_end=1, type
         
         hybridsolver_primal.update_variables()
         hybridsolver_dual.update_variables()
-    
+
+        state_exact_actual = problem.get_exact_solution(fdrk.Constant(actual_time))
+        error_dict_actual = dict_error_maxwell(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
+
+        # Computation of the Linfinity norm in time
+        for key_error, value_error in error_dict_actual.items():
+            if error_dict[key_error]< value_error:
+                error_dict[key_error]= value_error
+
     PETSc.Sys.Print(f"Solution with {n_elements} elements, pol degree {pol_degree} and bcs {bc_type} computed")
 
-    state_exact = problem.get_exact_solution(fdrk.Constant(actual_time))
-
-    error_dict = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
+    # state_exact = problem.get_exact_solution(fdrk.Constant(actual_time))
+    # error_dict = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
 
     return error_dict
 
 
 def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver_dual: HamiltonianWaveSolver):
     exact_electric, exact_magnetic = state_exact
-        # Error primal
+    
+    # Error primal
     electric_primal, magnetic_primal, electric_normal_primal, magnetic_tangential_primal = solver_primal.state_old.subfunctions
 
     error_L2_electric_primal = fdrk.norm(exact_electric-electric_primal)
@@ -83,12 +97,14 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
         "error_Hcurl_magnetic_primal": error_Hcurl_magnetic_primal,
         "error_tangential_primal": error_tangential_primal,
         "error_normal_primal": error_normal_primal,
+
         "error_L2_electric_dual": error_L2_electric_dual, 
         "error_L2_magnetic_dual": error_L2_magnetic_dual, 
         "error_Hcurl_electric_dual": error_Hcurl_electric_dual,
         "error_Hdiv_magnetic_dual": error_Hdiv_magnetic_dual,
         "error_tangential_dual": error_tangential_dual,
         "error_normal_dual": error_normal_dual,
+        
         "error_L2_electric_df": error_L2_electric_df,
         "error_L2_magnetic_df": error_L2_magnetic_df,
         }

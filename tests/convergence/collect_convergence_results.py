@@ -19,7 +19,7 @@ def make_convergence_csv(pol_degree, bc_case, comm):
         list_dict_result = []
 
     for n_elem in n_elem_vector:
-        dict_result = compute_error(n_elem, pol_degree, bc_type=bc_case)
+        dict_result = compute_error(n_elem, pol_degree, bc_type=bc_case, t_end=0.1)
 
         if rank==0:
             list_dict_result.append(dict_result)

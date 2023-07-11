@@ -77,7 +77,13 @@ def plot_convergence(h_list, variable_list, **options):
         h_deg = h_list[count]
         variable_list_deg = variable_list[count]
         if "label" in options:
-            plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+', label=f'{options["label"]}$_{deg}$')
+            if options["label"]=="DG":
+                plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+', label=f'{options["label"]}$_{deg-1}$')
+            elif options["label"]=="CG" or options["label"]=="NED" or options["label"]=="RT":
+                plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+', label=f'{options["label"]}$_{deg}$')
+            else:
+                plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+', label=f'{options["label"]}$={deg}$')
+
         else:
             plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+')
 
@@ -85,10 +91,6 @@ def plot_convergence(h_list, variable_list, **options):
         #         + 1.1 * (np.log(variable_list_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
         
         # # Define the coordinates of the triangle's vertices
-        # point1 = (h_deg[-1], variable_list_deg[-1])
-        # point2 = (h_deg[-1] + 0.5*(h_deg[-2] - h_deg[-1]), point1[1])
-        # point3 = (point2[0], point2[1]*(point2[0]-point1[0])**deg)
-
         base_triangle = 0.5*abs(np.log10(h_deg[-2]) - np.log10(h_deg[-1]))
         height_triangle = deg*base_triangle
         shift_down = 0.2*(abs(np.log10(variable_list_deg[-2]) - np.log10(variable_list_deg[-1])))
