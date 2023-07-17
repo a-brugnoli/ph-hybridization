@@ -2,6 +2,7 @@ import firedrake as fdrk
 from .solver import Solver
 from src.problems.problem import Problem
 from src.operators.maxwell_operators import MaxwellOperators
+from src.operators.wave_operators import WaveOperators
 from firedrake.petsc import PETSc
 
 class HamiltonianWaveSolver(Solver):
@@ -35,8 +36,11 @@ class HamiltonianWaveSolver(Solver):
                 self.operators = MaxwellOperators(type_discretization, type_formulation, problem.domain, pol_degree)
             elif type_discretization=="mixed":
                 self.operators = MaxwellOperators(type_discretization, type_formulation, problem.domain, pol_degree)
-            else:
-                raise ValueError(f"The discretization {type_discretization} does not exist")
+        elif type_system=="Wave":
+            if type_discretization=="hybrid" :
+                self.operators = WaveOperators(type_discretization, type_formulation, problem.domain, pol_degree)
+            elif type_discretization=="mixed":
+                self.operators = WaveOperators(type_discretization, type_formulation, problem.domain, pol_degree)
         else:
             ValueError(f"System type {type_system} is not a valid option")
 

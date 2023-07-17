@@ -46,7 +46,7 @@ class EigensolutionMaxwell3D(Problem):
         curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
                                -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
                                  om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
-        # curl_g = curl(g_fun)
+        # curl_g = fdrk.curl(g_fun)
 
         exact_electric = g_fun * dft
         exact_magnetic = -curl_g * ft

@@ -1,10 +1,10 @@
 import firedrake as fdrk
+from src.problems.eigensolution_wave import EigensolutionWave3D
 from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 
 import matplotlib.pyplot as plt
 from src.postprocessing import basic_plotting
-from src.postprocessing.directory_figures import directories_problem
 import math
 from tqdm import tqdm
 
@@ -14,30 +14,35 @@ time_step = 0.01
 t_end = time_step
 n_time_iter = math.ceil(t_end/time_step)
 
+
+eigen_wave = EigensolutionWave3D(n_elements, n_elements, n_elements)
 eigen_maxwell = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
 
-solver_params={}
+case = "Wave"
+if case=="Maxwell":
+    problem = eigen_maxwell
+else:
+    problem = eigen_wave
 
-mixedsolver_primal = HamiltonianWaveSolver(problem = eigen_maxwell, pol_degree=pol_degree, \
+mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                     type_discretization="mixed", \
                                     type_formulation="primal", \
-                                    solver_parameters= solver_params)
+                                    type_system=case)
 
-mixedsolver_dual = HamiltonianWaveSolver(problem = eigen_maxwell, pol_degree=pol_degree, \
+mixedsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                     type_discretization="mixed", \
                                     type_formulation="dual", \
-                                    solver_parameters= solver_params)
+                                    type_system=case)
 
-hybridsolver_primal = HamiltonianWaveSolver(problem = eigen_maxwell, pol_degree=pol_degree, \
+hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                     type_discretization="hybrid", \
                                     type_formulation="primal", \
-                                    solver_parameters= solver_params)
+                                    type_system=case)
 
-hybridsolver_dual = HamiltonianWaveSolver(problem = eigen_maxwell, pol_degree=pol_degree, \
+hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                     type_discretization="hybrid", \
                                     type_formulation="dual", \
-                                    solver_parameters= solver_params)
-
+                                    type_system=case)
 
 
 for ii in tqdm(range(n_time_iter)):
