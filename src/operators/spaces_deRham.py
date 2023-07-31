@@ -13,8 +13,6 @@ def deRhamElements(domain, pol_degree):
             tang_cont_element = ufl.FiniteElement("NCE", cell, pol_degree)
             nor_cont_element = ufl.FiniteElement("NCF", cell, pol_degree)
         else:
-            # tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree, variant='point') 
-            # nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree, variant='integral')
             tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree) 
             nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree)
             
@@ -23,8 +21,6 @@ def deRhamElements(domain, pol_degree):
             tang_cont_element = ufl.FiniteElement("RTCE", cell, pol_degree)
             nor_cont_element = ufl.FiniteElement("RTCF", cell, pol_degree)
         else:
-            # tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree, variant='point') 
-            # nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree, variant='point')
             tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree) 
             nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree)
             

@@ -165,16 +165,16 @@ class WaveOperators(SystemOperators):
 
             else:   
                              
-                control_loc = test_pressure * normaltrace_field
-                control_local_adj = test_normaltrace * pressure_field
+                control_local = fdrk.inner(test_pressure, normaltrace_field)
+                control_local_adj = fdrk.inner(test_normaltrace, pressure_field)
 
-                constr_local = + ((control_loc('+') + control_loc('-')) * fdrk.dS + control_loc * fdrk.ds) \
+                constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
                 
-                control_global = test_normaltrace * tangtrace_field
-                control_global_adj = test_tangtrace * normaltrace_field
+                control_global = fdrk.inner(test_normaltrace, tangtrace_field)
+                control_global_adj = fdrk.inner(test_tangtrace, normaltrace_field)
 
-                constr_global = + ((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
+                constr_global = ((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
                                 - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             dynamics += constr_local + constr_global
@@ -261,6 +261,6 @@ class WaveOperators(SystemOperators):
     
 
     def __str__(self) -> str:
-        return f"Maxwell Operators. Discretization {self.type_discretization}, Formulation {self.type_formulation}"
+        return f"Wave Operators. Discretization {self.type_discretization}, Formulation {self.type_formulation}"
 
     

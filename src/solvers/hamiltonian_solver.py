@@ -8,13 +8,11 @@ from firedrake.petsc import PETSc
 class HamiltonianWaveSolver(Solver):
     def __init__(self, 
                  problem: Problem, 
+                 type_system,
                  pol_degree=1, 
-                 type_system="Maxwell",
                  type_discretization="hybrid",
                  type_formulation="primal", 
-                 solver_parameters={'ksp_type': 'preonly',
-                                    'pc_type': 'lu',
-                                    'pc_factor_mat_solver_type': 'mumps'}
+                 solver_parameters={}
                 ):
         """
         Constructor for the solver class using implicit Midpoint
