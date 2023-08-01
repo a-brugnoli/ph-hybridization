@@ -232,7 +232,7 @@ class MaxwellOperators(SystemOperators):
 
         return projected_variable
 
-    def trace_norm(self, variable):
+    def trace_norm_NED(self, variable):
 
         boundary_integrand = self.cell_diameter * fdrk.cross(variable, self.normal_versor) ** 2
         return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))

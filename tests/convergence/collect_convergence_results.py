@@ -5,7 +5,7 @@ import os
 from tests.convergence.compute_error import compute_error
 
 
-def make_convergence_csv(pol_degree, bc_case, comm):
+def make_convergence_csv(pol_degree, bc_case, type_system, comm):
     rank = comm.Get_rank()
 
     if pol_degree==1:
@@ -19,13 +19,13 @@ def make_convergence_csv(pol_degree, bc_case, comm):
         list_dict_result = []
 
     for n_elem in n_elem_vector:
-        dict_result = compute_error(n_elem, pol_degree, bc_type=bc_case, t_end=1)
+        dict_result = compute_error(n_elem, pol_degree, bc_type=bc_case, type_system=type_system, t_end=1)
 
         if rank==0:
             list_dict_result.append(dict_result)
     
     if rank==0:
-        directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{bc_case}/"
+        directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{type_system}/{bc_case}/"
         if not os.path.exists(directory_results):
             os.makedirs(directory_results)
 
@@ -53,11 +53,13 @@ size = comm.Get_size()
 
 pol_degree_test = None
 if rank == 0:
+    physics= "Maxwell" # input("Enter the physics (Wave or Maxwell): ")
     pol_degree_test = int(input("Enter the polynomial degree: "))
     bc_case= "mixed" # input("Enter the boundary conditions (electric, magnetic, mixed):")
 
 pol_degree_test = comm.bcast(pol_degree_test, root=0)
 bc_case = comm.bcast(bc_case, root=0)
 
-make_convergence_csv(pol_degree_test, bc_case, comm)
+
+make_convergence_csv(pol_degree_test, bc_case, physics, comm)
 

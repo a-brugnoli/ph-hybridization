@@ -91,8 +91,13 @@ def plot_convergence(h_list, variable_list, **options):
         #         + 1.1 * (np.log(variable_list_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
         
         # # Define the coordinates of the triangle's vertices
+        if "rate" in options:
+            expected_rate = deg + options["rate"]
+        else:
+            expected_rate = deg 
+
         base_triangle = 0.5*abs(np.log10(h_deg[-2]) - np.log10(h_deg[-1]))
-        height_triangle = deg*base_triangle
+        height_triangle = expected_rate*base_triangle
         shift_down = 0.2*(abs(np.log10(variable_list_deg[-2]) - np.log10(variable_list_deg[-1])))
 
         point1 = (np.log10(h_deg[-1]), np.log10(variable_list_deg[-1])-shift_down)
@@ -106,7 +111,7 @@ def plot_convergence(h_list, variable_list, **options):
         plt.plot(x_triangle, y_triangle, 'k')  # 'k-' specifies a black solid line
 
         plt.text(0.5*(point1[0] + point2[0]), point1[1], '1', va='top', ha='left')  # Write '1' below the base
-        plt.text(point2[0] + 0.1*base_triangle, 0.5*(point2[1] + point3[1]), f'{deg}', ha='left', va='center')  # Write 'deg' next to the height
+        plt.text(point2[0] + 0.1*base_triangle, 0.5*(point2[1] + point3[1]), f'{expected_rate}', ha='left', va='center')  # Write 'expected_rate' next to the height
 
         # Add grid
         plt.grid(True)
