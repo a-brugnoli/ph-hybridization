@@ -82,6 +82,8 @@ class EigensolutionMaxwell3D(Problem):
         null_bc = fdrk.Constant((0,0,0))
         if self.bc_type == "electric":
             bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], null_bc)} 
+            # print("WARNING: null bc for electric when electric boundary condition")
+            # bd_dict = {"electric": (["on_boundary"], null_bc), "magnetic":([], null_bc)} 
         elif self.bc_type == "magnetic":
             bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], exact_magnetic)}
         elif self.bc_type == "mixed":

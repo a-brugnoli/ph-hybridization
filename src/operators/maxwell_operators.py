@@ -105,8 +105,7 @@ class MaxwellOperators(SystemOperators):
                 space_bc = self.fullspace.sub(0)
         
         global_element = str(space_bc.ufl_element())
-        print(global_element)
-        assert f"N1curl{str(self.pol_degree)}" in global_element or f"RTCE" in global_element
+        assert f"N1curl{str(self.pol_degree)}" in global_element
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]

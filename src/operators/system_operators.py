@@ -85,6 +85,9 @@ class SystemOperators(ABC):
         rhs_functional = mass_functional + 0.5 * time_step * dynamics_functional \
                                     + time_step * natural_control
         
+        # print("Warning: modified functional implicit midpoint to check problem with the primal formulation")
+        # rhs_functional = mass_functional + 0.5 * time_step * dynamics_functional 
+        
         return rhs_functional
     
     def __str__(self) -> str:

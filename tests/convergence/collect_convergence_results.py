@@ -40,7 +40,7 @@ def make_convergence_csv(pol_degree, bc_case, type_system, comm, time_step, t_en
         list_dict_result_Tend = []
 
     for n_elem in n_elem_vector:
-        type_discr = "mixed"
+        type_discr = "hybrid"
         dict_result_time = compute_error(n_elem, pol_degree, bc_type=bc_case, type_system=type_system, time_step=time_step, t_end=t_end, \
                                          type_discretization=type_discr)
 
@@ -72,7 +72,7 @@ pol_degree_test = None
 if rank == 0:
     physics= "Maxwell" # input("Enter the physics (Wave or Maxwell): ")
     pol_degree_test = int(input("Enter the polynomial degree: "))
-    bc_case= "electric" # input("Enter the boundary conditions (electric, magnetic, mixed):")
+    bc_case= "magnetic" # input("Enter the boundary conditions (electric, magnetic, mixed):")
 
 pol_degree_test = comm.bcast(pol_degree_test, root=0)
 bc_case = comm.bcast(bc_case, root=0)
