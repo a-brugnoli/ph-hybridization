@@ -41,7 +41,7 @@ def make_convergence_csv(pol_degree, bc_case, type_system, comm, time_step, t_en
 
     for n_elem in n_elem_vector:
         dict_result_time = compute_error(n_elem, pol_degree, bc_type=bc_case, type_system=type_system, time_step=time_step, t_end=t_end, \
-                                         type_discretization="mixed")
+                                         type_discretization="hybrid")
 
         dict_result_Linf = dict_result_time["Linf"]
         dict_result_L2 = dict_result_time["L2"]
@@ -76,7 +76,7 @@ if rank == 0:
 pol_degree_test = comm.bcast(pol_degree_test, root=0)
 bc_case = comm.bcast(bc_case, root=0)
 
-time_step = 10**(-3)
-t_end = 100*time_step
+time_step = 0.01
+t_end = time_step
 make_convergence_csv(pol_degree_test, bc_case, physics, comm, time_step, t_end)
 
