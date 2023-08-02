@@ -9,7 +9,7 @@ def deRhamElements(domain, pol_degree):
     cont_element = ufl.FiniteElement("CG", cell, pol_degree) 
 
     if domain.geometric_dimension()==3:
-        if str(cell)=='hexahedron':
+        if 'hexahedron' in str(cell) or "quadrilateral" in str(cell):
             tang_cont_element = ufl.FiniteElement("NCE", cell, pol_degree)
             nor_cont_element = ufl.FiniteElement("NCF", cell, pol_degree)
         else:

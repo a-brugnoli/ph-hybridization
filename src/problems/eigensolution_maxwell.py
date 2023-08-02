@@ -20,6 +20,12 @@ class EigensolutionMaxwell3D(Problem):
         self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
                                         ny=n_elements_y, \
                                         nz=n_elements_z)
+        
+        # quad_mesh = fdrk.UnitSquareMesh(nx=n_elements_x, \
+        #                                 ny=n_elements_y, quadrilateral=True)
+        
+        # self.domain = fdrk.ExtrudedMesh(quad_mesh, layers=n_elements_z)
+        
         self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
 
         self.bc_type = bc_type
@@ -35,21 +41,25 @@ class EigensolutionMaxwell3D(Problem):
         om_t = fdrk.sqrt(3*om ** 2)
 
         ft = fdrk.sin(om_t * time) / om_t
-        dft = fdrk.cos(om_t * time)
+        dft = fdrk.diff(ft, time) #fdrk.cos(om_t * time)
 
         g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
         g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
 
         g_fun = fdrk.as_vector([g_x, fdrk.Constant(0.0), g_z])
 
-        # curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
-        #                        -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
-        #                          om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
+        curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
+                               -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
+                                 om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
 
-        curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
+        # curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
 
         exact_electric = g_fun * dft
         exact_magnetic = -curl_g * ft
+
+        # exact_magnetic = g_fun * dft
+        # exact_electric = curl_g * ft
+
         return (exact_electric, exact_magnetic)
     
 

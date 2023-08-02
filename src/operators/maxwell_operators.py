@@ -48,9 +48,14 @@ class MaxwellOperators(SystemOperators):
         electric_field_exp, magnetic_field_exp = expression_initial
 
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
+        cell = self.domain.ufl_cell()
+        if 'hexahedron' in str(cell) or "quadrilateral" in str(cell):
+            electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
+            magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
 
-        electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
-        magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
+        else:
+            electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
+            magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
 
         if self.type_discretization=="hybrid":
             if self.type_formulation == "primal":
@@ -63,7 +68,11 @@ class MaxwellOperators(SystemOperators):
 
 
             variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
-            variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+
+            if 'hexahedron' in str(cell) or "quadrilateral" in str(cell):
+                variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
+            else:
+                variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
             
             return (electric, magnetic, variable_normaltrace, variable_tangentialtrace)
         else:
@@ -96,7 +105,8 @@ class MaxwellOperators(SystemOperators):
                 space_bc = self.fullspace.sub(0)
         
         global_element = str(space_bc.ufl_element())
-        assert f"N1curl{str(self.pol_degree)}" in global_element
+        print(global_element)
+        assert f"N1curl{str(self.pol_degree)}" in global_element or f"RTCE" in global_element
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]

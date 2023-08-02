@@ -135,24 +135,24 @@ for count, deg in enumerate(deg_vec):
             print(value)
 
 
-# # Plot primal
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_pressure_primal, 
-#                                 label="DG", 
-#                                 ylabel=r'$\log||\widehat{p}^3_h - \widehat{p}^3_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error $\widehat{p}^3_h$', 
-#                                 save_path=f"{directory_results}error_L2_pressure_primal")
+# Plot primal
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_pressure_primal, 
+                                label="DG", 
+                                ylabel=r'$\log||\widehat{p}^3_h - \widehat{p}^3_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{p}^3_h$', 
+                                save_path=f"{directory_results}error_L2_pressure_primal")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_velocity_primal, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||\widehat{u}^2_h - \widehat{u}^2_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error $\widehat{u}^2_h$', 
-#                                 save_path=f"{directory_results}error_L2_velocity_primal")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_velocity_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{u}^2_h - \widehat{u}^2_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{u}^2_h$', 
+                                save_path=f"{directory_results}error_L2_velocity_primal")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_velocity_primal, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||\widehat{u}^2_h - \widehat{u}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
-#                                 title=r'Error $\widehat{u}^2_h$', 
-#                                 save_path=f"{directory_results}error_Hdiv_velocity_primal")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_velocity_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{u}^2_h - \widehat{u}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
+                                title=r'Error $\widehat{u}^2_h$', 
+                                save_path=f"{directory_results}error_Hdiv_velocity_primal")
 
 if len(error_normal_primal) > 0 and len(error_tangential_primal)>0:
     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_primal, 
@@ -177,23 +177,23 @@ basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_pressure_d
                                 rate=[1, 1, 1],
                                 save_path=f"{directory_results}error_L2_pressure_dual")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_velocity_dual, 
-#                                 label="NED", 
-#                                 ylabel=r'$\log||{u}^1_h -   {u}^1_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error ${u}^1_h$', 
-#                                 save_path=f"{directory_results}error_L2_velocity_dual")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_velocity_dual, 
+                                label="NED", 
+                                ylabel=r'$\log||{u}^1_h -   {u}^1_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error ${u}^1_h$', 
+                                save_path=f"{directory_results}error_L2_velocity_dual")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_H1_pressure_dual, 
-#                                 label="CG", 
-#                                 ylabel=r'$\log||{p}^0_h - {p}^0_{\mathrm{ex}}||_{H^{1}}$',
-#                                 title=r'Error ${p}^0_h$', 
-#                                 save_path=f"{directory_results}error_H1_pressure_dual")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_H1_pressure_dual, 
+                                label="CG", 
+                                ylabel=r'$\log||{p}^0_h - {p}^0_{\mathrm{ex}}||_{H^{1}}$',
+                                title=r'Error ${p}^0_h$', 
+                                save_path=f"{directory_results}error_H1_pressure_dual")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_velocity_dual, 
-#                                 label="NED", 
-#                                 ylabel=r'$\log||{u}^1_h - {u}^1_{\mathrm{ex}}||_{H^{\mathrm{curl}}}$',
-#                                 title=r'Error ${u}^1_h$', 
-#                                 save_path=f"{directory_results}error_Hcurl_velocity_dual")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_velocity_dual, 
+                                label="NED", 
+                                ylabel=r'$\log||{u}^1_h - {u}^1_{\mathrm{ex}}||_{H^{\mathrm{curl}}}$',
+                                title=r'Error ${u}^1_h$', 
+                                save_path=f"{directory_results}error_Hcurl_velocity_dual")
 
 if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_dual, 
@@ -209,18 +209,18 @@ if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
                                     rate=[1, 1, 1],
                                     save_path=f"{directory_results}error_tangential_dual")
     
-# # # Plot primal/dual
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_pressure_df, 
-#                                 label="deg",
-#                                 ylabel=r'$\log|| {p}^0_h - \widehat{p}^3_{h} ||_{L^2}$',
-#                                 title=r'Error ${p}^0_h - \widehat{p}^3_{h}$', 
-#                                 save_path=f"{directory_results}error_pressure_df")
+# # Plot primal/dual
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_pressure_df, 
+                                label="deg",
+                                ylabel=r'$\log|| {p}^0_h - \widehat{p}^3_{h} ||_{L^2}$',
+                                title=r'Error ${p}^0_h - \widehat{p}^3_{h}$', 
+                                save_path=f"{directory_results}error_pressure_df")
                                 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_velocity_df, 
-#                                 label="deg", 
-#                                 ylabel=r'$\log|| \widehat{u}^2_h - {u}^1_{h} ||_{L^2}$',
-#                                 title=r'Error $\widehat{u}^2_h - {u}^1_{h}$', 
-#                                 save_path=f"{directory_results}error_velocity_df")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_velocity_df, 
+                                label="deg", 
+                                ylabel=r'$\log|| \widehat{u}^2_h - {u}^1_{h} ||_{L^2}$',
+                                title=r'Error $\widehat{u}^2_h - {u}^1_{h}$', 
+                                save_path=f"{directory_results}error_velocity_df")
     
 
 plt.show()
