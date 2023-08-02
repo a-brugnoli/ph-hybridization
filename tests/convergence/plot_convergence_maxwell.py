@@ -7,7 +7,7 @@ from src.postprocessing import basic_plotting
 bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{bc_case}/"
 
-deg_vec  = [1, 2, 3]
+deg_vec  = [1] #[1, 2, 3]
 
 h_list = []
 
