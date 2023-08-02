@@ -54,25 +54,13 @@ class MaxwellOperators(SystemOperators):
 
         if self.type_discretization=="hybrid":
             if self.type_formulation == "primal":
-                # Previous implementation (not necessary anymore)
-                # electric = fdrk.project(fdrk.interpolate(electric_field_exp, self.RT_space), self.fullspace.sub(0))
-                # magnetic = fdrk.project(fdrk.interpolate(magnetic_field_exp, self.NED_space), self.fullspace.sub(1))
-
                 exact_normaltrace = electric_field_exp
                 exact_tangtrace = magnetic_field_exp                    
 
-                # norm_div_electric = fdrk.norm(fdrk.div(electric))
-                # PETSc.Sys.Print(f"Norm divergence electric field primal: {norm_div_electric}")     
             else:
-                # Previous implementation (not necessary anymore)
-                # electric = fdrk.project(fdrk.interpolate(electric_field_exp, self.NED_space), self.fullspace.sub(0))
-                # magnetic = fdrk.project(fdrk.interpolate(magnetic_field_exp, self.RT_space), self.fullspace.sub(1))
-
                 exact_normaltrace = magnetic_field_exp
                 exact_tangtrace = electric_field_exp 
 
-                # norm_div_magnetic = fdrk.norm(fdrk.div(magnetic))
-                # PETSc.Sys.Print(f"Norm divergence magnetic field dual: {norm_div_magnetic}")   
 
             variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
@@ -232,13 +220,13 @@ class MaxwellOperators(SystemOperators):
 
         return projected_variable
 
+
     def trace_norm_NED(self, variable):
 
         boundary_integrand = self.cell_diameter * fdrk.cross(variable, self.normal_versor) ** 2
         return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
     
         
-
     def __str__(self) -> str:
         return f"Maxwell Operators. Discretization {self.type_discretization}, Formulation {self.type_formulation}"
 

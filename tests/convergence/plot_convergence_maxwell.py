@@ -4,12 +4,16 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "mixed_Tfinal" #input("Enter the boundary conditions (electric, magnetic, mixed):")
+bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{bc_case}/"
 
-deg_vec  = [1] #[1, 2, 3]
+deg_vec  = [1, 2, 3]
 
 h_list = []
+
+# norm = "Linf"
+# norm = "L2"
+norm="Tend"
 
 # Errors
 
@@ -64,7 +68,7 @@ rate_electric_df = []
 rate_magnetic_df = []
 
 for count, deg in enumerate(deg_vec):
-    file = f"convergence_maxwell_r={deg}.csv"
+    file = f"convergence_r={deg}_{norm}.csv"
 
     df = pd.read_csv(directory_results+file)
     n_elements = df["N"].values
@@ -128,23 +132,23 @@ for count, deg in enumerate(deg_vec):
             print(value)
 
 # Plot primal
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_primal, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error $\widehat{E}^2_h$', 
-#                                 save_path=f"{directory_results}error_L2_electric_primal")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{E}^2_h$', 
+                                save_path=f"{directory_results}error_L2_electric_primal")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_primal, 
-#                                 label="NED", 
-#                                 ylabel=r'$\log||\widehat{H}^1_h - \widehat{H}^1_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error $\widehat{H}^1_h$', 
-#                                 save_path=f"{directory_results}error_L2_magnetic_primal")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_primal, 
+                                label="NED", 
+                                ylabel=r'$\log||\widehat{H}^1_h - \widehat{H}^1_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error $\widehat{H}^1_h$', 
+                                save_path=f"{directory_results}error_L2_magnetic_primal")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_electric_primal, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
-#                                 title=r'Error $\widehat{E}^2_h$', 
-#                                 save_path=f"{directory_results}error_Hdiv_electric_primal")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_electric_primal, 
+                                label="RT", 
+                                ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
+                                title=r'Error $\widehat{E}^2_h$', 
+                                save_path=f"{directory_results}error_Hdiv_electric_primal")
 
 basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_magnetic_primal, 
                                 label="NED", 
@@ -152,32 +156,32 @@ basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_magneti
                                 title=r'Error $\widehat{H}^1_h$', 
                                 save_path=f"{directory_results}error_Hcurl_magnetic_primal")
 
-# if len(error_normal_primal) > 0 and len(error_tangential_primal)>0:
-#     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_primal, 
-#                                     label="NED",
-#                                     ylabel=r'$\log|||\widehat{E}^{1, \bm{n}}_h - P_h \widehat{E}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
-#                                     title=r'Error $\widehat{E}^{1, \bm{n}}_h$', 
-#                                     save_path=f"{directory_results}error_normal_primal")
+if len(error_normal_primal) > 0 and len(error_tangential_primal)>0:
+    basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_primal, 
+                                    label="NED",
+                                    ylabel=r'$\log|||\widehat{E}^{1, \bm{n}}_h - P_h \widehat{E}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                    title=r'Error $\widehat{E}^{1, \bm{n}}_h$', 
+                                    save_path=f"{directory_results}error_normal_primal")
 
-#     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_primal, 
-#                                     label="NED", 
-#                                     ylabel=r'$\log|||\widehat{H}^{1, \bm{t}}_h - \widehat{H}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
-#                                     title=r'Error $\widehat{H}^{1, \bm{t}}_h$', 
-#                                     save_path=f"{directory_results}error_tangential_primal")
+    basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_primal, 
+                                    label="NED", 
+                                    ylabel=r'$\log|||\widehat{H}^{1, \bm{t}}_h - \widehat{H}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                    title=r'Error $\widehat{H}^{1, \bm{t}}_h$', 
+                                    save_path=f"{directory_results}error_tangential_primal")
     
 
-# # # Plot dual
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_dual, 
-#                                 label="NED", 
-#                                 ylabel=r'$\log||{E}^1_h - {E}^1_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error ${E}^1_h$', 
-#                                 save_path=f"{directory_results}error_L2_electric_dual")
+# # Plot dual
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_dual, 
+                                label="NED", 
+                                ylabel=r'$\log||{E}^1_h - {E}^1_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error ${E}^1_h$', 
+                                save_path=f"{directory_results}error_L2_electric_dual")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_dual, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||{H}^2_h -   {H}^2_{\mathrm{ex}}||_{L^2}$',
-#                                 title=r'Error ${H}^2_h$', 
-#                                 save_path=f"{directory_results}error_L2_magnetic_dual")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_magnetic_dual, 
+                                label="RT", 
+                                ylabel=r'$\log||{H}^2_h -   {H}^2_{\mathrm{ex}}||_{L^2}$',
+                                title=r'Error ${H}^2_h$', 
+                                save_path=f"{directory_results}error_L2_magnetic_dual")
 
 basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_electric_dual, 
                                 label="NED", 
@@ -185,37 +189,37 @@ basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hcurl_electri
                                 title=r'Error ${E}^1_h$', 
                                 save_path=f"{directory_results}error_Hcurl_electric_dual")
 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_magnetic_dual, 
-#                                 label="RT", 
-#                                 ylabel=r'$\log||{H}^2_h - {H}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
-#                                 title=r'Error ${H}^2_h$', 
-#                                 save_path=f"{directory_results}error_Hdiv_magnetic_dual")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_Hdiv_magnetic_dual, 
+                                label="RT", 
+                                ylabel=r'$\log||{H}^2_h - {H}^2_{\mathrm{ex}}||_{H^{\mathrm{div}}}$',
+                                title=r'Error ${H}^2_h$', 
+                                save_path=f"{directory_results}error_Hdiv_magnetic_dual")
 
-# if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
-#     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_dual, 
-#                                 label="NED",
-#                                 ylabel=r'$\log|||{H}^{1, \bm{n}}_h - P_h {H}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
-#                                 title=r'Error ${H}^{1, \bm{n}}_h$', 
-#                                 save_path=f"{directory_results}error_normal_dual")
+if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
+    basic_plotting.plot_convergence(h_list=h_list, variable_list=error_normal_dual, 
+                                label="NED",
+                                ylabel=r'$\log|||{H}^{1, \bm{n}}_h - P_h {H}^{1, \bm{n}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                title=r'Error ${H}^{1, \bm{n}}_h$', 
+                                save_path=f"{directory_results}error_normal_dual")
     
-#     basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_dual, 
-#                                     label="NED", 
-#                                     ylabel=r'$\log|||{E}^{1, \bm{t}}_h - {E}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
-#                                     title=r'Error ${E}^{1, \bm{t}}_h$', 
-#                                     save_path=f"{directory_results}error_tangential_dual")
+    basic_plotting.plot_convergence(h_list=h_list, variable_list=error_tangential_dual, 
+                                    label="NED", 
+                                    ylabel=r'$\log|||{E}^{1, \bm{t}}_h - {E}^{1, \bm{t}}_{\mathrm{ex}}|||_{\mathcal{T}_h}$',
+                                    title=r'Error ${E}^{1, \bm{t}}_h$', 
+                                    save_path=f"{directory_results}error_tangential_dual")
     
-# # # Plot primal/dual
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_electric_df, 
-#                                 label="deg",
-#                                 ylabel=r'$\log|| {E}^1_h - \widehat{E}^2_{h} ||_{L^2}$',
-#                                 title=r'Error ${E}^1_h - \widehat{E}^2_{h}$', 
-#                                 save_path=f"{directory_results}error_electric_df")
+# # Plot primal/dual
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_electric_df, 
+                                label="deg",
+                                ylabel=r'$\log|| {E}^1_h - \widehat{E}^2_{h} ||_{L^2}$',
+                                title=r'Error ${E}^1_h - \widehat{E}^2_{h}$', 
+                                save_path=f"{directory_results}error_electric_df")
                                 
-# basic_plotting.plot_convergence(h_list=h_list, variable_list=error_magnetic_df, 
-#                                 label="deg", 
-#                                 ylabel=r'$\log|| \widehat{H}^1_h - {H}^2_{h} ||_{L^2}$',
-#                                 title=r'Error $\widehat{H}^1_h - {H}^2_{h}$', 
-#                                 save_path=f"{directory_results}error_magnetic_df")
+basic_plotting.plot_convergence(h_list=h_list, variable_list=error_magnetic_df, 
+                                label="deg", 
+                                ylabel=r'$\log|| \widehat{H}^1_h - {H}^2_{h} ||_{L^2}$',
+                                title=r'Error $\widehat{H}^1_h - {H}^2_{h}$', 
+                                save_path=f"{directory_results}error_magnetic_df")
     
 
 plt.show()

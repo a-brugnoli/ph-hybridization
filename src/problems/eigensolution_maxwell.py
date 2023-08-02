@@ -38,15 +38,15 @@ class EigensolutionMaxwell3D(Problem):
         dft = fdrk.cos(om_t * time)
 
         g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
-        g_y = fdrk.Constant(0.0)
         g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
 
-        g_fun = fdrk.as_vector([g_x, g_y, g_z])
+        g_fun = fdrk.as_vector([g_x, fdrk.Constant(0.0), g_z])
 
-        curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
-                               -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
-                                 om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
-        # curl_g = fdrk.curl(g_fun)
+        # curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
+        #                        -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
+        #                          om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
+
+        curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
 
         exact_electric = g_fun * dft
         exact_magnetic = -curl_g * ft

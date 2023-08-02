@@ -92,7 +92,7 @@ def plot_convergence(h_list, variable_list, **options):
         
         # # Define the coordinates of the triangle's vertices
         if "rate" in options:
-            expected_rate = deg + options["rate"]
+            expected_rate = deg + options["rate"][count]
         else:
             expected_rate = deg 
 

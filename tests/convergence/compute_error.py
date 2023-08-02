@@ -5,7 +5,7 @@ import math
 from tqdm import tqdm
 import firedrake as fdrk
 from firedrake.petsc import PETSc
-
+import numpy as np
 
 def compute_error(n_elements, pol_degree, bc_type, type_system, time_step=0.01, t_end=1, type_discretization="hybrid"):
     """
@@ -30,12 +30,18 @@ def compute_error(n_elements, pol_degree, bc_type, type_system, time_step=0.01, 
                                                 type_discretization=type_discretization, 
                                                 type_formulation="dual")
     
-    
     state_exact_0 = problem.get_exact_solution(fdrk.Constant(0))
     if type_system=="Maxwell":
-            error_dict = dict_error_maxwell(state_exact_0, hybridsolver_primal, hybridsolver_dual)
+            error_dict_0 = dict_error_maxwell(state_exact_0, hybridsolver_primal, hybridsolver_dual)
     else:
-            error_dict = dict_error_wave(state_exact_0, hybridsolver_primal, hybridsolver_dual)
+            error_dict_0 = dict_error_wave(state_exact_0, hybridsolver_primal, hybridsolver_dual)
+
+    # Linf error in time, L2 error in time and error at final time
+    error_dict_Linf = error_dict_0
+
+    error_dict_L2 = {}
+    for key_error_0, value_error_0 in error_dict_0.items():
+        error_dict_L2[key_error_0] = value_error_0 ** 2 /2
         
     for ii in tqdm(range(n_time_iter)):
         actual_time = (ii+1)*time_step
@@ -53,24 +59,26 @@ def compute_error(n_elements, pol_degree, bc_type, type_system, time_step=0.01, 
         else:
             error_dict_actual = dict_error_wave(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
 
-        # Computation of the Linfinity norm in time
-        for key_error, value_error in error_dict_actual.items():
-            if error_dict[key_error]< value_error:
-                error_dict[key_error]= value_error
+        # Computation of the Linfinity and L2 norm in time
+        for key_error, value_error_actual in error_dict_actual.items():
+            if error_dict_Linf[key_error]< value_error_actual:
+                error_dict_Linf[key_error]= value_error_actual
 
+            if abs(actual_time-t_end)>1e-6:
+                error_dict_L2[key_error] = error_dict_L2[key_error] + value_error_actual**2
+            else:
+                error_dict_L2[key_error] = error_dict_L2[key_error] + value_error_actual**2/2
+
+    
+    for key_error, value_error_L2 in error_dict_L2.items():
+        error_dict_L2[key_error] = math.sqrt(value_error_L2*time_step)
+    
     PETSc.Sys.Print(f"Solution with {n_elements} elements, pol degree {pol_degree} and bcs {bc_type} computed")
 
-    # assert abs(actual_time-float(hybridsolver_primal.time_old)) < 1e-9
-    # assert abs(actual_time-float(hybridsolver_dual.time_old)) < 1e-9
 
-    # state_exact_end = problem.get_exact_solution(fdrk.Constant(actual_time))
+    error_time = {"Linf": error_dict_Linf, "L2": error_dict_L2, "Tend": error_dict_actual}
 
-    # if type_system=="Maxwell":
-    #     error_dict = dict_error_maxwell(state_exact_end, hybridsolver_primal, hybridsolver_dual)
-    # else:
-    #     error_dict = dict_error_wave(state_exact_end, hybridsolver_primal, hybridsolver_dual)
-     
-    return error_dict
+    return error_time
 
 
 def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver_dual: HamiltonianWaveSolver):
