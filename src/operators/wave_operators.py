@@ -5,17 +5,17 @@ from firedrake.petsc import PETSc
 
 class WaveOperators(SystemOperators):
 
-    def __init__(self, type_discretization, type_formulation, domain: fdrk.MeshGeometry, pol_degree: int):
-        super().__init__(type_discretization, type_formulation, domain, pol_degree)
+    def __init__(self, discretization, formulation, domain: fdrk.MeshGeometry, pol_degree: int):
+        super().__init__(discretization, formulation, domain, pol_degree)
       
 
     def _set_space(self):
         broken_NED_element = fdrk.BrokenElement(self.NED_element)
         broken_NED_space = fdrk.FunctionSpace(self.domain, broken_NED_element)
 
-        if self.type_discretization=="hybrid":
+        if self.discretization=="hybrid":
 
-            if self.type_formulation == "primal":
+            if self.formulation == "primal":
                 broken_RT_element = fdrk.BrokenElement(self.RT_element)
                 broken_RT_space = fdrk.FunctionSpace(self.domain, broken_RT_element)
 
@@ -40,7 +40,7 @@ class WaveOperators(SystemOperators):
         
             self.fullspace = self.mixedspace_local * self.space_global
         else:
-            if self.type_formulation == "primal":
+            if self.formulation == "primal":
                 self.fullspace = self.DG_space * self.RT_space
             else:
                 self.fullspace = self.CG_space * broken_NED_space
@@ -55,8 +55,8 @@ class WaveOperators(SystemOperators):
         pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
         velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
 
-        if self.type_discretization=="hybrid":
-            if self.type_formulation == "primal":
+        if self.discretization=="hybrid":
+            if self.formulation == "primal":
                 exact_normaltrace = pressure_field_exp
                 exact_tangtrace = velocity_field_exp              
 
@@ -81,11 +81,11 @@ class WaveOperators(SystemOperators):
 
         bc_dictionary = problem.get_boundary_conditions(time)
 
-        if self.type_formulation=="primal":
+        if self.formulation=="primal":
             
             tuple_bc_data = bc_dictionary["neumann"]
             
-            if self.type_discretization=="hybrid":
+            if self.discretization=="hybrid":
                 space_bc = self.space_global
             else:
                 space_bc = self.fullspace.sub(1)
@@ -97,7 +97,7 @@ class WaveOperators(SystemOperators):
 
             tuple_bc_data = bc_dictionary["dirichlet"]
             
-            if self.type_discretization=="hybrid":
+            if self.discretization=="hybrid":
                 space_bc = self.space_global
             else:
                 space_bc = self.fullspace.sub(0)
@@ -117,10 +117,10 @@ class WaveOperators(SystemOperators):
     def natural_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         bc_dictionary = problem.get_boundary_conditions(time)
 
-        if self.type_formulation=="primal":
+        if self.formulation=="primal":
             natural_bc = bc_dictionary["dirichlet"][1]
             
-        elif self.type_formulation=="dual":
+        elif self.formulation=="dual":
             natural_bc = bc_dictionary["neumann"][1]
         
         return natural_bc
@@ -128,7 +128,7 @@ class WaveOperators(SystemOperators):
     
     def dynamics(self, testfunctions, functions):
 
-        if self.type_discretization=="hybrid":
+        if self.discretization=="hybrid":
             test_pressure, test_velocity, test_normaltrace, test_tangtrace = testfunctions
             pressure_field, velocity_field, normaltrace_field, tangtrace_field = functions
         else:
@@ -138,7 +138,7 @@ class WaveOperators(SystemOperators):
         mass = fdrk.inner(test_pressure, pressure_field) * fdrk.dx\
                     + fdrk.inner(test_velocity, velocity_field) * fdrk.dx
         
-        if self.type_formulation=="primal":
+        if self.formulation=="primal":
             interconnection = fdrk.dot(test_pressure, fdrk.div(velocity_field)) * fdrk.dx \
             - fdrk.dot(fdrk.div(test_velocity), pressure_field) * fdrk.dx
         else:
@@ -147,9 +147,9 @@ class WaveOperators(SystemOperators):
         
         dynamics = interconnection
 
-        if self.type_discretization=="hybrid":
+        if self.discretization=="hybrid":
 
-            if self.type_formulation=="primal":
+            if self.formulation=="primal":
                 
                 control_local = fdrk.inner(test_velocity, self.normal_versor) * fdrk.inner(normaltrace_field, self.normal_versor)
                 control_local_adj = fdrk.inner(test_normaltrace, self.normal_versor) * fdrk.inner(velocity_field, self.normal_versor)
@@ -190,16 +190,16 @@ class WaveOperators(SystemOperators):
             testfunctions (TestFunctions) : a mixed test function from the appropriate function space
             control (Function) : a control function from the appropriate function space
         """
-        if self.type_discretization=="hybrid":
+        if self.discretization=="hybrid":
             test_control = testfunctions[-1]
         else:
-            if self.type_formulation == "primal":
+            if self.formulation == "primal":
                 test_control = testfunctions[1]
             else:
                 test_control = testfunctions[0]
 
 
-        if self.type_formulation == "primal":
+        if self.formulation == "primal":
             natural_control = fdrk.dot(test_control, self.normal_versor) * control * fdrk.ds
             
         else: 
@@ -209,7 +209,7 @@ class WaveOperators(SystemOperators):
 
     
     def project_CG_facetbroken(self, variable_to_project):
-        if self.type_discretization!="hybrid":
+        if self.discretization!="hybrid":
             PETSc.Sys.Print("Formulation is not hybrid. Function not available")
             pass
 
@@ -261,6 +261,6 @@ class WaveOperators(SystemOperators):
     
 
     def __str__(self) -> str:
-        return f"Wave Operators. Discretization {self.type_discretization}, Formulation {self.type_formulation}"
+        return f"Wave Operators. Discretization {self.discretization}, Formulation {self.formulation}"
 
     

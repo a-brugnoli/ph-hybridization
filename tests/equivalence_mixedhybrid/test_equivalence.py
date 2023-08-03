@@ -32,21 +32,33 @@ else:
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
 
-mixedsolver_primal = HamiltonianWaveSolver(problem = problem, type_system=case, time_step=time_step, pol_degree=pol_degree, \
-                                    type_discretization="mixed", \
-                                    type_formulation="primal")
+mixedsolver_primal = HamiltonianWaveSolver(problem = problem, 
+                                           system=case, 
+                                           time_step=time_step, 
+                                           pol_degree=pol_degree, 
+                                            discretization="mixed", 
+                                            formulation="primal")
 
-hybridsolver_primal = HamiltonianWaveSolver(problem = problem, type_system=case, time_step=time_step, pol_degree=pol_degree, \
-                                    type_discretization="hybrid", \
-                                    type_formulation="primal")
+hybridsolver_primal = HamiltonianWaveSolver(problem = problem,
+                                            system=case,
+                                            time_step=time_step,
+                                            pol_degree=pol_degree, 
+                                            discretization="hybrid", 
+                                            formulation="primal")
 
-mixedsolver_dual = HamiltonianWaveSolver(problem = problem, type_system=case, time_step=time_step, pol_degree=pol_degree, \
-                                    type_discretization="mixed", \
-                                    type_formulation="dual")
+mixedsolver_dual = HamiltonianWaveSolver(problem = problem, 
+                                         system=case, 
+                                         time_step=time_step, 
+                                         pol_degree=pol_degree, 
+                                         discretization="mixed", 
+                                         formulation="dual")
 
-hybridsolver_dual = HamiltonianWaveSolver(problem = problem, type_system=case, time_step=time_step, pol_degree=pol_degree, \
-                                    type_discretization="hybrid", \
-                                    type_formulation="dual")
+hybridsolver_dual = HamiltonianWaveSolver(problem = problem,
+                                        system=case, 
+                                        time_step=time_step, 
+                                        pol_degree=pol_degree, 
+                                        discretization="hybrid", 
+                                        formulation="dual")
 
 PETSc.Sys.Print(f"Size Mixed: {mixedsolver_primal.space_operators.dim()}. Size Hybrid {hybridsolver_primal.space_operators.dim()}")
 

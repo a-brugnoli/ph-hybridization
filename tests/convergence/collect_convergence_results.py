@@ -6,21 +6,21 @@ from tests.convergence.compute_error import compute_error
 
 
 def save_csv(dict_result, n_elem_vector, pol_degree, directory_results, norm):
-     # get list of error dictionaries and store in pandas DataFrame
-        df = pd.DataFrame(dict_result, index=n_elem_vector)
-        df.index.name = 'N'
+    # get list of error dictionaries and store in pandas DataFrame
+    df = pd.DataFrame(dict_result, index=n_elem_vector)
+    df.index.name = 'N'
 
-        # compute convergence rates
-        df[df.columns.str.replace('error', 'rate')] = -df.apply(np.log2).diff()
-        delta_logN = np.diff(np.array(df.index.map(np.log2)))
+    # compute convergence rates
+    df[df.columns.str.replace('error', 'rate')] = -df.apply(np.log2).diff()
+    delta_logN = np.diff(np.array(df.index.map(np.log2)))
 
-        columns_to_divide = df.columns[df.columns.str.contains('rate')]
-        rows_to_divide = df.index > n_elem_vector[0]
-        # Select the slice of columns to divide
-        df.loc[rows_to_divide, columns_to_divide] = df.loc[rows_to_divide, columns_to_divide].div(delta_logN, axis=0)
+    columns_to_divide = df.columns[df.columns.str.contains('rate')]
+    rows_to_divide = df.index > n_elem_vector[0]
+    # Select the slice of columns to divide
+    df.loc[rows_to_divide, columns_to_divide] = df.loc[rows_to_divide, columns_to_divide].div(delta_logN, axis=0)
 
-        fileresults = f"convergence_r={pol_degree}_{norm}.csv"
-        df.to_csv(directory_results + fileresults, na_rep='---')
+    fileresults = f"convergence_r={pol_degree}_{norm}.csv"
+    df.to_csv(directory_results + fileresults, na_rep='---')
 
 
 
@@ -29,16 +29,24 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 if rank == 0:
-    type_system= "Maxwell" # input("Enter the physics (Wave or Maxwell): ")
     pol_degree = int(input("Enter the polynomial degree: "))
-    bc_case= "mixed" # input("Enter the boundary conditions (electric, magnetic, mixed):")
-    
-type_discr = "mixed"
-pol_degree= comm.bcast(pol_degree, root=0)
-bc_case = comm.bcast(bc_case, root=0)
 
-time_step = 0.001
-t_end = 10*time_step
+    time_step = 10**(-4)
+    t_end = 10*time_step
+
+    system = "Wave"
+    discretization = "hybrid"
+    boundary_condition = "mixed"
+
+    dict_configuration = {"system": system,
+                        "pol_degree": pol_degree, 
+                        "bc": boundary_condition, 
+                        "discretization": discretization, 
+                        "time_step": time_step, 
+                        "t_end": t_end}
+
+    
+dict_configuration= comm.bcast(dict_configuration, root=0)
 
 rank = comm.Get_rank()
 
@@ -55,8 +63,7 @@ if rank==0:
     list_dict_result_Tend = []
 
 for n_elem in n_elem_vector:
-    dict_result_time = compute_error(n_elem, pol_degree, bc_type=bc_case, type_system=type_system, time_step=time_step, t_end=t_end, \
-                                        type_discretization=type_discr)
+    dict_result_time = compute_error(n_elem, dict_configuration)
 
     dict_result_Linf = dict_result_time["Linf"]
     dict_result_L2 = dict_result_time["L2"]
@@ -69,7 +76,7 @@ for n_elem in n_elem_vector:
         list_dict_result_Tend.append(dict_result_Tend)
 
 if rank==0:
-    directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{type_system}/{type_discr}_discretization/{bc_case}/"
+    directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
     if not os.path.exists(directory_results):
         os.makedirs(directory_results)
 

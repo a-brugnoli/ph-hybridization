@@ -36,27 +36,27 @@ exact_first, exact_second = problem.get_exact_solution(time)
 
 mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
-                                        type_discretization="mixed", \
-                                        type_formulation="primal", \
-                                        type_system=case)
+                                        discretization="mixed", \
+                                        formulation="primal", \
+                                        system=case)
 
 mixedsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
-                                        type_discretization="mixed", \
-                                        type_formulation="dual", \
-                                        type_system=case)
+                                        discretization="mixed", \
+                                        formulation="dual", \
+                                        system=case)
 
 hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
-                                        type_discretization="hybrid", \
-                                        type_formulation="primal", \
-                                        type_system=case)
+                                        discretization="hybrid", \
+                                        formulation="primal", \
+                                        system=case)
 
 hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
-                                    time_step=time_step, \
-                                    type_discretization="hybrid", \
-                                    type_formulation="dual", \
-                                    type_system=case)
+                                        time_step=time_step, \
+                                        discretization="hybrid", \
+                                        formulation="dual", \
+                                        system=case)
 
 if rank==0:
     directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'

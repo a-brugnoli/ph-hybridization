@@ -5,16 +5,16 @@ import pandas as pd
 from src.postprocessing import basic_plotting
 
 bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
-discretization = "mixed"
-directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{discretization}_discretization/{bc_case}/"
+discretization = "hybrid"
+directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{discretization}_discretization/{bc_case}_bc/"
 
 deg_vec  = [1, 2, 3]
 
 h_list = []
 
 # norm = "Linf"
-# norm = "L2"
-norm="Tend"
+norm = "L2"
+# norm="Tend"
 
 # Errors
 
@@ -108,29 +108,17 @@ for count, deg in enumerate(deg_vec):
     error_electric_df.append(df["error_L2_electric_df"].values)
     error_magnetic_df.append(df["error_L2_magnetic_df"].values)
 
-
-    # rate_L2_electric_primal.append(df["rate_L2_electric_primal"].values)
-    # rate_L2_magnetic_primal.append(df["rate_L2_magnetic_primal"].values)
-
-    # rate_Hdiv_electric_primal.append(df["rate_Hdiv_electric_primal"].values)
-    # rate_Hcurl_magnetic_primal.append(df["rate_Hcurl_magnetic_primal"].values)
-
-    # rate_normal_primal.append(df["rate_normal_primal"].values)
-    # rate_tangential_primal.append(df["rate_tangential_primal"].values)
-
+    # # Print the columns
+    # for column in errors_rate:
+    #     print(column)
+    #     for value in df[column]:
+    #         print(value)
 
     # Print the columns
     for column in columns_rate:
         print(column)
         for value in df[column]:
             print(value)
-
-#     columns_rate_Hcurl = df.columns[df.columns.str.contains('rate_Hcurl')]
-
-#     for column in columns_rate_Hcurl:
-#         print(column)
-#         for value in df[column]:
-#             print(value)
 
 # Plot primal
 basic_plotting.plot_convergence(h_list=h_list, variable_list=error_L2_electric_primal, 

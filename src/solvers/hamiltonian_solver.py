@@ -8,11 +8,11 @@ from firedrake.petsc import PETSc
 class HamiltonianWaveSolver(Solver):
     def __init__(self, 
                  problem: Problem, 
-                 type_system,
+                 system,
                  time_step,
                  pol_degree=1, 
-                 type_discretization="hybrid",
-                 type_formulation="primal", 
+                 discretization="hybrid",
+                 formulation="primal", 
                  solver_parameters={}
                 ):
         """
@@ -20,8 +20,8 @@ class HamiltonianWaveSolver(Solver):
         Parameters:
             problem (Problem) : a problem instance 
             pol_degree (int) : integer for the polynomial degree of the finite elements
-            type_discretization (string) : "hybrid" or "mixed"
-            type_formulation (string) :  "primal" or "dual" 
+            discretization (string) : "hybrid" or "mixed"
+            formulation (string) :  "primal" or "dual" 
             solver_parameter (dictionary) : dictionary containing the solver parameter  
                 polynomial degree (int), time step (float), final time (float)
         """
@@ -31,18 +31,18 @@ class HamiltonianWaveSolver(Solver):
         self.solver_parameters = solver_parameters
         self.time_step = time_step
 
-        if type_system=="Maxwell":
-            if type_discretization=="hybrid" :
-                self.operators = MaxwellOperators(type_discretization, type_formulation, problem.domain, pol_degree)
-            elif type_discretization=="mixed":
-                self.operators = MaxwellOperators(type_discretization, type_formulation, problem.domain, pol_degree)
-        elif type_system=="Wave":
-            if type_discretization=="hybrid" :
-                self.operators = WaveOperators(type_discretization, type_formulation, problem.domain, pol_degree)
-            elif type_discretization=="mixed":
-                self.operators = WaveOperators(type_discretization, type_formulation, problem.domain, pol_degree)
+        if system=="Maxwell":
+            if discretization=="hybrid" :
+                self.operators = MaxwellOperators(discretization, formulation, problem.domain, pol_degree)
+            elif discretization=="mixed":
+                self.operators = MaxwellOperators(discretization, formulation, problem.domain, pol_degree)
+        elif system=="Wave":
+            if discretization=="hybrid" :
+                self.operators = WaveOperators(discretization, formulation, problem.domain, pol_degree)
+            elif discretization=="mixed":
+                self.operators = WaveOperators(discretization, formulation, problem.domain, pol_degree)
         else:
-            ValueError(f"System type {type_system} is not a valid option")
+            ValueError(f"System type {system} is not a valid option")
 
         self._set_spaces()
         self._set_initial_conditions()
@@ -81,7 +81,7 @@ class HamiltonianWaveSolver(Solver):
         self.time_new = fdrk.Constant(self.time_step)
         self.actual_time = fdrk.Constant(0)
 
-        PETSc.Sys.Print(f"System {self.operators.type_discretization} {self.operators.type_formulation}: inital conditions set")
+        PETSc.Sys.Print(f"System {self.operators.discretization} {self.operators.formulation}: inital conditions set")
 
 
     def _set_boundary_conditions(self):
@@ -89,7 +89,7 @@ class HamiltonianWaveSolver(Solver):
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
-        PETSc.Sys.Print(f"System {self.operators.type_discretization} {self.operators.type_formulation}: boundary conditions set")
+        PETSc.Sys.Print(f"System {self.operators.discretization} {self.operators.formulation}: boundary conditions set")
 
     
     def _set_solver(self):
@@ -101,7 +101,7 @@ class HamiltonianWaveSolver(Solver):
         b_functional = self.operators.functional_implicit_midpoint(self.time_step, \
                     self.tests, states_old, control=self.natural_bcs)
 
-        if self.operators.type_discretization=="mixed":
+        if self.operators.discretization=="mixed":
             linear_problem = fdrk.LinearVariationalProblem(A_operator, b_functional, self.state_new, bcs=self.essential_bcs)
             self.solver =  fdrk.LinearVariationalSolver(linear_problem, solver_parameters=self.solver_parameters)
 
@@ -134,7 +134,7 @@ class HamiltonianWaveSolver(Solver):
             log_variables (Boolean): if True logs all the variables
         """
 
-        if self.operators.type_discretization=="mixed":
+        if self.operators.discretization=="mixed":
             self.solver.solve()
         else:
             self.global_solver.solve()
@@ -153,7 +153,7 @@ class HamiltonianWaveSolver(Solver):
 
 
     def _assemble_solution_hybrid(self):
-        if self.operators.type_discretization=="mixed":
+        if self.operators.discretization=="mixed":
             raise ValueError("Global to local assembly only valid for Hybrid system")
 
         # Intermediate expressions
@@ -174,7 +174,7 @@ class HamiltonianWaveSolver(Solver):
         import numpy as np
         dofs_essential = []
 
-        if self.operators.type_discretization=="mixed":
+        if self.operators.discretization=="mixed":
             raise ValueError(f" Function to extract dofs not defined for mixed discretization")
             
 

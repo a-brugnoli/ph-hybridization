@@ -40,25 +40,24 @@ class EigensolutionMaxwell3D(Problem):
         om = 1
         om_t = fdrk.sqrt(3*om ** 2)
 
-        ft = fdrk.sin(om_t * time) / om_t
-        dft = fdrk.diff(ft, time) #fdrk.cos(om_t * time)
+        ft =  2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
+        dft = fdrk.diff(ft, time) 
+
 
         g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
+        g_y = fdrk.Constant(0.0)
         g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
 
-        g_fun = fdrk.as_vector([g_x, fdrk.Constant(0.0), g_z])
+        g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
-        curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
-                               -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
-                                 om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
+        # curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
+        #                        -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
+        #                          om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
 
-        # curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
+        curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
 
         exact_electric = g_fun * dft
         exact_magnetic = -curl_g * ft
-
-        # exact_magnetic = g_fun * dft
-        # exact_electric = curl_g * ft
 
         return (exact_electric, exact_magnetic)
     
@@ -82,8 +81,7 @@ class EigensolutionMaxwell3D(Problem):
         null_bc = fdrk.Constant((0,0,0))
         if self.bc_type == "electric":
             bd_dict = {"electric": (["on_boundary"], exact_electric), "magnetic":([], null_bc)} 
-            # print("WARNING: null bc for electric when electric boundary condition")
-            # bd_dict = {"electric": (["on_boundary"], null_bc), "magnetic":([], null_bc)} 
+
         elif self.bc_type == "magnetic":
             bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], exact_magnetic)}
         elif self.bc_type == "mixed":

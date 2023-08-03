@@ -7,31 +7,39 @@ import firedrake as fdrk
 from firedrake.petsc import PETSc
 import numpy as np
 
-def compute_error(n_elements, pol_degree, bc_type, type_system, time_step=0.01, t_end=1, type_discretization="hybrid"):
+def compute_error(n_elements, dict_configuration):
     """
     Returns the Linfinity norm in time of the error
     """
+
+    pol_degree = dict_configuration["pol_degree"]
+    bc_type = dict_configuration["bc"]
+    system = dict_configuration["system"]
+    discretization = dict_configuration["discretization"]
+    time_step = dict_configuration["time_step"]
+    t_end = dict_configuration["t_end"]
+
     n_time_iter = math.ceil(t_end/time_step)
 
-    if type_system=="Maxwell":
+    if system=="Maxwell":
         problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type=bc_type)
-    elif type_system=="Wave":
+    elif system=="Wave":
         problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type=bc_type)
     else: 
         raise TypeError("Physics not valid")
         
     hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, time_step=time_step,
-                                                type_system=type_system, 
-                                                type_discretization=type_discretization, 
-                                                type_formulation="primal")
+                                                system=system, 
+                                                discretization=discretization, 
+                                                formulation="primal")
 
     hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, time_step=time_step,
-                                                type_system=type_system, 
-                                                type_discretization=type_discretization, 
-                                                type_formulation="dual")
+                                                system=system, 
+                                                discretization=discretization, 
+                                                formulation="dual")
     
     state_exact_0 = problem.get_exact_solution(fdrk.Constant(0))
-    if type_system=="Maxwell":
+    if system=="Maxwell":
             error_dict_0 = dict_error_maxwell(state_exact_0, hybridsolver_primal, hybridsolver_dual)
     else:
             error_dict_0 = dict_error_wave(state_exact_0, hybridsolver_primal, hybridsolver_dual)
@@ -54,7 +62,7 @@ def compute_error(n_elements, pol_degree, bc_type, type_system, time_step=0.01, 
 
         state_exact_actual = problem.get_exact_solution(fdrk.Constant(actual_time))
 
-        if type_system=="Maxwell":
+        if system=="Maxwell":
             error_dict_actual = dict_error_maxwell(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
         else:
             error_dict_actual = dict_error_wave(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
@@ -85,7 +93,7 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     exact_electric, exact_magnetic = state_exact
     
     # Error primal
-    if solver_primal.operators.type_discretization=="hybrid":
+    if solver_primal.operators.discretization=="hybrid":
         electric_primal, magnetic_primal, electric_normal_primal, magnetic_tangential_primal = solver_primal.state_old.subfunctions
         error_tangential_primal = solver_primal.operators.trace_norm_NED(exact_magnetic-magnetic_tangential_primal)
         projected_exact_electric = solver_primal.operators.project_NED_facetbroken(exact_electric)
@@ -102,7 +110,7 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     error_Hcurl_magnetic_primal = fdrk.norm(exact_magnetic-magnetic_primal, norm_type="Hcurl")
         
     # Error dual
-    if solver_dual.operators.type_discretization=="hybrid":
+    if solver_dual.operators.discretization=="hybrid":
         electric_dual, magnetic_dual, magnetic_normal_dual, electric_tangential_dual = solver_dual.state_old.subfunctions
         error_tangential_dual = solver_dual.operators.trace_norm_NED(exact_electric-electric_tangential_dual)
         projected_exact_magnetic = solver_dual.operators.project_NED_facetbroken(exact_magnetic)
@@ -121,7 +129,7 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     error_L2_magnetic_df = fdrk.norm(magnetic_primal - magnetic_dual)
 
 
-    if solver_primal.operators.type_discretization=="hybrid" and solver_dual.operators.type_discretization=="hybrid":
+    if solver_primal.operators.discretization=="hybrid" and solver_dual.operators.discretization=="hybrid":
 
         error_dictionary = {
             "error_L2_electric_primal": error_L2_electric_primal, 
@@ -167,7 +175,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     exact_pressure, exact_velocity = state_exact
     
     # Error primal
-    if solver_primal.operators.type_discretization=="hybrid":
+    if solver_primal.operators.discretization=="hybrid":
         pressure_primal, velocity_primal, pressure_normal_primal, velocity_tangential_primal = solver_primal.state_old.subfunctions
         error_tangential_primal = solver_primal.operators.trace_norm_RT(exact_velocity-velocity_tangential_primal)
         projected_exact_pressure = solver_primal.operators.project_RT_facetbroken(exact_pressure)
@@ -183,7 +191,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     error_Hdiv_velocity_primal = fdrk.norm(exact_velocity-velocity_primal, norm_type="Hdiv")
         
     # Error dual
-    if solver_dual.operators.type_discretization=="hybrid":
+    if solver_dual.operators.discretization=="hybrid":
         pressure_dual, velocity_dual, velocity_normal_dual, pressure_tangential_dual = solver_dual.state_old.subfunctions
         error_tangential_dual = solver_dual.operators.trace_norm_CG(exact_pressure-pressure_tangential_dual)
         projected_exact_velocity = solver_dual.operators.project_CG_facetbroken(exact_velocity)
@@ -202,7 +210,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     error_L2_velocity_df = fdrk.norm(velocity_primal - velocity_dual)
 
 
-    if solver_primal.operators.type_discretization=="hybrid" and solver_dual.operators.type_discretization=="hybrid":
+    if solver_primal.operators.discretization=="hybrid" and solver_dual.operators.discretization=="hybrid":
 
         error_dictionary = {
             "error_L2_pressure_primal": error_L2_pressure_primal, 

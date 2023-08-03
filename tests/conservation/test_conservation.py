@@ -21,7 +21,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-case = "Maxwell"
+case = "Wave"
 
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
@@ -30,15 +30,19 @@ else:
 
 norm_versor = problem.normal_versor
 
-hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree,\
-                                            time_step=time_step, type_system=case, \
-                                            type_discretization="hybrid", \
-                                            type_formulation="primal")
+hybridsolver_primal = HamiltonianWaveSolver(problem = problem, 
+                                            pol_degree=pol_degree,
+                                            time_step=time_step, 
+                                            system=case, 
+                                            discretization="hybrid", 
+                                            formulation="primal")
 
-hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
-                                            time_step=time_step, type_system=case,\
-                                            type_discretization="hybrid", \
-                                            type_formulation="dual")
+hybridsolver_dual = HamiltonianWaveSolver(problem = problem, 
+                                          pol_degree=pol_degree, 
+                                            time_step=time_step, 
+                                            system=case,
+                                            discretization="hybrid", 
+                                            formulation="dual")
 
 
 time_midpoint = hybridsolver_primal.time_midpoint

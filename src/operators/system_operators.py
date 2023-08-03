@@ -3,7 +3,7 @@ import firedrake as fdrk
 from abc import ABC, abstractmethod
 
 class SystemOperators(ABC):
-    def __init__(self, type_discretization, type_formulation, domain: fdrk.MeshGeometry, pol_degree):
+    def __init__(self, discretization, formulation, domain: fdrk.MeshGeometry, pol_degree):
         """
         Constructor for the MaxwellOperators class
         Parameters
@@ -11,14 +11,14 @@ class SystemOperators(ABC):
             reynold (float) : the reciprocal of the magnetic Reynolds number
         """
         
-        if type_discretization!="mixed" and type_discretization!="hybrid":
-            raise ValueError(f"Discretization type {type_discretization} is not a valid value")
+        if discretization!="mixed" and discretization!="hybrid":
+            raise ValueError(f"Discretization type {discretization} is not a valid value")
         
-        if type_formulation!="primal" and type_formulation!="dual":
-            raise ValueError(f"Formulation type {type_formulation} is not a valid value")
+        if formulation!="primal" and formulation!="dual":
+            raise ValueError(f"Formulation type {formulation} is not a valid value")
 
-        self.type_discretization=type_discretization
-        self.type_formulation=type_formulation
+        self.discretization=discretization
+        self.formulation=formulation
 
         self.domain = domain
         self.pol_degree = pol_degree
@@ -85,10 +85,7 @@ class SystemOperators(ABC):
         rhs_functional = mass_functional + 0.5 * time_step * dynamics_functional \
                                     + time_step * natural_control
         
-        # print("Warning: modified functional implicit midpoint to check problem with the primal formulation")
-        # rhs_functional = mass_functional + 0.5 * time_step * dynamics_functional 
-        
         return rhs_functional
     
     def __str__(self) -> str:
-        return f"Discretization {self.type_discretization}, Formulation {self.type_formulation}"
+        return f"Discretization {self.discretization}, Formulation {self.formulation}"
