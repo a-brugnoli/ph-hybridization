@@ -64,7 +64,7 @@ if rank==0:
         # If it doesn't exist, create it
         os.makedirs(directory_results)
 
-    directory_paraview = "/home/andrea/StoreResults/Ph_Hybridization/EigensolutionMaxwell3D/Paraview/"
+    directory_paraview = f"/home/andrea/StoreResults/Ph_Hybridization/{str(problem)}/Paraview/"
     if not os.path.exists(directory_paraview):
         # If it doesn't exist, create it
         os.makedirs(directory_paraview)
