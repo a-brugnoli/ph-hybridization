@@ -43,7 +43,6 @@ class EigensolutionMaxwell3D(Problem):
         ft =  2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
         dft = fdrk.diff(ft, time) 
 
-
         g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
         g_y = fdrk.Constant(0.0)
         g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
@@ -93,4 +92,4 @@ class EigensolutionMaxwell3D(Problem):
 
 
     def __str__(self):
-        return f"Eigensolution Maxwell 3D. Boundary conditions {self.bc_type}"
+        return f"eigensolution_maxwell_3D_bc_{self.bc_type}"

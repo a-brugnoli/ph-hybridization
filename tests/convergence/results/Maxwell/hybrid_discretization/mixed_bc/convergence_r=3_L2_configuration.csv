@@ -1,0 +1,2 @@
+,system,pol_degree,bc,discretization,time_step,t_end
+0,Maxwell,3,mixed,hybrid,0.0001,0.001

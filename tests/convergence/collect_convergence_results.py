@@ -5,7 +5,7 @@ import os
 from tests.convergence.compute_error import compute_error
 
 
-def save_csv(dict_result, n_elem_vector, pol_degree, directory_results, norm):
+def save_csv(dict_configuration, dict_result, n_elem_vector, pol_degree, directory_results, norm):
     # get list of error dictionaries and store in pandas DataFrame
     df = pd.DataFrame(dict_result, index=n_elem_vector)
     df.index.name = 'N'
@@ -22,67 +22,78 @@ def save_csv(dict_result, n_elem_vector, pol_degree, directory_results, norm):
     fileresults = f"convergence_r={pol_degree}_{norm}.csv"
     df.to_csv(directory_results + fileresults, na_rep='---')
 
+    df_configuration = pd.DataFrame([dict_configuration])
+    file_configuration  = f"convergence_r={pol_degree}_{norm}_configuration.csv"
+    df_configuration.to_csv(directory_results + file_configuration, na_rep='---')
+
+
 
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-if rank == 0:
-    pol_degree = int(input("Enter the polynomial degree: "))
+pol_degree_vec = [1,2,3]
 
-    time_step = 10**(-4)
-    t_end = 10*time_step
+for pol_degree in pol_degree_vec:
 
-    system = "Wave"
-    discretization = "hybrid"
-    boundary_condition = "mixed"
+    if pol_degree==1:
+        n_elem_vector = [1, 2, 4, 8, 16] 
+    elif pol_degree==2:
+        n_elem_vector = [1, 2, 4, 8]
+    elif pol_degree==3:
+        n_elem_vector = [1, 2, 4]
 
-    dict_configuration = {"system": system,
-                        "pol_degree": pol_degree, 
-                        "bc": boundary_condition, 
-                        "discretization": discretization, 
-                        "time_step": time_step, 
-                        "t_end": t_end}
+
+    if rank == 0:
+        # pol_degree = int(input("Enter the polynomial degree: "))
+
+        time_step = 10**(-3)
+        t_end = 1*time_step
+
+        system = "Maxwell" # input("Enter the system: ")
+        discretization = "hybrid"
+        boundary_condition = "mixed"
+
+        dict_configuration = {"system": system,
+                            "pol_degree": pol_degree, 
+                            "bc": boundary_condition, 
+                            "discretization": discretization, 
+                            "time_step": time_step, 
+                            "t_end": t_end}
+
+        
+    dict_configuration = comm.bcast(dict_configuration, root=0)
+
+    rank = comm.Get_rank()
 
     
-dict_configuration= comm.bcast(dict_configuration, root=0)
+    if rank==0:
+        list_dict_result_Linf = []
+        list_dict_result_L2 = []
+        list_dict_result_Tend = []
 
-rank = comm.Get_rank()
 
-if pol_degree==1:
-    n_elem_vector = [1, 2, 4, 8] #, 16] 
-elif pol_degree==2:
-    n_elem_vector = [1, 2, 4, 8]
-elif pol_degree==3:
-    n_elem_vector = [1, 2, 4]
+    for n_elem in n_elem_vector:
+        dict_result_time = compute_error(n_elem, dict_configuration)
 
-if rank==0:
-    list_dict_result_Linf = []
-    list_dict_result_L2 = []
-    list_dict_result_Tend = []
+        dict_result_Linf = dict_result_time["Linf"]
+        dict_result_L2 = dict_result_time["L2"]
+        dict_result_Tend = dict_result_time["Tend"]
 
-for n_elem in n_elem_vector:
-    dict_result_time = compute_error(n_elem, dict_configuration)
-
-    dict_result_Linf = dict_result_time["Linf"]
-    dict_result_L2 = dict_result_time["L2"]
-    dict_result_Tend = dict_result_time["Tend"]
-
+        if rank==0:
+            list_dict_result_Linf.append(dict_result_Linf)
+            list_dict_result_L2.append(dict_result_L2)
+            list_dict_result_Tend.append(dict_result_Tend)
 
     if rank==0:
-        list_dict_result_Linf.append(dict_result_Linf)
-        list_dict_result_L2.append(dict_result_L2)
-        list_dict_result_Tend.append(dict_result_Tend)
+        directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
+        if not os.path.exists(directory_results):
+            os.makedirs(directory_results)
 
-if rank==0:
-    directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
-    if not os.path.exists(directory_results):
-        os.makedirs(directory_results)
-
-    save_csv(list_dict_result_Linf, n_elem_vector, pol_degree, directory_results, "Linf")
-    save_csv(list_dict_result_L2, n_elem_vector, pol_degree, directory_results, "L2")
-    save_csv(list_dict_result_Tend, n_elem_vector, pol_degree, directory_results, "Tend")
+        save_csv(dict_configuration, list_dict_result_Linf, n_elem_vector, pol_degree, directory_results, "Linf")
+        save_csv(dict_configuration, list_dict_result_L2, n_elem_vector, pol_degree, directory_results, "L2")
+        save_csv(dict_configuration, list_dict_result_Tend, n_elem_vector, pol_degree, directory_results, "Tend")
 
 
 

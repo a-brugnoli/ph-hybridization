@@ -69,11 +69,10 @@ def plot_signals(t_vec, *signals_vec, **options):
         plt.savefig(options["save_path"], dpi='figure', format='eps')
 
 
-def plot_convergence(h_list, variable_list, **options):
+def plot_convergence(deg_vec, h_list, variable_list, **options):
     
-    max_degree = len(h_list)+1
     plt.figure()
-    for count, deg in enumerate(range(1, max_degree)):
+    for count, deg in enumerate(deg_vec):
         h_deg = h_list[count]
         variable_list_deg = variable_list[count]
         if "label" in options:
@@ -87,17 +86,16 @@ def plot_convergence(h_list, variable_list, **options):
         else:
             plt.plot(np.log10(h_deg), np.log10(variable_list_deg), '-.+')
 
-        # plt.plot(np.log(h_deg), np.log(h_deg ** deg) + \
-        #         + 1.1 * (np.log(variable_list_deg)[0] - np.log(h_deg ** deg)[0]), '-v', label=r'$h^' + str(deg) + '$')
-        
         # # Define the coordinates of the triangle's vertices
-        if "rate" in options:
-            expected_rate = deg + options["rate"][count]
-        else:
-            expected_rate = deg 
+        # if "rate" in options:
+        #     empirical_rate = deg + options["rate"][count]
+        # else:
+        #     empirical_rate = deg 
+
+        empirical_rate = np.log10(variable_list_deg[-1]/variable_list_deg[-2])/np.log10(h_deg[-1]/h_deg[-2]) 
 
         base_triangle = 0.5*abs(np.log10(h_deg[-2]) - np.log10(h_deg[-1]))
-        height_triangle = expected_rate*base_triangle
+        height_triangle = empirical_rate*base_triangle
         shift_down = 0.2*(abs(np.log10(variable_list_deg[-2]) - np.log10(variable_list_deg[-1])))
 
         point1 = (np.log10(h_deg[-1]), np.log10(variable_list_deg[-1])-shift_down)
@@ -109,9 +107,8 @@ def plot_convergence(h_list, variable_list, **options):
 
         # Plot the triangle
         plt.plot(x_triangle, y_triangle, 'k')  # 'k-' specifies a black solid line
-
-        plt.text(0.5*(point1[0] + point2[0]), point1[1], '1', va='top', ha='left')  # Write '1' below the base
-        plt.text(point2[0] + 0.1*base_triangle, 0.5*(point2[1] + point3[1]), f'{expected_rate}', ha='left', va='center')  # Write 'expected_rate' next to the height
+        # plt.text(0.5*(point1[0] + point2[0]), point1[1], '1', va='top', ha='left')  # Write '1' below the base
+        plt.text(point2[0] + 0.1*base_triangle, 0.5*(point2[1] + point3[1]), f'{empirical_rate:.1f}', ha='left', va='center')  # Write 'empirical_rate' next to the height
 
         # Add grid
         plt.grid(True)

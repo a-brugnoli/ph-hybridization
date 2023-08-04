@@ -2,7 +2,7 @@ import firedrake as fdrk
 from src.problems.eigensolution_wave import EigensolutionWave3D
 from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
-
+from src.operators.spaces_deRham import deRhamSpaces
 import matplotlib.pyplot as plt
 from src.postprocessing import basic_plotting
 import math
@@ -33,6 +33,13 @@ else:
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
 
+CG_deg3, NED_deg3, RT_deg3, DG_deg3 = deRhamSpaces(problem.domain, 3).values()
+
+exact_first_function = fdrk.Function(RT_deg3)
+exact_second_function = fdrk.Function(RT_deg3)
+
+exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
 
 mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
@@ -119,9 +126,12 @@ if rank==0:
 
     outfile_primal = fdrk.File(f"{directory_paraview}/Fields_primal.pvd")
     outfile_dual = fdrk.File(f"{directory_paraview}/Fields_dual.pvd")
-    
+    outfile_exact = fdrk.File(f"{directory_paraview}/Fields_exact.pvd")
+
     outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
     outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
+
+    outfile_exact.write(exact_first_function, exact_second_function, time=0)
 
 
 for ii in tqdm(range(1,n_time_iter+1)):
@@ -145,12 +155,15 @@ for ii in tqdm(range(1,n_time_iter+1)):
     errorvalue_first_dual = fdrk.norm(mixed_first_dual - hybrid_first_dual)
     errorvalue_second_dual = fdrk.norm(mixed_second_dual - hybrid_second_dual)
 
-    outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
-    outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
-
-
     if rank==0:
         time.assign(actual_time)
+
+        outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
+        outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
+
+        exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+        exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
+        outfile_exact.write(exact_first_function, exact_second_function, time=actual_time)
 
         if case=="Maxwell":
             value_mixed_first_primal[ii] = mixed_first_primal.at(point)[0]

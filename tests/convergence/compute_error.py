@@ -83,7 +83,6 @@ def compute_error(n_elements, dict_configuration):
     
     PETSc.Sys.Print(f"Solution with {n_elements} elements, pol degree {pol_degree} and bcs {bc_type} computed")
 
-
     error_time = {"Linf": error_dict_Linf, "L2": error_dict_L2, "Tend": error_dict_actual}
 
     return error_time

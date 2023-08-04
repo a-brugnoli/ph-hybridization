@@ -75,4 +75,4 @@ class EigensolutionWave3D(Problem):
 
 
     def __str__(self):
-        return f"Eigensolution Wave 3D. Boundary conditions {self.bc_type}"
+        return f"eigensolution_wave_3d_bc_{self.bc_type}"
