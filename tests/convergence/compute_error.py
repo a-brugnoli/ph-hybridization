@@ -20,6 +20,7 @@ def compute_error(n_elements, dict_configuration):
     t_end = dict_configuration["t_end"]
 
     n_time_iter = math.ceil(t_end/time_step)
+    actual_t_end = n_time_iter*time_step
 
     if system=="Maxwell":
         problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type=bc_type)
@@ -72,7 +73,7 @@ def compute_error(n_elements, dict_configuration):
             if error_dict_Linf[key_error]< value_error_actual:
                 error_dict_Linf[key_error]= value_error_actual
 
-            if abs(actual_time-t_end)>1e-6:
+            if abs(actual_time-actual_t_end)>1e-6:
                 error_dict_L2[key_error] = error_dict_L2[key_error] + value_error_actual**2
             else:
                 error_dict_L2[key_error] = error_dict_L2[key_error] + value_error_actual**2/2

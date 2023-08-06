@@ -45,13 +45,11 @@ for pol_degree in pol_degree_vec:
         n_elem_vector = [1, 2, 4]
 
 
-    if rank == 0:
-        # pol_degree = int(input("Enter the polynomial degree: "))
+    if rank==0:
+        basic_time_step = 0.001
+        t_end = 10*basic_time_step
 
-        time_step = 10**(-3)
-        t_end = 1*time_step
-
-        system = "Maxwell" # input("Enter the system: ")
+        system = "Wave" # input("Enter the system: ")
         discretization = "hybrid"
         boundary_condition = "mixed"
 
@@ -59,22 +57,23 @@ for pol_degree in pol_degree_vec:
                             "pol_degree": pol_degree, 
                             "bc": boundary_condition, 
                             "discretization": discretization, 
-                            "time_step": time_step, 
+                            "time_step": None,
                             "t_end": t_end}
-
         
-    dict_configuration = comm.bcast(dict_configuration, root=0)
-
-    rank = comm.Get_rank()
-
-    
-    if rank==0:
         list_dict_result_Linf = []
         list_dict_result_L2 = []
         list_dict_result_Tend = []
 
+    dict_configuration = comm.bcast(dict_configuration, root=0)
+
 
     for n_elem in n_elem_vector:
+
+        time_step = basic_time_step/n_elem
+        # time_step = basic_time_step
+
+        dict_configuration["time_step"] = time_step
+
         dict_result_time = compute_error(n_elem, dict_configuration)
 
         dict_result_Linf = dict_result_time["Linf"]

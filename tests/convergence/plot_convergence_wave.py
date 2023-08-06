@@ -12,9 +12,9 @@ deg_vec  = [1, 2, 3]
 
 h_list = []
 
-# norm = "Linf"
+norm = "Linf"
 # norm = "L2"
-norm="Tend"
+# norm="Tend"
 
 # Errors
 
@@ -115,18 +115,18 @@ for count, deg in enumerate(deg_vec):
     # rate_tangential_primal.append(df["rate_tangential_primal"].values)
 
 
-    # Print the columns
-    for column in columns_rate:
-        print(column)
-        for value in df[column]:
-            print(value)
-
-    # columns_rate_H1 = df.columns[df.columns.str.contains('rate_H1')]
-
-    # for column in columns_rate_H1:
+    # # Print the columns
+    # for column in columns_rate:
     #     print(column)
     #     for value in df[column]:
     #         print(value)
+
+    columns_rate_H1 = df.columns[df.columns.str.contains('rate_H1')]
+
+    for column in columns_rate_H1:
+        print(column)
+        for value in df[column]:
+            print(value)
 
     # columns_rate_normal = df.columns[df.columns.str.contains('rate_normal')]
 
