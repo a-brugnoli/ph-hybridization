@@ -261,6 +261,6 @@ class WaveOperators(SystemOperators):
     
 
     def __str__(self) -> str:
-        return f"Wave Operators. Discretization {self.discretization}, Formulation {self.formulation}"
+        return f"Wave Operators, discretization {self.discretization}, formulation {self.formulation}"
 
     

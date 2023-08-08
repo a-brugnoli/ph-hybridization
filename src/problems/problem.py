@@ -7,6 +7,7 @@ class Problem(ABC):
         self.domain = None
         self.x, self.y, self.z = None, None, None
         self.bc_type=None
+        self.forcing = False
 
 
     @abstractmethod
@@ -18,6 +19,11 @@ class Problem(ABC):
     def get_exact_solution(self, time: fdrk.Constant):
         pass
     
+
+    @abstractmethod
+    def get_forcing(self, time: fdrk.Constant):
+        pass
+
     
     @abstractmethod
     def get_boundary_conditions(self, time: fdrk.Constant):

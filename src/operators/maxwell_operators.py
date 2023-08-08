@@ -237,6 +237,6 @@ class MaxwellOperators(SystemOperators):
     
         
     def __str__(self) -> str:
-        return f"Maxwell Operators. Discretization {self.discretization}, Formulation {self.formulation}"
+        return f"Maxwell Operators. discretization {self.discretization}, formulation {self.formulation}"
 
     

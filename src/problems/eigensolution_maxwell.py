@@ -32,7 +32,7 @@ class EigensolutionMaxwell3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        PETSc.Sys.Print(str(self))
+        self.forcing = False
 
         
 
@@ -59,6 +59,17 @@ class EigensolutionMaxwell3D(Problem):
         exact_magnetic = -curl_g * ft
 
         return (exact_electric, exact_magnetic)
+    
+
+    def get_forcing(self, time):
+        assert isinstance(time, fdrk.Constant)
+
+        exact_electric, exact_magnetic = self.get_exact_solution(time)
+
+        force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
+
+
+        return {"0": force_electric, "1":None}
     
 
     def get_initial_conditions(self):

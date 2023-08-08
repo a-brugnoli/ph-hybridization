@@ -26,7 +26,7 @@ class EigensolutionWave3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        PETSc.Sys.Print(str(self))
+        self.forcing = False
        
 
     def get_exact_solution(self, time: fdrk.Constant):
@@ -34,15 +34,24 @@ class EigensolutionWave3D(Problem):
         om_t = fdrk.sqrt(3*om ** 2)
 
         ft = 2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
-        dft = fdrk.diff(ft, time) # om_t * (2 * cos(om_t * time) - 3 * sin(om_t * time))
+        dft = fdrk.diff(ft, time) 
 
         g_fun = fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
-
         grad_g = fdrk.grad(g_fun)
 
         exact_pressure = g_fun * dft
         exact_velocity = grad_g * ft
         return (exact_pressure, exact_velocity)
+    
+
+    def get_forcing(self, time):
+        assert isinstance(time, fdrk.Constant)
+
+        exact_pressure, exact_velocity = self.get_exact_solution(time)
+
+        force_pressure = fdrk.diff(exact_pressure, time) - fdrk.div(exact_velocity)
+
+        return (force_pressure, None)
     
 
     def get_initial_conditions(self):
@@ -72,6 +81,9 @@ class EigensolutionWave3D(Problem):
             raise ValueError(f"{self.bc_type} is not a valid value for bc")
         
         return bd_dict
+    
+
+    
 
 
     def __str__(self):

@@ -100,6 +100,14 @@ class HamiltonianWaveSolver(Solver):
         
         b_functional = self.operators.functional_implicit_midpoint(self.time_step, \
                     self.tests, states_old, control=self.natural_bcs)
+        
+        if self.problem.forcing:
+            PETSc.Sys.Print("Problem with forcing term")
+            tuple_forcing = self.problem.get_forcing(self.time_midpoint)
+
+            for counter, force in enumerate(tuple_forcing):
+                if force is not None:
+                    b_functional += self.time_step*fdrk.inner(self.tests[counter], force)*fdrk.dx
 
         if self.operators.discretization=="mixed":
             linear_problem = fdrk.LinearVariationalProblem(A_operator, b_functional, self.state_new, bcs=self.essential_bcs)

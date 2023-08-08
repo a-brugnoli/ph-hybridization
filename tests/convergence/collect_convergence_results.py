@@ -33,66 +33,62 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [1,2,3]
+pol_degree_vec = [1,2,3] 
 
-for pol_degree in pol_degree_vec:
+systems = ["Wave", "Maxwell"]
 
-    if pol_degree==1:
-        n_elem_vector = [1, 2, 4, 8, 16] 
-    elif pol_degree==2:
-        n_elem_vector = [1, 2, 4, 8]
-    elif pol_degree==3:
-        n_elem_vector = [1, 2, 4]
+for system in systems:
+    for pol_degree in pol_degree_vec:
 
+        if pol_degree==1:
+            n_elem_vector = [1, 2, 4, 8, 16] 
+        elif pol_degree==2:
+            n_elem_vector = [1, 2, 4, 8]
+        elif pol_degree==3:
+            n_elem_vector = [1, 2, 4]
 
-    if rank==0:
-        basic_time_step = 0.001
-        t_end = 10*basic_time_step
-
-        system = "Wave" # input("Enter the system: ")
-        discretization = "hybrid"
-        boundary_condition = "mixed"
-
-        dict_configuration = {"system": system,
-                            "pol_degree": pol_degree, 
-                            "bc": boundary_condition, 
-                            "discretization": discretization, 
-                            "time_step": None,
-                            "t_end": t_end}
-        
-        list_dict_result_Linf = []
-        list_dict_result_L2 = []
-        list_dict_result_Tend = []
-
-    dict_configuration = comm.bcast(dict_configuration, root=0)
-
-
-    for n_elem in n_elem_vector:
-
-        time_step = basic_time_step/n_elem
-        # time_step = basic_time_step
-
-        dict_configuration["time_step"] = time_step
-
-        dict_result_time = compute_error(n_elem, dict_configuration)
-
-        dict_result_Linf = dict_result_time["Linf"]
-        dict_result_L2 = dict_result_time["L2"]
-        dict_result_Tend = dict_result_time["Tend"]
 
         if rank==0:
-            list_dict_result_Linf.append(dict_result_Linf)
-            list_dict_result_L2.append(dict_result_L2)
-            list_dict_result_Tend.append(dict_result_Tend)
+            time_step = 10**(-5)
+            t_end = 10**4*time_step
+            discretization = "hybrid"
+            boundary_condition = "mixed"
 
-    if rank==0:
-        directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
-        if not os.path.exists(directory_results):
-            os.makedirs(directory_results)
+            dict_configuration = {"system": system,
+                                "pol_degree": pol_degree, 
+                                "bc": boundary_condition, 
+                                "discretization": discretization, 
+                                "time_step": time_step,
+                                "t_end": t_end}
+            
+            list_dict_result_Linf = []
+            list_dict_result_L2 = []
+            list_dict_result_Tend = []
 
-        save_csv(dict_configuration, list_dict_result_Linf, n_elem_vector, pol_degree, directory_results, "Linf")
-        save_csv(dict_configuration, list_dict_result_L2, n_elem_vector, pol_degree, directory_results, "L2")
-        save_csv(dict_configuration, list_dict_result_Tend, n_elem_vector, pol_degree, directory_results, "Tend")
+        dict_configuration = comm.bcast(dict_configuration, root=0)
+
+
+        for n_elem in n_elem_vector:
+
+            dict_result_time = compute_error(n_elem, dict_configuration)
+
+            dict_result_Linf = dict_result_time["Linf"]
+            dict_result_L2 = dict_result_time["L2"]
+            dict_result_Tend = dict_result_time["Tend"]
+
+            if rank==0:
+                list_dict_result_Linf.append(dict_result_Linf)
+                list_dict_result_L2.append(dict_result_L2)
+                list_dict_result_Tend.append(dict_result_Tend)
+
+        if rank==0:
+            directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
+            if not os.path.exists(directory_results):
+                os.makedirs(directory_results)
+
+            save_csv(dict_configuration, list_dict_result_Linf, n_elem_vector, pol_degree, directory_results, "Linf")
+            save_csv(dict_configuration, list_dict_result_L2, n_elem_vector, pol_degree, directory_results, "L2")
+            save_csv(dict_configuration, list_dict_result_Tend, n_elem_vector, pol_degree, directory_results, "Tend")
 
 
 

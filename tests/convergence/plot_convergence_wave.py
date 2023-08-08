@@ -8,7 +8,7 @@ bc_case = "mixed" #input("Enter the boundary conditions (pressure, velocity, mix
 discretization = "hybrid"
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/{bc_case}_bc/"
 
-deg_vec  = [1, 2, 3]
+deg_vec  = [1, 2, 3] # [1, 2, 3]
 
 h_list = []
 
