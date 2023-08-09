@@ -39,12 +39,15 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
             if discretization == "mixed":
                 residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds
             else:
+                # normaltrace_pessure_midpoint = solver.state_midpoint.subfunctions[2]
+                # control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normaltrace_pessure_midpoint, norm_versor))
+                # residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS \
+                #                     - fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds 
+                
                 normaltrace_pessure_midpoint = solver.state_midpoint.subfunctions[2]
                 control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normaltrace_pessure_midpoint, norm_versor))
                 residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
                 
-                # PETSc.Sys.Print("Warning: modifyng control debug")
-                # residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds
         else:
             PETSc.Sys.Print("WARNING: debug essential conditions for primal system to be implemented")
 
@@ -61,12 +64,14 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
             if discretization == "mixed":
                 residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
             else:
+                # normaltrace_velocity_midpoint = solver.state_midpoint.subfunctions[2]
+                # control_local = fdrk.inner(test_pressure, normaltrace_velocity_midpoint)
+                # residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + \
+                #                     -fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds   
+                        
                 normaltrace_velocity_midpoint = solver.state_midpoint.subfunctions[2]
                 control_local = fdrk.inner(test_pressure, normaltrace_velocity_midpoint)
                 residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
-
-                # PETSc.Sys.Print("Warning: modifyng control debug")
-                # residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
 
         else:
             PETSc.Sys.Print("WARNING: Debug essential conditions for dual system to be implemented")
