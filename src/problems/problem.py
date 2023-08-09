@@ -9,6 +9,8 @@ class Problem(ABC):
         self.bc_type=None
         self.forcing = False
         self.dim=None
+        self.normal_versor = None
+
 
 
     @abstractmethod

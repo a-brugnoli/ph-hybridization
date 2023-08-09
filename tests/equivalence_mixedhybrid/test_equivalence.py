@@ -11,10 +11,11 @@ import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
 from firedrake.petsc import PETSc
+from tests.basic.debug_solver import debug_wave
 
 
-n_elements = 4
-pol_degree = 3
+n_elements = 3
+pol_degree = 1
 time_step = 0.01
 t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
@@ -23,37 +24,38 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-case = "Maxwell"
+case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements)
+    problem_dirichlet = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="dirichlet")
+    problem_neumann = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="neumann")
 
 time = fdrk.Constant(0)
-exact_first, exact_second = problem.get_exact_solution(time)
+exact_first, exact_second = problem_neumann.get_exact_solution(time)
 
-mixedsolver_primal = HamiltonianWaveSolver(problem = problem, 
+mixedsolver_primal = HamiltonianWaveSolver(problem = problem_dirichlet, 
                                            system=case, 
                                            time_step=time_step, 
                                            pol_degree=pol_degree, 
                                             discretization="mixed", 
                                             formulation="primal")
 
-hybridsolver_primal = HamiltonianWaveSolver(problem = problem,
+hybridsolver_primal = HamiltonianWaveSolver(problem = problem_dirichlet,
                                             system=case,
                                             time_step=time_step,
                                             pol_degree=pol_degree, 
                                             discretization="hybrid", 
                                             formulation="primal")
 
-mixedsolver_dual = HamiltonianWaveSolver(problem = problem, 
+mixedsolver_dual = HamiltonianWaveSolver(problem = problem_neumann, 
                                          system=case, 
                                          time_step=time_step, 
                                          pol_degree=pol_degree, 
                                          discretization="mixed", 
                                          formulation="dual")
 
-hybridsolver_dual = HamiltonianWaveSolver(problem = problem,
+hybridsolver_dual = HamiltonianWaveSolver(problem = problem_neumann,
                                         system=case, 
                                         time_step=time_step, 
                                         pol_degree=pol_degree, 
@@ -91,12 +93,7 @@ if rank==0:
     value_exact_first = np.zeros((n_time_iter, ))
     value_exact_second = np.zeros((n_time_iter, ))
 
-    mixed_first_primal, mixed_second_primal = mixedsolver_primal.state_old.subfunctions
-    hybrid_first_primal, hybrid_second_primal = hybridsolver_primal.state_old.subfunctions[0:2]
     
-    mixed_first_dual, mixed_second_dual = mixedsolver_dual.state_old.subfunctions
-    hybrid_first_dual, hybrid_second_dual = hybridsolver_dual.state_old.subfunctions[0:2]
-
 
 for ii in tqdm(range(n_time_iter)):
     actual_time = (ii+1)*time_step
@@ -104,18 +101,30 @@ for ii in tqdm(range(n_time_iter)):
     mixedsolver_primal.integrate()
     hybridsolver_primal.integrate()
 
-    mixedsolver_primal.update_variables()
-    hybridsolver_primal.update_variables()
-
-    errorvalue_first_primal = fdrk.norm(mixed_first_primal - hybrid_first_primal)
-    errorvalue_second_primal = fdrk.norm(mixed_second_primal - hybrid_second_primal)
-
-
     mixedsolver_dual.integrate()
     hybridsolver_dual.integrate()
+
+    # debug_wave(mixedsolver_primal, actual_time)
+    # debug_wave(mixedsolver_dual, actual_time)
+
+    # debug_wave(hybridsolver_primal, actual_time)
+    # debug_wave(hybridsolver_dual, actual_time)
+
+
+    mixedsolver_primal.update_variables()
+    hybridsolver_primal.update_variables()
     
     mixedsolver_dual.update_variables()
     hybridsolver_dual.update_variables()
+
+    mixed_first_primal, mixed_second_primal = mixedsolver_primal.state_old.subfunctions
+    hybrid_first_primal, hybrid_second_primal, _, _ = hybridsolver_primal.state_old.subfunctions
+    
+    mixed_first_dual, mixed_second_dual = mixedsolver_dual.state_old.subfunctions
+    hybrid_first_dual, hybrid_second_dual, _, _ = hybridsolver_dual.state_old.subfunctions
+
+    errorvalue_first_primal = fdrk.norm(mixed_first_primal - hybrid_first_primal)
+    errorvalue_second_primal = fdrk.norm(mixed_second_primal - hybrid_second_primal)
 
     errorvalue_first_dual = fdrk.norm(mixed_first_dual - hybrid_first_dual)
     errorvalue_second_dual = fdrk.norm(mixed_second_dual - hybrid_second_dual)

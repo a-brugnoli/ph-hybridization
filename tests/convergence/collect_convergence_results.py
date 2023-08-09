@@ -53,8 +53,8 @@ for system in systems:
         if rank==0:
             time_step_base = 10**(-3)
             t_end = 10*time_step_base
-            discretization = "hybrid"
-            boundary_condition = "mixed"
+            discretization = "mixed"
+            boundary_condition = "dirichlet"
 
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 
