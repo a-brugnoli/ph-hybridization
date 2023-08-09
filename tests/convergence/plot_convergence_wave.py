@@ -5,7 +5,7 @@ import pandas as pd
 from src.postprocessing import basic_plotting
 
 bc_case = "mixed" #input("Enter the boundary conditions (pressure, velocity, mixed):")
-discretization = "mixed"
+discretization = "hybrid"
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/{bc_case}_bc/"
 
 deg_vec  = [1, 2, 3]

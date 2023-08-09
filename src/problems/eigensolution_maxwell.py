@@ -17,7 +17,7 @@ class EigensolutionMaxwell3D(Problem):
         * 6: plane z == L
         """
 
-        self.dim==3
+        self.dim=3
 
         self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
                                         ny=n_elements_y, \

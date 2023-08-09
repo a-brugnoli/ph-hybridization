@@ -51,14 +51,9 @@ for system in systems:
             n_elem_vector = [1, 2, 4]
 
         if rank==0:
-            time_step_base = 10**(-1)
-            t_end = 1
-            discretization = "mixed"
-            # if system=="Wave":
-            #     boundary_condition = "dirichlet"
-            # else:
-            #     boundary_condition = "electric"
-
+            time_step_base = 10**(-3)
+            t_end = 10*time_step_base
+            discretization = "hybrid"
             boundary_condition = "mixed"
 
             dict_configuration = {"system": system,
@@ -77,7 +72,8 @@ for system in systems:
 
         for n_elem in n_elem_vector:
 
-            time_step = time_step_base/n_elem
+            # time_step = time_step_base/n_elem
+            time_step = time_step_base
             dict_configuration["time_step"] = time_step
 
             dict_result_time = compute_error(n_elem, dict_configuration)
