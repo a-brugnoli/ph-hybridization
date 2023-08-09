@@ -5,7 +5,7 @@ from firedrake.petsc import PETSc
 
 class EigensolutionWave3D(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed"):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -17,10 +17,19 @@ class EigensolutionWave3D(Problem):
         * 6: plane z == L
         """
 
-        self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
-                                        ny=n_elements_y, \
-                                        nz=n_elements_z)
-        self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
+        self.dim=dim
+
+        if dim==3:
+            self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, 
+                                            ny=n_elements_y, 
+                                            nz=n_elements_z)
+            self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
+        elif dim==2:
+            self.domain = fdrk.UnitSquareMesh(nx=n_elements_x, 
+                                              ny=n_elements_y)
+            self.x, self.y = fdrk.SpatialCoordinate(self.domain)
+        else:
+            PETSc.Sys.Print("Invalid dimension")
 
         self.bc_type = bc_type
 
@@ -30,17 +39,31 @@ class EigensolutionWave3D(Problem):
        
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om = 1
-        om_t = fdrk.sqrt(3*om ** 2)
+        om = pi
+
+        if self.dim==3:
+            om_t = fdrk.sqrt(3)*om
+            g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
+
+            grad_g = om*fdrk.as_vector([fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z),
+                                        fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z),
+                                        fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)])
+        else:
+            om_t = fdrk.sqrt(2)*om
+            g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y)
+
+            grad_g = om*fdrk.as_vector([fdrk.cos(om * self.x) * fdrk.sin(om * self.y),
+                                        fdrk.sin(om * self.x) * fdrk.cos(om * self.y)])
 
         ft = 2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
-        dft = fdrk.diff(ft, time) 
-
-        g_fun = fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
-        grad_g = fdrk.grad(g_fun)
+        dft = 2 * om_t * fdrk.cos(om_t*time) - 3 * om_t * fdrk.sin(om_t * time)
+        
+        # dft = fdrk.diff(ft, time) 
+        # grad_g = fdrk.grad(g_fun)
 
         exact_pressure = g_fun * dft
         exact_velocity = grad_g * ft
+
         return (exact_pressure, exact_velocity)
     
 
@@ -70,21 +93,22 @@ class EigensolutionWave3D(Problem):
         """
         exact_pressure, exact_velocity = self.get_exact_solution(time)
 
-        null_bc = fdrk.Constant((0,0,0))
+        null_bc = fdrk.Constant(0)
+        null_bc_vec = fdrk.Constant((0,0,0))
         if self.bc_type == "dirichlet":
-            bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc)} 
+            bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
         elif self.bc_type == "neumann":
             bd_dict = {"dirichlet": ([], null_bc), "neumann": (["on_boundary"], exact_velocity)}
         elif self.bc_type == "mixed":
-            bd_dict = {"dirichlet": ([1,3,5], exact_pressure), "neumann": ([2,4,6], exact_velocity)}
+            if self.dim==3:
+                bd_dict = {"dirichlet": ([1,3,5], exact_pressure), "neumann": ([2,4,6], exact_velocity)}
+            else:
+                bd_dict = {"dirichlet": ([1,3], exact_pressure), "neumann": ([2,4], exact_velocity)}
         else:
             raise ValueError(f"{self.bc_type} is not a valid value for bc")
         
         return bd_dict
     
-
-    
-
 
     def __str__(self):
         return f"eigensolution_wave_3d_bc_{self.bc_type}"

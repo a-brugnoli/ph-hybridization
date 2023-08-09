@@ -8,6 +8,7 @@ class Problem(ABC):
         self.x, self.y, self.z = None, None, None
         self.bc_type=None
         self.forcing = False
+        self.dim=None
 
 
     @abstractmethod

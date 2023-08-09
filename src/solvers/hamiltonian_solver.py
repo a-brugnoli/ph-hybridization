@@ -154,6 +154,7 @@ class HamiltonianWaveSolver(Solver):
 
     def update_variables(self):
         self.state_old.assign(self.state_new)
+        
         self.time_old.assign(self.actual_time)
         self.time_midpoint.assign(float(self.time_old) + self.time_step/2)
         self.time_new.assign(float(self.time_old) + self.time_step)

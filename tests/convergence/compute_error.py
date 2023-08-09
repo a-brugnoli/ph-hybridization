@@ -39,11 +39,13 @@ def compute_error(n_elements, dict_configuration):
                                                 discretization=discretization, 
                                                 formulation="dual")
     
-    state_exact_0 = problem.get_exact_solution(fdrk.Constant(0))
+    exact_time = fdrk.Constant(0)
+    
+    state_exact = problem.get_exact_solution(exact_time)
     if system=="Maxwell":
-            error_dict_0 = dict_error_maxwell(state_exact_0, hybridsolver_primal, hybridsolver_dual)
+            error_dict_0 = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
     else:
-            error_dict_0 = dict_error_wave(state_exact_0, hybridsolver_primal, hybridsolver_dual)
+            error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
     # Linf error in time, L2 error in time and error at final time
     error_dict_Linf = error_dict_0
@@ -61,12 +63,12 @@ def compute_error(n_elements, dict_configuration):
         hybridsolver_primal.update_variables()
         hybridsolver_dual.update_variables()
 
-        state_exact_actual = problem.get_exact_solution(fdrk.Constant(actual_time))
+        exact_time.assign(actual_time)
 
         if system=="Maxwell":
-            error_dict_actual = dict_error_maxwell(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
+            error_dict_actual = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
         else:
-            error_dict_actual = dict_error_wave(state_exact_actual, hybridsolver_primal, hybridsolver_dual)
+            error_dict_actual = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
         # Computation of the Linfinity and L2 norm in time
         for key_error, value_error_actual in error_dict_actual.items():

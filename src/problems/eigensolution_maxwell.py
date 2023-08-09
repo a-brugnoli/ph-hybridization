@@ -17,6 +17,8 @@ class EigensolutionMaxwell3D(Problem):
         * 6: plane z == L
         """
 
+        self.dim==3
+
         self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
                                         ny=n_elements_y, \
                                         nz=n_elements_z)
@@ -37,8 +39,8 @@ class EigensolutionMaxwell3D(Problem):
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om = 1
-        om_t = fdrk.sqrt(3*om ** 2)
+        om = pi
+        om_t = fdrk.sqrt(3)*om
 
         ft =  2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
         dft = fdrk.diff(ft, time) 

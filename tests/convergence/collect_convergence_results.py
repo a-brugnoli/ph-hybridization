@@ -35,7 +35,10 @@ size = comm.Get_size()
 
 pol_degree_vec = [1,2,3] 
 
-systems = ["Wave", "Maxwell"]
+# systems = ["Wave", "Maxwell"]
+systems = ["Wave"]
+# systems = ["Maxwell"]
+
 
 for system in systems:
     for pol_degree in pol_degree_vec:
@@ -47,18 +50,22 @@ for system in systems:
         elif pol_degree==3:
             n_elem_vector = [1, 2, 4]
 
-
         if rank==0:
-            time_step = 10**(-5)
-            t_end = 10**4*time_step
-            discretization = "hybrid"
+            time_step_base = 10**(-1)
+            t_end = 1
+            discretization = "mixed"
+            # if system=="Wave":
+            #     boundary_condition = "dirichlet"
+            # else:
+            #     boundary_condition = "electric"
+
             boundary_condition = "mixed"
 
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 
                                 "bc": boundary_condition, 
                                 "discretization": discretization, 
-                                "time_step": time_step,
+                                "time_step": None,
                                 "t_end": t_end}
             
             list_dict_result_Linf = []
@@ -69,6 +76,9 @@ for system in systems:
 
 
         for n_elem in n_elem_vector:
+
+            time_step = time_step_base/n_elem
+            dict_configuration["time_step"] = time_step
 
             dict_result_time = compute_error(n_elem, dict_configuration)
 

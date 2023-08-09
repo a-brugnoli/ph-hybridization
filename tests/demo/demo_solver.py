@@ -13,9 +13,9 @@ from mpi4py import MPI
 
 
 n_elements = 4
-pol_degree = 2
-time_step = 0.01
-t_end = 1
+pol_degree = 3
+time_step = 10**(-2)
+t_end = 1000*time_step
 n_time_iter = math.ceil(t_end/time_step)
 
 
@@ -23,22 +23,27 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-case = "Maxwell"
+case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type="mixed")
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements)
+    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="mixed", dim=2)
 
 
-time = fdrk.Constant(0)
-exact_first, exact_second = problem.get_exact_solution(time)
+time_exact = fdrk.Constant(0)
+exact_first, exact_second = problem.get_exact_solution(time_exact)
 
 CG_deg3, NED_deg3, RT_deg3, DG_deg3 = deRhamSpaces(problem.domain, 3).values()
 
-exact_first_function = fdrk.Function(RT_deg3)
-exact_second_function = fdrk.Function(RT_deg3)
 
-exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+if case =="Maxwell":
+    exact_first_function = fdrk.Function(RT_deg3)
+    exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+else:
+    exact_first_function = fdrk.Function(CG_deg3)
+    exact_first_function.assign(fdrk.interpolate(exact_first, CG_deg3))
+
+exact_second_function = fdrk.Function(RT_deg3)
 exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
 
 mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
@@ -99,9 +104,9 @@ if rank==0:
     value_exact_first = np.zeros((n_time_iter+1, ))
     value_exact_second = np.zeros((n_time_iter+1, ))
 
-    point = (9/17, 15/19, 2/13)
 
     if case=="Maxwell":
+        point = (9/17, 15/19, 2/13)
         value_mixed_first_primal[0] = mixed_first_primal.at(point)[0]
         value_hybrid_first_primal[0] = hybrid_first_primal.at(point)[0]
 
@@ -109,6 +114,10 @@ if rank==0:
         value_hybrid_first_dual[0] = hybrid_first_dual.at(point)[0]
         value_exact_first[0] = exact_first[0](point)
     else:
+        if problem.dim ==3:
+            point = (9/17, 15/19, 2/13)
+        else:
+            point = (9/17, 15/19)
         value_mixed_first_primal[0] = mixed_first_primal.at(point)
         value_hybrid_first_primal[0] = hybrid_first_primal.at(point)
 
@@ -156,12 +165,16 @@ for ii in tqdm(range(1,n_time_iter+1)):
     errorvalue_second_dual = fdrk.norm(mixed_second_dual - hybrid_second_dual)
 
     if rank==0:
-        time.assign(actual_time)
+        time_exact.assign(actual_time)
 
         outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
         outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
 
-        exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+        if case =="Maxwell":
+            exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+        else:
+            exact_first_function.assign(fdrk.interpolate(exact_first, CG_deg3))
+
         exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
         outfile_exact.write(exact_first_function, exact_second_function, time=actual_time)
 
