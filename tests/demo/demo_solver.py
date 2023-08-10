@@ -14,8 +14,8 @@ from mpi4py import MPI
 
 n_elements = 4
 pol_degree = 3
-time_step = 10**(-2)
-t_end = 1000*time_step
+time_step = 10**(-1)
+t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
 
 
@@ -27,7 +27,7 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type="mixed")
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="mixed", dim=2)
+    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="dirichlet", dim=2)
 
 
 time_exact = fdrk.Constant(0)

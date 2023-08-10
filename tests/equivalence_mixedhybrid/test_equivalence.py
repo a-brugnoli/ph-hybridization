@@ -28,34 +28,33 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
 else:
-    problem_dirichlet = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="dirichlet")
-    problem_neumann = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="neumann")
+    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="neumann")
 
 time = fdrk.Constant(0)
-exact_first, exact_second = problem_neumann.get_exact_solution(time)
+exact_first, exact_second = problem.get_exact_solution(time)
 
-mixedsolver_primal = HamiltonianWaveSolver(problem = problem_dirichlet, 
+mixedsolver_primal = HamiltonianWaveSolver(problem = problem, 
                                            system=case, 
                                            time_step=time_step, 
                                            pol_degree=pol_degree, 
                                             discretization="mixed", 
                                             formulation="primal")
 
-hybridsolver_primal = HamiltonianWaveSolver(problem = problem_dirichlet,
+hybridsolver_primal = HamiltonianWaveSolver(problem = problem,
                                             system=case,
                                             time_step=time_step,
                                             pol_degree=pol_degree, 
                                             discretization="hybrid", 
                                             formulation="primal")
 
-mixedsolver_dual = HamiltonianWaveSolver(problem = problem_neumann, 
+mixedsolver_dual = HamiltonianWaveSolver(problem = problem, 
                                          system=case, 
                                          time_step=time_step, 
                                          pol_degree=pol_degree, 
                                          discretization="mixed", 
                                          formulation="dual")
 
-hybridsolver_dual = HamiltonianWaveSolver(problem = problem_neumann,
+hybridsolver_dual = HamiltonianWaveSolver(problem = problem,
                                         system=case, 
                                         time_step=time_step, 
                                         pol_degree=pol_degree, 
@@ -103,13 +102,6 @@ for ii in tqdm(range(n_time_iter)):
 
     mixedsolver_dual.integrate()
     hybridsolver_dual.integrate()
-
-    # debug_wave(mixedsolver_primal, actual_time)
-    # debug_wave(mixedsolver_dual, actual_time)
-
-    # debug_wave(hybridsolver_primal, actual_time)
-    # debug_wave(hybridsolver_dual, actual_time)
-
 
     mixedsolver_primal.update_variables()
     hybridsolver_primal.update_variables()

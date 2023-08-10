@@ -194,11 +194,7 @@ class WaveOperators(SystemOperators):
 
         if self.discretization=="hybrid":
             test_control = testfunctions[-1]
-            # PETSc.Sys.Print("Warning: modifyng control operator")
-            # if self.formulation == "primal":
-            #     test_control = testfunctions[1]
-            # else:
-            #     test_control = testfunctions[0]
+           
         else:
             if self.formulation == "primal":
                 test_control = testfunctions[1]

@@ -40,26 +40,17 @@ class EigensolutionWave3D(Problem):
 
     def get_exact_solution(self, time: fdrk.Constant):
         om = pi
+        om_t = fdrk.sqrt(self.dim)*om
 
         if self.dim==3:
-            om_t = fdrk.sqrt(3)*om
             g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
-
-            grad_g = om*fdrk.as_vector([fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z),
-                                        fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z),
-                                        fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)])
         else:
-            om_t = fdrk.sqrt(2)*om
             g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y)
 
-            grad_g = om*fdrk.as_vector([fdrk.cos(om * self.x) * fdrk.sin(om * self.y),
-                                        fdrk.sin(om * self.x) * fdrk.cos(om * self.y)])
-
         ft = 2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
-        dft = 2 * om_t * fdrk.cos(om_t*time) - 3 * om_t * fdrk.sin(om_t * time)
         
-        # dft = fdrk.diff(ft, time) 
-        # grad_g = fdrk.grad(g_fun)
+        dft = fdrk.diff(ft, time) 
+        grad_g = fdrk.grad(g_fun)
 
         exact_pressure = g_fun * dft
         exact_velocity = grad_g * ft
@@ -94,7 +85,9 @@ class EigensolutionWave3D(Problem):
         exact_pressure, exact_velocity = self.get_exact_solution(time)
 
         null_bc = fdrk.Constant(0)
-        null_bc_vec = fdrk.Constant((0,0,0))
+
+        null_bc_vec = fdrk.Constant((0,) * self.dim)
+
         if self.bc_type == "dirichlet":
             bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
         elif self.bc_type == "neumann":

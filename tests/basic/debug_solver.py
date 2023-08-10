@@ -39,14 +39,20 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
             if discretization == "mixed":
                 residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds
             else:
-                # normaltrace_pessure_midpoint = solver.state_midpoint.subfunctions[2]
-                # control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normaltrace_pessure_midpoint, norm_versor))
-                # residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS \
-                #                     - fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds 
-                
-                normaltrace_pessure_midpoint = solver.state_midpoint.subfunctions[2]
-                control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normaltrace_pessure_midpoint, norm_versor))
+                normal_pessure_midpoint, tangential_velocity_midpoint = solver.state_midpoint.subfunctions[2:4]
+                test_normal_pressure, test_tangential_velocity = solver.tests[2:4]
+
+                control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normal_pessure_midpoint, norm_versor))
+                control_local_adj = fdrk.inner(fdrk.dot(test_normal_pressure, norm_versor), fdrk.dot(velocity_midpoint, norm_versor))
+
                 residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
+
+
+                control_global = fdrk.inner(fdrk.dot(test_normal_pressure, norm_versor), fdrk.dot(tangential_velocity_midpoint, norm_versor))
+                control_global_adj = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), fdrk.dot(normal_pessure_midpoint, norm_versor))
+                
+                form_control = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds
+
                 
         else:
             PETSc.Sys.Print("WARNING: debug essential conditions for primal system to be implemented")
@@ -64,14 +70,18 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
             if discretization == "mixed":
                 residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
             else:
-                # normaltrace_velocity_midpoint = solver.state_midpoint.subfunctions[2]
-                # control_local = fdrk.inner(test_pressure, normaltrace_velocity_midpoint)
-                # residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + \
-                #                     -fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds   
-                        
-                normaltrace_velocity_midpoint = solver.state_midpoint.subfunctions[2]
-                control_local = fdrk.inner(test_pressure, normaltrace_velocity_midpoint)
+                normal_velocity_midpoint, tangential_pressure_midpoint = solver.state_midpoint.subfunctions[2:4]
+                test_normal_velocity, test_tangential_pressure = solver.tests[2:4]
+
+                control_local = fdrk.inner(test_pressure, normal_velocity_midpoint)
+                control_local_adj = fdrk.inner(test_normal_velocity, pressure_midpoint)
+
                 residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
+
+                control_global = fdrk.inner(test_normal_velocity, tangential_pressure_midpoint)
+                control_global_adj = fdrk.inner(test_tangential_pressure, normal_velocity_midpoint)
+
+                form_control = fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
 
         else:
             PETSc.Sys.Print("WARNING: Debug essential conditions for dual system to be implemented")
@@ -83,5 +93,18 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
     PETSc.Sys.Print(f"Max Residual velocity equation {formulation} dicretization {discretization}: {max_res_velocity}")
 
     assert max_res_pressure < tol and max_res_velocity < tol
+
+    if discretization=="hybrid":
+        residual_normal = (control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds \
+                                            -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds)
+        
+        residual_tangential = (control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds - form_control
+                
+        max_res_normal = fdrk.assemble(residual_normal).vector().max()
+        PETSc.Sys.Print(f"Max Residual normal trace equation {formulation} dicretization {discretization}: {max_res_normal}")
+        max_res_tangential = fdrk.assemble(residual_tangential).vector().max()
+        PETSc.Sys.Print(f"Max Residual tangential equation {formulation} dicretization {discretization}: {max_res_tangential}")
+
+        assert max_res_normal < tol and max_res_tangential < tol
 
     PETSc.Sys.Print(f"Wave {formulation} with bc {bc_type}: PASSED")
