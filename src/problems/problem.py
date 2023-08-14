@@ -31,3 +31,11 @@ class Problem(ABC):
     @abstractmethod
     def get_boundary_conditions(self, time: fdrk.Constant):
         pass
+
+    def _get_time_function(self, time: fdrk.Constant, omega):
+        # f_time = fdrk.cos(omega * time)
+        # f_time = fdrk.sin(omega * time)
+
+        f_time = fdrk.exp(-time**2)
+        return f_time
+    

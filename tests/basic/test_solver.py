@@ -13,7 +13,7 @@ problem_wave_dirichlet = EigensolutionWave3D(n_elements, n_elements, n_elements,
 problem_wave_neumann = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="neumann")
 
 time_step =0.001
-t_end = 1
+t_end = 10*time_step
 
 n_time_iter = math.ceil(t_end/time_step)
 

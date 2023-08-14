@@ -35,19 +35,19 @@ class EigensolutionWave3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = False
+        self.forcing = True
        
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om = pi
-        om_t = fdrk.sqrt(self.dim)*om
+        omega_space = 1
+        omega_time = fdrk.sqrt(self.dim)*omega_space
 
         if self.dim==3:
-            g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
+            g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
         else:
-            g_fun = fdrk.sin(om * self.x) * fdrk.sin(om * self.y)
+            g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y)
 
-        ft = 2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
+        ft = self._get_time_function(time, omega=omega_time)
         
         dft = fdrk.diff(ft, time) 
         grad_g = fdrk.grad(g_fun)

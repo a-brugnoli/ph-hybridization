@@ -34,26 +34,23 @@ class EigensolutionMaxwell3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = False
+        self.forcing = True
 
         
 
     def get_exact_solution(self, time: fdrk.Constant):
-        om = pi
-        om_t = fdrk.sqrt(3)*om
+        omega_space = 1
+        omega_time = fdrk.sqrt(3)*omega_space
 
-        ft =  2 * fdrk.sin(om_t * time) + 3 * fdrk.cos(om_t * time)
+        ft = self._get_time_function(time, omega=omega_time)
+
         dft = fdrk.diff(ft, time) 
 
-        g_x = -fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.sin(om * self.z)
+        g_x = -fdrk.cos(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
         g_y = fdrk.Constant(0.0)
-        g_z = fdrk.sin(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z)
+        g_z = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.cos(omega_space * self.z)
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
-
-        # curl_g = fdrk.as_vector([om * fdrk.sin(om * self.x) * fdrk.cos(om * self.y) * fdrk.cos(om * self.z),
-        #                        -(2*om) * fdrk.cos(om * self.x) * fdrk.sin(om * self.y) * fdrk.cos(om * self.z),
-        #                          om * fdrk.cos(om * self.x) * fdrk.cos(om * self.y) * fdrk.sin(om * self.z)])
 
         curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
 
@@ -63,6 +60,7 @@ class EigensolutionMaxwell3D(Problem):
         return (exact_electric, exact_magnetic)
     
 
+
     def get_forcing(self, time):
         assert isinstance(time, fdrk.Constant)
 
@@ -70,8 +68,7 @@ class EigensolutionMaxwell3D(Problem):
 
         force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
 
-
-        return {"0": force_electric, "1":None}
+        return (force_electric, None)
     
 
     def get_initial_conditions(self):

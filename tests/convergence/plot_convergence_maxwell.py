@@ -5,16 +5,16 @@ import pandas as pd
 from src.postprocessing import basic_plotting
 
 bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
-discretization = "hybrid"
+discretization = "mixed"
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{discretization}_discretization/{bc_case}_bc/"
 
 deg_vec  = [1, 2, 3]
 
 h_list = []
 
-# norm = "Linf"
+norm = "Linf"
 # norm = "L2"
-norm="Tend"
+# norm = "Tend"
 
 # Errors
 

@@ -53,6 +53,12 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
                 
                 form_control = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds
 
+                test_velocity_unbroken = fdrk.TestFunction(solver.operators.RT_space)
+
+                residual_equivalence = fdrk.inner(test_velocity_unbroken, (velocity_new-velocity_old)/time_step)*fdrk.dx \
+                            +fdrk.inner(fdrk.div(test_velocity_unbroken), pressure_midpoint) *fdrk.dx \
+                            -fdrk.inner(fdrk.dot(test_velocity_unbroken, norm_versor), natural_control)*fdrk.ds
+
                 
         else:
             PETSc.Sys.Print("WARNING: debug essential conditions for primal system to be implemented")
@@ -83,6 +89,13 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
 
                 form_control = fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
 
+                test_pressure_unbroken = fdrk.TestFunction(solver.operators.CG_space)
+
+                residual_equivalence = fdrk.inner(test_pressure_unbroken, (pressure_new-pressure_old)/time_step)*fdrk.dx \
+                                        +fdrk.inner(fdrk.grad(test_pressure_unbroken), velocity_midpoint)*fdrk.dx \
+                                        -fdrk.inner(test_pressure_unbroken, fdrk.dot(natural_control, norm_versor))*fdrk.ds
+
+
         else:
             PETSc.Sys.Print("WARNING: Debug essential conditions for dual system to be implemented")
 
@@ -104,7 +117,9 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
         PETSc.Sys.Print(f"Max Residual normal trace equation {formulation} dicretization {discretization}: {max_res_normal}")
         max_res_tangential = fdrk.assemble(residual_tangential).vector().max()
         PETSc.Sys.Print(f"Max Residual tangential equation {formulation} dicretization {discretization}: {max_res_tangential}")
+        max_res_equivalence = fdrk.assemble(residual_equivalence).vector().max()
+        PETSc.Sys.Print(f"Max Residual equivalence equation {formulation} dicretization {discretization}: {max_res_equivalence}")
 
-        assert max_res_normal < tol and max_res_tangential < tol
+        assert max_res_normal < tol and max_res_tangential < tol and max_res_equivalence < tol
 
     PETSc.Sys.Print(f"Wave {formulation} with bc {bc_type}: PASSED")
