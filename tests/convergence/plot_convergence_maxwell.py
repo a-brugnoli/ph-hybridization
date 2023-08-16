@@ -114,8 +114,15 @@ for count, deg in enumerate(deg_vec):
     #     for value in df[column]:
     #         print(value)
 
-    # Print the columns
-    for column in columns_rate:
+    # # Print the columns
+    # for column in columns_rate:
+    #     print(column)
+    #     for value in df[column]:
+    #         print(value)
+
+    columns_rate_Hcurl = df.columns[df.columns.str.contains('rate_Hcurl')]
+
+    for column in columns_rate_Hcurl:
         print(column)
         for value in df[column]:
             print(value)

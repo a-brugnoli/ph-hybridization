@@ -128,12 +128,12 @@ for count, deg in enumerate(deg_vec):
         for value in df[column]:
             print(value)
 
-    # columns_rate_normal = df.columns[df.columns.str.contains('rate_normal')]
+    columns_rate_Hdiv = df.columns[df.columns.str.contains('rate_Hdiv')]
 
-    # for column in columns_rate_normal:
-    #     print(column)
-    #     for value in df[column]:
-    #         print(value)
+    for column in columns_rate_Hdiv:
+        print(column)
+        for value in df[column]:
+            print(value)
 
 
 # Plot primal

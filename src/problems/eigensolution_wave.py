@@ -72,6 +72,8 @@ class EigensolutionWave3D(Problem):
         pressure_field, velocity_field = self.get_exact_solution(time = fdrk.Constant(0))
 
         return (pressure_field, velocity_field)
+    
+    
 
 
     def get_boundary_conditions(self, time: fdrk.Constant):

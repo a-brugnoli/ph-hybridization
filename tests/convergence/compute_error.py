@@ -110,6 +110,9 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
 
     error_Hdiv_electric_primal = fdrk.norm(exact_electric-electric_primal, norm_type="Hdiv")
     error_Hcurl_magnetic_primal = fdrk.norm(exact_magnetic-magnetic_primal, norm_type="Hcurl")
+
+    # error_Hdiv_electric_primal = fdrk.norm(fdrk.div(exact_electric-electric_primal))
+    # error_Hcurl_magnetic_primal = fdrk.norm(fdrk.curl(exact_magnetic-magnetic_primal))
         
     # Error dual
     if solver_dual.operators.discretization=="hybrid":
@@ -125,6 +128,9 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
 
     error_Hcurl_electric_dual = fdrk.norm(exact_electric-electric_dual, norm_type="Hcurl")
     error_Hdiv_magnetic_dual = fdrk.norm(exact_magnetic-magnetic_dual, norm_type="Hdiv")
+
+    # error_Hcurl_electric_dual = fdrk.norm(fdrk.curl(exact_electric-electric_dual))
+    # error_Hdiv_magnetic_dual = fdrk.norm(fdrk.div(exact_magnetic-magnetic_dual))
         
     # Error dual field
     error_L2_electric_df = fdrk.norm(electric_primal - electric_dual)
@@ -191,6 +197,8 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     error_L2_velocity_primal = fdrk.norm(exact_velocity-velocity_primal)
 
     error_Hdiv_velocity_primal = fdrk.norm(exact_velocity-velocity_primal, norm_type="Hdiv")
+    
+    # error_Hdiv_velocity_primal = fdrk.norm(fdrk.div(exact_velocity-velocity_primal))
         
     # Error dual
     if solver_dual.operators.discretization=="hybrid":
@@ -206,6 +214,9 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
 
     error_H1_pressure_dual = fdrk.norm(exact_pressure-pressure_dual, norm_type="H1")
     error_Hcurl_velocity_dual = fdrk.norm(exact_velocity-velocity_dual, norm_type="Hcurl")
+
+    # error_H1_pressure_dual = fdrk.norm(fdrk.grad(exact_pressure-pressure_dual))
+    # error_Hcurl_velocity_dual = fdrk.norm(fdrk.curl(exact_velocity-velocity_dual))
         
     # Error dual field
     error_L2_pressure_df = fdrk.norm(pressure_primal - pressure_dual)

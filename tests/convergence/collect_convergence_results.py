@@ -35,8 +35,8 @@ size = comm.Get_size()
 
 pol_degree_vec = [1,2,3] 
 
-systems = ["Wave", "Maxwell"]
-# systems = ["Wave"]
+# systems = ["Wave", "Maxwell"]
+systems = ["Wave"]
 # systems = ["Maxwell"]
 
 
@@ -51,8 +51,8 @@ for system in systems:
             n_elem_vector = [1, 2, 4]
 
         if rank==0:
-            time_step_base = 1/50
-            t_end = 1/2
+            time_step_base = 1/500
+            t_end = time_step_base
             discretization = "mixed"
             boundary_condition= "mixed"
             
@@ -77,8 +77,8 @@ for system in systems:
 
         for n_elem in n_elem_vector:
 
-            time_step = time_step_base/n_elem
-            # time_step = time_step_base
+            # time_step = time_step_base/n_elem
+            time_step = time_step_base
             dict_configuration["time_step"] = time_step
 
             dict_result_time = compute_error(n_elem, dict_configuration)
