@@ -1,2 +1,2 @@
 ,system,pol_degree,bc,discretization,time_step,t_end
-0,Wave,2,mixed,mixed,0.025,0.1
+0,Wave,2,mixed,mixed,0.0025,0.5

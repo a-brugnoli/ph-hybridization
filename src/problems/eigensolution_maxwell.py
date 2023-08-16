@@ -34,7 +34,7 @@ class EigensolutionMaxwell3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = True
+        self.forcing = False
 
         
 

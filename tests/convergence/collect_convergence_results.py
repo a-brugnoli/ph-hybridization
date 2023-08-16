@@ -51,10 +51,15 @@ for system in systems:
             n_elem_vector = [1, 2, 4]
 
         if rank==0:
-            time_step_base = 1/10
-            t_end = 1*time_step_base
+            time_step_base = 1/50
+            t_end = 1/2
             discretization = "mixed"
-            boundary_condition = "mixed"
+            boundary_condition= "mixed"
+            
+            # if system=="Wave":
+            #     boundary_condition = "dirichlet"
+            # else:
+            #     boundary_condition= "electric"
 
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 

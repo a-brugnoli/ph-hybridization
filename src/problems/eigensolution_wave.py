@@ -35,7 +35,7 @@ class EigensolutionWave3D(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = True
+        self.forcing = False
        
 
     def get_exact_solution(self, time: fdrk.Constant):

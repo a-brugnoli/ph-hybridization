@@ -27,7 +27,7 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type="mixed")
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="dirichlet", dim=2)
+    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="mixed")
 
 
 time_exact = fdrk.Constant(0)
