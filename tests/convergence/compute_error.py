@@ -47,6 +47,9 @@ def compute_error(n_elements, dict_configuration):
     else:
             error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
+    # return {"Linf": error_dict_0, "L2": error_dict_0, "Tend": error_dict_0}
+
+
     # Linf error in time, L2 error in time and error at final time
     error_dict_Linf = error_dict_0
 

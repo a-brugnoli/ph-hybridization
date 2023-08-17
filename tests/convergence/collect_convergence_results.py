@@ -51,8 +51,8 @@ for system in systems:
             n_elem_vector = [1, 2, 4]
 
         if rank==0:
-            time_step_base = 1/500
-            t_end = time_step_base
+            time_step = 1/100
+            t_end = 1/100
             discretization = "mixed"
             boundary_condition= "mixed"
             
@@ -65,7 +65,7 @@ for system in systems:
                                 "pol_degree": pol_degree, 
                                 "bc": boundary_condition, 
                                 "discretization": discretization, 
-                                "time_step": None,
+                                "time_step": time_step,
                                 "t_end": t_end}
             
             list_dict_result_Linf = []
@@ -76,10 +76,6 @@ for system in systems:
 
 
         for n_elem in n_elem_vector:
-
-            # time_step = time_step_base/n_elem
-            time_step = time_step_base
-            dict_configuration["time_step"] = time_step
 
             dict_result_time = compute_error(n_elem, dict_configuration)
 

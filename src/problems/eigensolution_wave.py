@@ -47,9 +47,8 @@ class EigensolutionWave3D(Problem):
         else:
             g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y)
 
-        ft = self._get_time_function(time, omega=omega_time)
+        ft, dft = self._get_time_function(time, omega=omega_time)
         
-        dft = fdrk.diff(ft, time) 
         grad_g = fdrk.grad(g_fun)
 
         exact_pressure = g_fun * dft

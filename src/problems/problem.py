@@ -1,6 +1,6 @@
 import firedrake as fdrk
 from abc import ABC, abstractmethod
-
+from math import pi
 
 class Problem(ABC):
     def __init__(self):
@@ -33,8 +33,8 @@ class Problem(ABC):
         pass
 
     def _get_time_function(self, time: fdrk.Constant, omega):
-        # f_time = fdrk.cos(omega * time)
-        f_time = fdrk.sin(omega * time) 
-        # f_time = fdrk.exp(-time**2)
-        return f_time
+        f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
+
+        df_dtime = fdrk.diff(f_time, time)
+        return f_time, df_dtime
     

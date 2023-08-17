@@ -42,9 +42,7 @@ class EigensolutionMaxwell3D(Problem):
         omega_space = 1
         omega_time = fdrk.sqrt(3)*omega_space
 
-        ft = self._get_time_function(time, omega=omega_time)
-
-        dft = fdrk.diff(ft, time) 
+        ft, dft = self._get_time_function(time, omega=omega_time)
 
         g_x = -fdrk.cos(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
         g_y = fdrk.Constant(0.0)
