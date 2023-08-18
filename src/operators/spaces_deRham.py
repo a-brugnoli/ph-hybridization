@@ -16,9 +16,6 @@ def deRhamElements(domain, pol_degree):
             tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree) 
             nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree)
 
-            # tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree, variant="integral") 
-            # nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree, variant="integral")
-            
     else:
         if str(cell)=='quadrilateral':
             tang_cont_element = ufl.FiniteElement("RTCE", cell, pol_degree)
@@ -26,9 +23,6 @@ def deRhamElements(domain, pol_degree):
         else:
             tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree) 
             nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree)
-            
-            # tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree, variant="integral") 
-            # nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree, variant="integral")
             
     disc_element  = ufl.FiniteElement("DG", cell, pol_degree-1) 
     

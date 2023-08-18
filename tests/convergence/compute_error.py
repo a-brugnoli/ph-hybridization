@@ -25,7 +25,7 @@ def compute_error(n_elements, dict_configuration):
     if system=="Maxwell":
         problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type=bc_type)
     elif system=="Wave":
-        problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type=bc_type)
+        problem = EigensolutionWave3D(n_elements, n_elements, n_elements, dim=2, bc_type=bc_type)
     else: 
         raise TypeError("Physics not valid")
         

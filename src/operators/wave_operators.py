@@ -52,8 +52,13 @@ class WaveOperators(SystemOperators):
 
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
 
-        pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
-        velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
+        cell_name = str(self.domain.ufl_cell())
+        if "quadrilateral" in cell_name:
+            pressure = fdrk.project(pressure_field_exp, self.fullspace.sub(0))
+            velocity = fdrk.project(velocity_field_exp, self.fullspace.sub(1))
+        else:
+            pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
+            velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
 
         if self.discretization=="hybrid":
             if self.formulation == "primal":
@@ -68,7 +73,10 @@ class WaveOperators(SystemOperators):
 
                 variable_normaltrace = self.project_CG_facetbroken(exact_normaltrace)      
            
-            variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+            if "quadrilateral" in cell_name:
+                variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
+            else:
+                variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
             
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
         else:
@@ -91,7 +99,8 @@ class WaveOperators(SystemOperators):
                 space_bc = self.fullspace.sub(1)
             
             global_element = str(space_bc.ufl_element())
-            assert f"RT{str(self.pol_degree)}" in global_element
+            print(global_element)
+            assert f"RT{str(self.pol_degree)}" in global_element or f"RTCF{str(self.pol_degree)}" in global_element
 
         else:
 
@@ -103,7 +112,8 @@ class WaveOperators(SystemOperators):
                 space_bc = self.fullspace.sub(0)
         
             global_element = str(space_bc.ufl_element())
-            assert f"CG{str(self.pol_degree)}" in global_element
+
+            assert f"CG{str(self.pol_degree)}" in global_element or f"Q{str(self.pol_degree)}" in global_element
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]

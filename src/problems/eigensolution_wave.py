@@ -5,7 +5,7 @@ from firedrake.petsc import PETSc
 
 class EigensolutionWave3D(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3, quadrilateral=True):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -25,8 +25,11 @@ class EigensolutionWave3D(Problem):
                                             nz=n_elements_z)
             self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
         elif dim==2:
+            print("Quadrilateral mesh requested")
             self.domain = fdrk.UnitSquareMesh(nx=n_elements_x, 
-                                              ny=n_elements_y)
+                                              ny=n_elements_y, 
+                                              quadrilateral=True)
+            
             self.x, self.y = fdrk.SpatialCoordinate(self.domain)
         else:
             PETSc.Sys.Print("Invalid dimension")
