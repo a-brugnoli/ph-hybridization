@@ -5,7 +5,7 @@ from firedrake.petsc import PETSc
 
 class EigensolutionMaxwell(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", quad = True):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", quad = False):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 

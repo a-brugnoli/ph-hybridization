@@ -18,14 +18,16 @@ def compute_error(n_elements, dict_configuration):
     discretization = dict_configuration["discretization"]
     time_step = dict_configuration["time_step"]
     t_end = dict_configuration["t_end"]
+    dim = dict_configuration["dim"]
+    quad = dict_configuration["quad"]
 
     n_time_iter = math.ceil(t_end/time_step)
     actual_t_end = n_time_iter*time_step
 
     if system=="Maxwell":
-        problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type)
+        problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type, quad=quad)
     elif system=="Wave":
-        problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type=bc_type)
+        problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad)
     else: 
         raise TypeError("Physics not valid")
         

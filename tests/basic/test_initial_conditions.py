@@ -5,10 +5,10 @@ from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import firedrake as fdrk
 
 n_elements = 3
-pol_degree = 3
+pol_degree = 1
 
 quad = True
-problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, bc_type="mixed")
+problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, dim=2, bc_type="dirichlet")
 
 time_step =0.001
 t_end = 10*time_step

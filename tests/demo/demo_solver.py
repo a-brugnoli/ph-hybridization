@@ -24,10 +24,12 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 case = "Wave"
+quad=False
+dim=3
 if case=="Maxwell":
-    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed")
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="mixed")
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 
 
 time_exact = fdrk.Constant(0)

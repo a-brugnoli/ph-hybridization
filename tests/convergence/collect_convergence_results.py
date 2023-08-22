@@ -31,7 +31,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [1,2,3] 
+pol_degree_vec = [1,2] 
 
 # systems = ["Wave", "Maxwell"]
 systems = ["Wave"]
@@ -50,16 +50,20 @@ for system in systems:
 
         if rank==0:
             time_step = 0.001
-            t_end = 10*time_step
+            t_end = 100*time_step
             discretization = "hybrid"
             boundary_condition= "dirichlet"
+            quad = True
+            dim = 2
             
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 
                                 "bc": boundary_condition, 
                                 "discretization": discretization, 
                                 "time_step": time_step,
-                                "t_end": t_end}
+                                "t_end": t_end, 
+                                "dim": dim,
+                                "quad":quad}
             
             list_dict_result_Linf = []
             list_dict_result_L2 = []
@@ -82,7 +86,8 @@ for system in systems:
                 list_dict_result_Tend.append(dict_result_Tend)
 
         if rank==0:
-            directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/{system}/{discretization}_discretization/{boundary_condition}_bc/"
+            directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" + \
+                                f"{system}/{discretization}_discretization/{boundary_condition}_bc/dimension_{dim}/quad_mesh_{quad}/"
             if not os.path.exists(directory_results):
                 os.makedirs(directory_results)
 

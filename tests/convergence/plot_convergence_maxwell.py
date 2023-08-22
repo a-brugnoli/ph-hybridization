@@ -4,9 +4,13 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
+bc_case = "mixed" #input("Enter the boundary conditions (pressure, velocity, mixed):")
 discretization = "mixed"
-directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Maxwell/{discretization}_discretization/{bc_case}_bc/"
+dim=3
+quad=True
+directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" \
+                   +f"Maxwell/{discretization}_discretization/" \
+                   +f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
 deg_vec  = [1, 2, 3]
 

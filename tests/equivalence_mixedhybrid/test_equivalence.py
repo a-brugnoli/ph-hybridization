@@ -13,8 +13,10 @@ from mpi4py import MPI
 from firedrake.petsc import PETSc
 from tests.basic.debug_solver import debug_wave
 
+quad=False
+dim=2
 
-n_elements = 3
+n_elements = 5
 pol_degree = 2
 time_step = 0.01
 t_end = 10*time_step
@@ -26,9 +28,9 @@ size = comm.Get_size()
 
 case = "Wave"
 if case=="Maxwell":
-    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements)
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="dirichlet")
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="dirichlet", quad=quad)
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
@@ -64,7 +66,7 @@ hybridsolver_dual = HamiltonianWaveSolver(problem = problem,
 PETSc.Sys.Print(f"Size Mixed: {mixedsolver_primal.space_operators.dim()}. Size Hybrid {hybridsolver_primal.space_operators.dim()}")
 
 if rank==0:
-    directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
+    directory_results = os.path.dirname(os.path.abspath(__file__)) + f'/results/dimension_{dim}/quad_mesh_{quad}/'
     if not os.path.exists(directory_results):
         # If it doesn't exist, create it
         os.makedirs(directory_results)
@@ -124,14 +126,16 @@ for ii in tqdm(range(n_time_iter)):
 
     if rank==0:
         time.assign(actual_time)
-
         error_first_primal[ii] = errorvalue_first_primal
         error_second_primal[ii] = errorvalue_second_primal
 
         error_first_dual[ii] = errorvalue_first_dual
         error_second_dual[ii] = errorvalue_second_dual
 
-        point = (1/7, 1/10, 2/3)
+        if problem.dim==3:
+            point = (1/7, 1/10, 2/3)
+        else:
+            point = (1/7, 1/10)
 
         if case=="Maxwell":
             value_mixed_first_primal[ii] = mixed_first_primal.at(point)[0]

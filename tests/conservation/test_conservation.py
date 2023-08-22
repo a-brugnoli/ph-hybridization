@@ -22,11 +22,12 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 case = "Wave"
-
+dim=3
+quad = True
 if case=="Maxwell":
-    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements)
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, dim=dim)
 
 norm_versor = problem.normal_versor
 

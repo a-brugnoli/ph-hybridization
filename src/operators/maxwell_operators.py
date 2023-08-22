@@ -49,7 +49,7 @@ class MaxwellOperators(SystemOperators):
 
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
         cell_name = str(self.domain.ufl_cell())
-        if "quadrilateral" in cell_name:
+        if self.domain.extruded:
             electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
         else:
@@ -68,7 +68,7 @@ class MaxwellOperators(SystemOperators):
 
             variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
 
-            if "quadrilateral" in str(cell_name):
+            if self.domain.extruded:
                 variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
             else:
                 variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
@@ -220,10 +220,13 @@ class MaxwellOperators(SystemOperators):
         if self.domain.extruded:
             if self.formulation == "primal":
                 natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_v \
-                                  + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_tb
+                                  + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_t \
+                                  + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_b
+
             else: 
                 natural_control = - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_v \
-                                  - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_tb
+                                  - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_t \
+                                  - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_b
         else:
             if self.formulation == "primal":
                 natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
@@ -251,11 +254,17 @@ class MaxwellOperators(SystemOperators):
         
 
         if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
-                       + (a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v \
+                       + (a_form('+') + a_form('-')) * fdrk.dS_h \
+                       + a_form * fdrk.ds_v \
+                       + a_form * fdrk.ds_t \
+                       + a_form * fdrk.ds_b
             
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
-                         + (l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v \
+                         + (l_form('+') + l_form('-')) * fdrk.dS_h \
+                         + l_form * fdrk.ds_v \
+                         + l_form * fdrk.ds_t \
+                         + l_form * fdrk.ds_b
         else:
             a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
             l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
@@ -272,10 +281,16 @@ class MaxwellOperators(SystemOperators):
         boundary_integrand = self.cell_diameter * fdrk.cross(variable, self.normal_versor) ** 2
 
         if self.domain.extruded:
-            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v + boundary_integrand * fdrk.ds_v) \
-                  +fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h + boundary_integrand * fdrk.ds_tb))
+            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v \
+                +(boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h \
+                + boundary_integrand * fdrk.ds_v \
+                + boundary_integrand * fdrk.ds_b \
+                + boundary_integrand * fdrk.ds_t
         else:
-            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
+            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds
+
+        
+        return fdrk.sqrt(fdrk.assemble(square_norm))
     
         
     def __str__(self) -> str:
