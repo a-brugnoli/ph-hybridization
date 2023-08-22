@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
-from src.problems.eigensolution_wave import EigensolutionWave3D
+from src.problems.eigensolution_maxwell import EigensolutionMaxwell
+from src.problems.eigensolution_wave import EigensolutionWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 
 from src.postprocessing import basic_plotting
@@ -24,9 +24,9 @@ size = comm.Get_size()
 case = "Wave"
 
 if case=="Maxwell":
-    problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements)
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements)
 
 norm_versor = problem.normal_versor
 

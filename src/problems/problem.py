@@ -7,9 +7,10 @@ class Problem(ABC):
         self.domain = None
         self.x, self.y, self.z = None, None, None
         self.bc_type=None
-        self.forcing = False
+        self.forcing = None
         self.dim=None
         self.normal_versor = None
+        self.quad = None
 
 
 

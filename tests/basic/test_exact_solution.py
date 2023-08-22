@@ -1,13 +1,13 @@
 import firedrake as fdrk
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
-from src.problems.eigensolution_wave import EigensolutionWave3D
+from src.problems.eigensolution_maxwell import EigensolutionMaxwell
+from src.problems.eigensolution_wave import EigensolutionWave
 import numpy as np
 from tqdm import tqdm
 
 n_elements = 5
 
-problem_wave = EigensolutionWave3D(n_elements, n_elements, n_elements, dim=2)
-problem_maxwell = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
+problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, dim=2)
+problem_maxwell = EigensolutionMaxwell(n_elements, n_elements, n_elements)
 
 time = fdrk.Constant(0)
 

@@ -3,9 +3,9 @@ from math import pi
 import firedrake as fdrk
 from firedrake.petsc import PETSc
 
-class EigensolutionWave3D(Problem):
+class EigensolutionWave(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3, quadrilateral=True):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3, quad=True):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -18,17 +18,28 @@ class EigensolutionWave3D(Problem):
         """
 
         self.dim=dim
+        self.quad = quad
+
 
         if dim==3:
-            self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, 
+            if quad:
+                PETSc.Sys.Print("Hexahedral mesh requested")
+                quad_mesh = fdrk.UnitSquareMesh(n_elements_x, n_elements_x, quadrilateral=quad)
+                self.domain = fdrk.ExtrudedMesh(quad_mesh, layers=n_elements_z)
+
+            else:
+                self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, 
                                             ny=n_elements_y, 
                                             nz=n_elements_z)
+            
             self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
         elif dim==2:
-            print("Quadrilateral mesh requested")
+            if quad:
+                PETSc.Sys.Print("Quadrilateral mesh requested")
+
             self.domain = fdrk.UnitSquareMesh(nx=n_elements_x, 
                                               ny=n_elements_y, 
-                                              quadrilateral=True)
+                                              quadrilateral=quad)
             
             self.x, self.y = fdrk.SpatialCoordinate(self.domain)
         else:
@@ -93,12 +104,23 @@ class EigensolutionWave3D(Problem):
         null_bc_vec = fdrk.Constant((0,) * self.dim)
 
         if self.bc_type == "dirichlet":
-            bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
+            if self.dim==3 and self.quad:
+                bd_dict = {"dirichlet": (["on_boundary", "top", "bottom"], exact_pressure), "neumann":([], null_bc_vec)} 
+            else:
+                bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
+
         elif self.bc_type == "neumann":
-            bd_dict = {"dirichlet": ([], null_bc), "neumann": (["on_boundary"], exact_velocity)}
+            if self.dim==3 and self.quad:
+                bd_dict = {"dirichlet": ([], null_bc), "neumann": (["on_boundary", "top", "bottom"], exact_velocity)}
+            else:
+                bd_dict = {"dirichlet": ([], null_bc), "neumann": (["on_boundary"], exact_velocity)}
+
         elif self.bc_type == "mixed":
             if self.dim==3:
-                bd_dict = {"dirichlet": ([1,3,5], exact_pressure), "neumann": ([2,4,6], exact_velocity)}
+                if self.quad:
+                    bd_dict = {"dirichlet": ([1,3,"bottom"], exact_pressure), "neumann": ([2,4,"top"], exact_velocity)}
+                else:
+                    bd_dict = {"dirichlet": ([1,3,5], exact_pressure), "neumann": ([2,4,6], exact_velocity)}
             else:
                 bd_dict = {"dirichlet": ([1,3], exact_pressure), "neumann": ([2,4], exact_velocity)}
         else:
@@ -108,4 +130,4 @@ class EigensolutionWave3D(Problem):
     
 
     def __str__(self):
-        return f"eigensolution_wave_3d_bc_{self.bc_type}"
+        return f"eigensolution_wave_bc_{self.bc_type}"

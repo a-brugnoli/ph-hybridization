@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
-from src.problems.eigensolution_wave import EigensolutionWave3D
+from src.problems.eigensolution_maxwell import EigensolutionMaxwell
+from src.problems.eigensolution_wave import EigensolutionWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import math
 from tqdm import tqdm
@@ -23,9 +23,9 @@ def compute_error(n_elements, dict_configuration):
     actual_t_end = n_time_iter*time_step
 
     if system=="Maxwell":
-        problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type=bc_type)
+        problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type)
     elif system=="Wave":
-        problem = EigensolutionWave3D(n_elements, n_elements, n_elements, dim=2, bc_type=bc_type)
+        problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type=bc_type)
     else: 
         raise TypeError("Physics not valid")
         
@@ -48,7 +48,6 @@ def compute_error(n_elements, dict_configuration):
             error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
     # return {"Linf": error_dict_0, "L2": error_dict_0, "Tend": error_dict_0}
-
 
     # Linf error in time, L2 error in time and error at final time
     error_dict_Linf = error_dict_0
@@ -189,7 +188,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     if solver_primal.operators.discretization=="hybrid":
         pressure_primal, velocity_primal, pressure_normal_primal, velocity_tangential_primal = solver_primal.state_old.subfunctions
         error_tangential_primal = solver_primal.operators.trace_norm_RT(exact_velocity-velocity_tangential_primal)
-        projected_exact_pressure = solver_primal.operators.project_RT_facetbroken(exact_pressure)
+        projected_exact_pressure = solver_primal.operators.project_RT_brokenfacet(exact_pressure)
         error_normal_primal = solver_primal.operators.trace_norm_RT(projected_exact_pressure-pressure_normal_primal)
 
     else:
@@ -207,7 +206,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     if solver_dual.operators.discretization=="hybrid":
         pressure_dual, velocity_dual, velocity_normal_dual, pressure_tangential_dual = solver_dual.state_old.subfunctions
         error_tangential_dual = solver_dual.operators.trace_norm_CG(exact_pressure-pressure_tangential_dual)
-        projected_exact_velocity = solver_dual.operators.project_CG_facetbroken(exact_velocity)
+        projected_exact_velocity = solver_dual.operators.project_CG_brokenfacet(exact_velocity)
         error_normal_dual = solver_dual.operators.trace_norm_CG(projected_exact_velocity-velocity_normal_dual)
     else:
         pressure_dual, velocity_dual = solver_dual.state_old.subfunctions

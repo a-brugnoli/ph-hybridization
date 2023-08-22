@@ -1,6 +1,6 @@
 import firedrake as fdrk
-from src.problems.eigensolution_wave import EigensolutionWave3D
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
+from src.problems.eigensolution_wave import EigensolutionWave
+from src.problems.eigensolution_maxwell import EigensolutionMaxwell
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.operators.spaces_deRham import deRhamSpaces
 import matplotlib.pyplot as plt
@@ -25,9 +25,9 @@ size = comm.Get_size()
 
 case = "Wave"
 if case=="Maxwell":
-    problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements, bc_type="mixed")
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed")
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="mixed")
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="mixed")
 
 
 time_exact = fdrk.Constant(0)

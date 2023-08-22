@@ -48,11 +48,10 @@ class MaxwellOperators(SystemOperators):
         electric_field_exp, magnetic_field_exp = expression_initial
 
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
-        cell = self.domain.ufl_cell()
-        if 'hexahedron' in str(cell) or "quadrilateral" in str(cell):
+        cell_name = str(self.domain.ufl_cell())
+        if "quadrilateral" in cell_name:
             electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
-
         else:
             electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
@@ -69,7 +68,7 @@ class MaxwellOperators(SystemOperators):
 
             variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
 
-            if 'hexahedron' in str(cell) or "quadrilateral" in str(cell):
+            if "quadrilateral" in str(cell_name):
                 variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
             else:
                 variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
@@ -105,7 +104,7 @@ class MaxwellOperators(SystemOperators):
                 space_bc = self.fullspace.sub(0)
         
         global_element = str(space_bc.ufl_element())
-        assert f"N1curl{str(self.pol_degree)}" in global_element
+        assert f"N1curl{str(self.pol_degree)}" in global_element or "RTCE" in global_element
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]
@@ -158,21 +157,45 @@ class MaxwellOperators(SystemOperators):
                 control_local = fdrk.inner(fdrk.cross(test_magnetic, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
                 control_local_adj = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(magnetic_field, self.normal_versor))
 
-                constr_local = (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                             - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-                
-                constr_global = (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
-                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                if self.domain.extruded:
+                    constr_local = (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
+                                +  (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb) 
+                    
+                    constr_global = (control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v \
+                                   +(control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb \
+                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
+                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb)
+
+                else:
+                    constr_local = (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
+                    
+                    constr_global = (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             else:   
                 control_loc = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
                 control_local_adj = -fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(electric_field, self.normal_versor))
 
-                constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS + control_loc * fdrk.ds) \
-                             - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-                
-                constr_global = -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
-                                + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                if self.domain.extruded:
+                    constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS_v + control_loc * fdrk.ds_v) \
+                                  +((control_loc('+') + control_loc('-')) * fdrk.dS_h + control_loc * fdrk.ds_tb) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)
+                    
+                    constr_global = -((control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v) \
+                                    -((control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb) \
+                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
+                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb)
+                    
+                else:
+                    constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS + control_loc * fdrk.ds) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
+                    
+                    constr_global = -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
+                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             dynamics += constr_local + constr_global
         
@@ -194,11 +217,18 @@ class MaxwellOperators(SystemOperators):
             else:
                 test_control = testfunctions[0]
 
-
-        if self.formulation == "primal":
-            natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
-        else: 
-            natural_control = - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
+        if self.domain.extruded:
+            if self.formulation == "primal":
+                natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_v \
+                                  + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_tb
+            else: 
+                natural_control = - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_v \
+                                  - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds_tb
+        else:
+            if self.formulation == "primal":
+                natural_control = + fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
+            else: 
+                natural_control = - fdrk.dot(fdrk.cross(test_control, control), self.normal_versor) * fdrk.ds
 
         return natural_control
 
@@ -216,12 +246,19 @@ class MaxwellOperators(SystemOperators):
 
         a_form = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
                             fdrk.cross(trial_function, self.normal_versor))
-        a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-
         l_form = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
-                       fdrk.cross(fdrk.cross(variable_to_project, self.normal_versor), \
-                                   self.normal_versor))
-        l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
+                fdrk.cross(fdrk.cross(variable_to_project, self.normal_versor), self.normal_versor))
+        
+
+        if self.domain.extruded:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
+                       + (a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
+            
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
+                         + (l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb
+        else:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
 
         A_matrix = fdrk.Tensor(a_operator)
         b_vector = fdrk.Tensor(l_functional)
@@ -233,7 +270,12 @@ class MaxwellOperators(SystemOperators):
     def trace_norm_NED(self, variable):
 
         boundary_integrand = self.cell_diameter * fdrk.cross(variable, self.normal_versor) ** 2
-        return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
+
+        if self.domain.extruded:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v + boundary_integrand * fdrk.ds_v) \
+                  +fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h + boundary_integrand * fdrk.ds_tb))
+        else:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
     
         
     def __str__(self) -> str:

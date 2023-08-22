@@ -37,7 +37,12 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
             
         if bc_type == "dirichlet":
             if discretization == "mixed":
-                residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds
+                if solver.operators.domain.extruded:
+                    residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds_v
+                    residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds_tb
+
+                else:
+                    residual_velocity -=fdrk.inner(fdrk.dot(test_velocity, norm_versor), natural_control)*fdrk.ds
             else:
                 normal_pessure_midpoint, tangential_velocity_midpoint = solver.state_midpoint.subfunctions[2:4]
                 test_normal_pressure, test_tangential_velocity = solver.tests[2:4]
@@ -45,21 +50,31 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
                 control_local = fdrk.inner(fdrk.dot(test_velocity, norm_versor), fdrk.dot(normal_pessure_midpoint, norm_versor))
                 control_local_adj = fdrk.inner(fdrk.dot(test_normal_pressure, norm_versor), fdrk.dot(velocity_midpoint, norm_versor))
 
-                residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
-
-
                 control_global = fdrk.inner(fdrk.dot(test_normal_pressure, norm_versor), fdrk.dot(tangential_velocity_midpoint, norm_versor))
                 control_global_adj = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), fdrk.dot(normal_pessure_midpoint, norm_versor))
                 
-                form_control = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds
-
                 test_velocity_unbroken = fdrk.TestFunction(solver.operators.RT_space)
 
                 residual_equivalence = fdrk.inner(test_velocity_unbroken, (velocity_new-velocity_old)/time_step)*fdrk.dx \
-                            +fdrk.inner(fdrk.div(test_velocity_unbroken), pressure_midpoint) *fdrk.dx \
-                            -fdrk.inner(fdrk.dot(test_velocity_unbroken, norm_versor), natural_control)*fdrk.ds
-
+                            +fdrk.inner(fdrk.div(test_velocity_unbroken), pressure_midpoint) *fdrk.dx 
                 
+                if solver.operators.domain.extruded:
+                    residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v
+                    residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb
+
+                    form_control = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds_v \
+                                 + fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds_tb
+
+                    residual_equivalence -=fdrk.inner(fdrk.dot(test_velocity_unbroken, norm_versor), natural_control)*fdrk.ds_v
+                    residual_equivalence -=fdrk.inner(fdrk.dot(test_velocity_unbroken, norm_versor), natural_control)*fdrk.ds_tb
+
+                else:
+                    residual_equivalence -=fdrk.inner(fdrk.dot(test_velocity_unbroken, norm_versor), natural_control)*fdrk.ds
+
+                    form_control = fdrk.inner(fdrk.dot(test_tangential_velocity, norm_versor), natural_control)*fdrk.ds
+
+                    residual_velocity -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
+
         else:
             PETSc.Sys.Print("WARNING: debug essential conditions for primal system to be implemented")
 
@@ -74,7 +89,12 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
         
         if bc_type == "neumann":
             if discretization == "mixed":
-                residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
+                if solver.operators.domain.extruded:
+                    residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds_v
+                    residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds_tb
+
+                else:
+                    residual_pressure -=fdrk.inner(test_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
             else:
                 normal_velocity_midpoint, tangential_pressure_midpoint = solver.state_midpoint.subfunctions[2:4]
                 test_normal_velocity, test_tangential_pressure = solver.tests[2:4]
@@ -82,18 +102,32 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
                 control_local = fdrk.inner(test_pressure, normal_velocity_midpoint)
                 control_local_adj = fdrk.inner(test_normal_velocity, pressure_midpoint)
 
-                residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
 
                 control_global = fdrk.inner(test_normal_velocity, tangential_pressure_midpoint)
                 control_global_adj = fdrk.inner(test_tangential_pressure, normal_velocity_midpoint)
 
-                form_control = fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
 
                 test_pressure_unbroken = fdrk.TestFunction(solver.operators.CG_space)
 
                 residual_equivalence = fdrk.inner(test_pressure_unbroken, (pressure_new-pressure_old)/time_step)*fdrk.dx \
-                                        +fdrk.inner(fdrk.grad(test_pressure_unbroken), velocity_midpoint)*fdrk.dx \
-                                        -fdrk.inner(test_pressure_unbroken, fdrk.dot(natural_control, norm_versor))*fdrk.ds
+                                        +fdrk.inner(fdrk.grad(test_pressure_unbroken), velocity_midpoint)*fdrk.dx 
+                
+                if solver.operators.domain.extruded:
+                    residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v
+                    residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb
+
+                    form_control = fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds_v \
+                                 + fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds_tb
+                    
+                    residual_equivalence -=fdrk.inner(test_pressure_unbroken, fdrk.dot(natural_control, norm_versor))*fdrk.ds_v 
+                    residual_equivalence -=fdrk.inner(test_pressure_unbroken, fdrk.dot(natural_control, norm_versor))*fdrk.ds_tb
+
+                else:
+                    residual_pressure -=(control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds
+
+                    form_control = fdrk.inner(test_tangential_pressure, fdrk.dot(natural_control, norm_versor))*fdrk.ds
+
+                    residual_equivalence -=fdrk.inner(test_pressure_unbroken, fdrk.dot(natural_control, norm_versor))*fdrk.ds
 
 
         else:
@@ -108,10 +142,21 @@ def debug_wave(solver: HamiltonianWaveSolver, time_new_test, tol=1e-9):
     assert max_res_pressure < tol and max_res_velocity < tol
 
     if discretization=="hybrid":
-        residual_normal = (control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds \
-                                            -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds)
-        
-        residual_tangential = (control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds - form_control
+
+        if solver.operators.domain.extruded:
+            residual_normal = (control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v \
+                            + (control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb \
+                            - ((control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v) \
+                            - ((control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb) 
+            
+            residual_tangential = (control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v \
+                                + (control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb - form_control
+               
+        else:
+            residual_normal = (control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds \
+                                                -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds)
+            
+            residual_tangential = (control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds - form_control
                 
         max_res_normal = fdrk.assemble(residual_normal).vector().max()
         PETSc.Sys.Print(f"Max Residual normal trace equation {formulation} dicretization {discretization}: {max_res_normal}")

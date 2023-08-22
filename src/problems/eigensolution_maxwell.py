@@ -3,9 +3,9 @@ from math import pi
 import firedrake as fdrk
 from firedrake.petsc import PETSc
 
-class EigensolutionMaxwell3D(Problem):
+class EigensolutionMaxwell(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed"):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", quad = True):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -18,15 +18,17 @@ class EigensolutionMaxwell3D(Problem):
         """
 
         self.dim=3
+        self.quad=quad
 
-        self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
-                                        ny=n_elements_y, \
-                                        nz=n_elements_z)
+        if quad:
+            quad_mesh = fdrk.UnitSquareMesh(nx=n_elements_x, \
+                                        ny=n_elements_y, quadrilateral=True)
+            self.domain = fdrk.ExtrudedMesh(quad_mesh, layers=n_elements_z)
+        else:
+            self.domain = fdrk.UnitCubeMesh(nx=n_elements_x, \
+                                            ny=n_elements_y, \
+                                            nz=n_elements_z)
         
-        # quad_mesh = fdrk.UnitSquareMesh(nx=n_elements_x, \
-        #                                 ny=n_elements_y, quadrilateral=True)
-        
-        # self.domain = fdrk.ExtrudedMesh(quad_mesh, layers=n_elements_z)
         
         self.x, self.y, self.z = fdrk.SpatialCoordinate(self.domain)
 
@@ -92,7 +94,10 @@ class EigensolutionMaxwell3D(Problem):
         elif self.bc_type == "magnetic":
             bd_dict = {"electric": ([], null_bc), "magnetic": (["on_boundary"], exact_magnetic)}
         elif self.bc_type == "mixed":
-            bd_dict = {"electric": ([2,4,6], exact_electric), "magnetic": ([1,3,5], exact_magnetic)}
+            if self.quad:
+                bd_dict = {"electric": ([1,3,"bottom"], exact_electric), "magnetic": ([2,4,"top"], exact_magnetic)}
+            else:
+                bd_dict = {"electric": ([1,3,5], exact_electric), "magnetic": ([2,4,6], exact_magnetic)}
         else:
             raise ValueError(f"{self.bc_type} is not a valid value for bc")
         
@@ -100,4 +105,4 @@ class EigensolutionMaxwell3D(Problem):
 
 
     def __str__(self):
-        return f"eigensolution_maxwell_3D_bc_{self.bc_type}"
+        return f"eigensolution_maxwell_bc_{self.bc_type}"

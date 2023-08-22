@@ -22,9 +22,9 @@ class WaveOperators(SystemOperators):
                 facet_RT_element = self.RT_element[fdrk.facet]
                 brokenfacet_RT_element = fdrk.BrokenElement(facet_RT_element)
                 self.brokenfacet_RT_space = fdrk.FunctionSpace(self.domain, brokenfacet_RT_element)
-                facet_RT_space = fdrk.FunctionSpace(self.domain, facet_RT_element)
+                self.facet_RT_space = fdrk.FunctionSpace(self.domain, facet_RT_element)
 
-                self.space_global = facet_RT_space
+                self.space_global = self.facet_RT_space
                 self.mixedspace_local = self.DG_space * broken_RT_space * self.brokenfacet_RT_space
             else:
                 broken_CG_element = fdrk.BrokenElement(self.CG_element)
@@ -33,9 +33,9 @@ class WaveOperators(SystemOperators):
                 facet_CG_element = self.CG_element[fdrk.facet]
                 brokenfacet_CG_element = fdrk.BrokenElement(facet_CG_element)
                 self.brokenfacet_CG_space = fdrk.FunctionSpace(self.domain, brokenfacet_CG_element)
-                facet_CG_space = fdrk.FunctionSpace(self.domain, facet_CG_element)
+                self.facet_CG_space = fdrk.FunctionSpace(self.domain, facet_CG_element)
 
-                self.space_global = facet_CG_space
+                self.space_global = self.facet_CG_space
                 self.mixedspace_local = broken_CG_space * broken_NED_space * self.brokenfacet_CG_space 
         
             self.fullspace = self.mixedspace_local * self.space_global
@@ -53,9 +53,20 @@ class WaveOperators(SystemOperators):
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
 
         cell_name = str(self.domain.ufl_cell())
+        
         if "quadrilateral" in cell_name:
-            pressure = fdrk.project(pressure_field_exp, self.fullspace.sub(0))
-            velocity = fdrk.project(velocity_field_exp, self.fullspace.sub(1))
+            if self.formulation == "primal":
+                pressure = fdrk.project(pressure_field_exp, self.fullspace.sub(0))
+                if self.discretization=="hybrid":
+                    velocity = fdrk.project(fdrk.project(velocity_field_exp, self.RT_space), self.fullspace.sub(1))
+                else:
+                    velocity = fdrk.project(velocity_field_exp, self.fullspace.sub(1))
+            else:
+                velocity = fdrk.project(fdrk.project(velocity_field_exp, self.NED_space), self.fullspace.sub(1))
+                if self.discretization=="hybrid":
+                    pressure = fdrk.project(fdrk.project(pressure_field_exp, self.CG_space), self.fullspace.sub(0))
+                else:
+                    pressure = fdrk.project(pressure_field_exp, self.fullspace.sub(0))
         else:
             pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
             velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
@@ -65,19 +76,33 @@ class WaveOperators(SystemOperators):
                 exact_normaltrace = pressure_field_exp
                 exact_tangtrace = velocity_field_exp              
 
-                variable_normaltrace = self.project_RT_facetbroken(exact_normaltrace)      
+                if "quadrilateral" in cell_name:
+                    # variable_normaltrace_unbroken = self.project_RT_facet(exact_normaltrace)
+                    # variable_normaltrace = fdrk.project(variable_normaltrace_unbroken, self.brokenfacet_RT_space)   
+                    variable_normaltrace = self.project_RT_brokenfacet(exact_normaltrace)
+   
+                    # variable_tangentialtrace = fdrk.project(fdrk.project(exact_tangtrace, self.RT_space), self.space_global)
+                    variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
+                else:
+                    variable_normaltrace = self.project_RT_brokenfacet(exact_normaltrace)      
+                    variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
 
             else:
                 exact_normaltrace = velocity_field_exp
                 exact_tangtrace = pressure_field_exp 
 
-                variable_normaltrace = self.project_CG_facetbroken(exact_normaltrace)      
-           
-            if "quadrilateral" in cell_name:
-                variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
-            else:
-                variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-            
+                if "quadrilateral" in cell_name:
+                    # variable_normaltrace_unbroken = self.project_CG_facet(exact_normaltrace)
+                    # variable_normaltrace = fdrk.project(variable_normaltrace_unbroken, self.brokenfacet_CG_space)      
+                    variable_normaltrace = self.project_CG_brokenfacet(exact_normaltrace)
+
+                    # variable_tangentialtrace = fdrk.project(fdrk.project(exact_tangtrace, self.CG_space), self.space_global)
+                    variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
+                else:
+                    variable_normaltrace = self.project_CG_brokenfacet(exact_normaltrace)      
+                    variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+
+
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
         else:
             return (pressure, velocity)
@@ -99,8 +124,7 @@ class WaveOperators(SystemOperators):
                 space_bc = self.fullspace.sub(1)
             
             global_element = str(space_bc.ufl_element())
-            print(global_element)
-            assert f"RT{str(self.pol_degree)}" in global_element or f"RTCF{str(self.pol_degree)}" in global_element
+            assert f"RT{str(self.pol_degree)}" in global_element or f"RTCF" in global_element 
 
         else:
 
@@ -117,6 +141,12 @@ class WaveOperators(SystemOperators):
 
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]
+
+        if self.domain.extruded and self.discretization=="hybrid":
+            if self.formulation=="primal":
+                value_bc = fdrk.project(fdrk.project(value_bc, self.RT_space), self.space_global)
+            else:
+                value_bc = fdrk.project(fdrk.project(value_bc, self.CG_space), self.space_global)
 
         for id in list_id_bc:
                 essential_bc.append(fdrk.DirichletBC(space_bc, value_bc, id))
@@ -163,29 +193,52 @@ class WaveOperators(SystemOperators):
                 
                 control_local = fdrk.inner(test_velocity, self.normal_versor) * fdrk.inner(normaltrace_field, self.normal_versor)
                 control_local_adj = fdrk.inner(test_normaltrace, self.normal_versor) * fdrk.inner(velocity_field, self.normal_versor)
-
-                constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                               - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
                 
                 control_global = fdrk.inner(test_normaltrace, self.normal_versor) * fdrk.inner(tangtrace_field, self.normal_versor)
                 control_global_adj = fdrk.inner(test_tangtrace, self.normal_versor) * fdrk.inner(normaltrace_field, self.normal_versor)
 
-                constr_global = + (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
-                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                if self.domain.extruded:
+                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
+                                   + (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)
+                    
+                    constr_global = + (control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v \
+                                    + (control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb) 
+                    
+                else:
+                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
+
+                    constr_global = + (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             else:   
                              
                 control_local = fdrk.inner(test_pressure, normaltrace_field)
                 control_local_adj = fdrk.inner(test_normaltrace, pressure_field)
 
-                constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                               - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-                
                 control_global = fdrk.inner(test_normaltrace, tangtrace_field)
                 control_global_adj = fdrk.inner(test_tangtrace, normaltrace_field)
 
-                constr_global = ((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
-                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                if self.domain.extruded:
+                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
+                                + (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)                
+            
+                    constr_global = ((control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v) \
+                                  + ((control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb) \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb) 
+                else:
+                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
+                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
+            
+                    constr_global = ((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
+                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
 
             dynamics += constr_local + constr_global
         
@@ -212,16 +265,24 @@ class WaveOperators(SystemOperators):
                 test_control = testfunctions[0]
 
 
-        if self.formulation == "primal":
-            natural_control = fdrk.dot(test_control, self.normal_versor) * control * fdrk.ds
-            
-        else: 
-            natural_control = test_control * fdrk.dot(control, self.normal_versor) * fdrk.ds
+        if self.domain.extruded:
+            if self.formulation == "primal":
+                natural_control = fdrk.dot(test_control, self.normal_versor) * control * fdrk.ds_v \
+                                + fdrk.dot(test_control, self.normal_versor) * control * fdrk.ds_tb
+            else: 
+                natural_control = test_control * fdrk.dot(control, self.normal_versor) * fdrk.ds_v \
+                                + test_control * fdrk.dot(control, self.normal_versor) * fdrk.ds_tb
+                
+        else:
+            if self.formulation == "primal":
+                natural_control = fdrk.dot(test_control, self.normal_versor) * control * fdrk.ds
+            else: 
+                natural_control = test_control * fdrk.dot(control, self.normal_versor) * fdrk.ds
             
         return natural_control
 
     
-    def project_CG_facetbroken(self, variable_to_project):
+    def project_CG_brokenfacet(self, variable_to_project):
         if self.discretization!="hybrid":
             PETSc.Sys.Print("Formulation is not hybrid. Function not available")
             pass
@@ -231,10 +292,17 @@ class WaveOperators(SystemOperators):
         test_function = fdrk.TestFunction(self.brokenfacet_CG_space)
 
         a_form = fdrk.inner(test_function, trial_function)
-        a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-
         l_form = fdrk.inner(test_function, fdrk.dot(variable_to_project, self.normal_versor))
-        l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
+
+        if self.domain.extruded:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
+                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
+            
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
+                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb
+        else:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
 
         A_matrix = fdrk.Tensor(a_operator)
         b_vector = fdrk.Tensor(l_functional)
@@ -243,16 +311,76 @@ class WaveOperators(SystemOperators):
         return projected_variable
 
 
-    def project_RT_facetbroken(self, variable_to_project):
+    def project_CG_facet(self, variable_to_project):
+        if self.discretization!="hybrid":
+            PETSc.Sys.Print("Formulation is not hybrid. Function not available")
+            pass
+
+        # project normal trace of u_e onto Vnor
+        trial_function = fdrk.TrialFunction(self.facet_CG_space)
+        test_function = fdrk.TestFunction(self.facet_CG_space)
+
+        a_form = fdrk.inner(test_function, trial_function)
+        l_form = fdrk.inner(test_function, fdrk.dot(variable_to_project, self.normal_versor))
+
+        if self.domain.extruded:
+            a_operator = a_form * fdrk.dS_v + a_form * fdrk.ds_v \
+                        +a_form * fdrk.dS_h + a_form * fdrk.ds_tb
+            
+            l_functional = l_form * fdrk.dS_v + l_form * fdrk.ds_v \
+                          +l_form * fdrk.dS_h + l_form * fdrk.ds_tb
+        else:
+            a_operator = a_form * fdrk.dS + a_form * fdrk.ds
+            l_functional = l_form * fdrk.dS + l_form * fdrk.ds
+
+        A_matrix = fdrk.Tensor(a_operator)
+        b_vector = fdrk.Tensor(l_functional)
+        projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+
+        return projected_variable
+
+    def project_RT_brokenfacet(self, variable_to_project):
         # project normal trace of u_e onto Vnor
         trial_function = fdrk.TrialFunction(self.brokenfacet_RT_space)
         test_function = fdrk.TestFunction(self.brokenfacet_RT_space)
 
         a_form = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(trial_function, self.normal_versor)
-        a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-
         l_form = fdrk.inner(test_function, self.normal_versor)*variable_to_project
-        l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
+
+        if self.domain.extruded:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
+                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
+             
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
+                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb 
+        else:
+            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
+            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
+
+        A_matrix = fdrk.Tensor(a_operator)
+        b_vector = fdrk.Tensor(l_functional)
+        projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+
+        return projected_variable
+    
+
+    def project_RT_facet(self, variable_to_project):
+        # project normal trace of u_e onto Vnor
+        trial_function = fdrk.TrialFunction(self.facet_RT_space)
+        test_function = fdrk.TestFunction(self.facet_RT_space)
+
+        a_form = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(trial_function, self.normal_versor)
+        l_form = fdrk.inner(test_function, self.normal_versor)*variable_to_project
+
+        if self.domain.extruded:
+            a_operator = a_form * fdrk.dS_v + a_form * fdrk.ds_v \
+                        +a_form * fdrk.dS_h + a_form * fdrk.ds_tb
+             
+            l_functional = l_form * fdrk.dS_v + l_form * fdrk.ds_v \
+                          +l_form * fdrk.dS_h + l_form * fdrk.ds_tb 
+        else:
+            a_operator = a_form * fdrk.dS + a_form * fdrk.ds
+            l_functional = l_form * fdrk.dS + l_form * fdrk.ds
 
         A_matrix = fdrk.Tensor(a_operator)
         b_vector = fdrk.Tensor(l_functional)
@@ -264,13 +392,22 @@ class WaveOperators(SystemOperators):
     def trace_norm_CG(self, variable):
 
         boundary_integrand = self.cell_diameter * variable ** 2
-        return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
+        if self.domain.extruded:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v + boundary_integrand * fdrk.ds_v) \
+                 + fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h + boundary_integrand * fdrk.ds_tb))        
+        else:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
     
 
     def trace_norm_RT(self, variable):
 
         boundary_integrand = self.cell_diameter * fdrk.inner(variable, self.normal_versor) ** 2
-        return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
+
+        if self.domain.extruded:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v + boundary_integrand * fdrk.ds_v) \
+                 + fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h + boundary_integrand * fdrk.ds_tb))
+        else:
+            return fdrk.sqrt(fdrk.assemble((boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds))
     
 
     def __str__(self) -> str:

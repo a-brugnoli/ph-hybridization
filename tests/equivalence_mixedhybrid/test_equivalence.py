@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell3D
-from src.problems.eigensolution_wave import EigensolutionWave3D
+from src.problems.eigensolution_maxwell import EigensolutionMaxwell
+from src.problems.eigensolution_wave import EigensolutionWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.postprocessing import basic_plotting
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ from tests.basic.debug_solver import debug_wave
 
 
 n_elements = 3
-pol_degree = 1
+pol_degree = 2
 time_step = 0.01
 t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
@@ -26,9 +26,9 @@ size = comm.Get_size()
 
 case = "Wave"
 if case=="Maxwell":
-    problem = EigensolutionMaxwell3D(n_elements, n_elements, n_elements)
+    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements)
 else:
-    problem = EigensolutionWave3D(n_elements, n_elements, n_elements, bc_type="neumann")
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="dirichlet")
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)

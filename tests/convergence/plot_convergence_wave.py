@@ -14,7 +14,7 @@ h_list = []
 
 norm = "Linf"
 # norm = "L2"
-# norm="Tend"
+# norm = "Tend"
 
 # Errors
 

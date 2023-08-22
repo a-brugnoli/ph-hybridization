@@ -27,8 +27,6 @@ def save_csv(dict_configuration, dict_result, n_elem_vector, pol_degree, directo
     df_configuration.to_csv(directory_results + file_configuration, na_rep='---')
 
 
-
-
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
@@ -52,9 +50,9 @@ for system in systems:
 
         if rank==0:
             time_step = 0.001
-            t_end = 1
-            discretization = "mixed"
-            boundary_condition= "mixed"
+            t_end = 10*time_step
+            discretization = "hybrid"
+            boundary_condition= "dirichlet"
             
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 

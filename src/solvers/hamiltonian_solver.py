@@ -44,6 +44,7 @@ class HamiltonianWaveSolver(Solver):
         else:
             ValueError(f"System type {system} is not a valid option")
 
+        PETSc.Sys.Print(f"{str(self.operators)}")
         self._set_spaces()
         self._set_initial_conditions()
         self._set_boundary_conditions()
@@ -59,7 +60,7 @@ class HamiltonianWaveSolver(Solver):
         self.state_new = fdrk.Function(self.space_operators)
         self.state_midpoint = fdrk.Function(self.space_operators)
 
-        PETSc.Sys.Print(f"Dimension of space for {str(self.operators)}: {self.space_operators.dim()} ")
+        PETSc.Sys.Print(f"Dimension of space: {self.space_operators.dim()} ")
                  
 
     def _set_initial_conditions(self):
@@ -81,7 +82,7 @@ class HamiltonianWaveSolver(Solver):
         self.time_new = fdrk.Constant(self.time_step)
         self.actual_time = fdrk.Constant(0)
 
-        PETSc.Sys.Print(f"System {self.operators.discretization} {self.operators.formulation}: inital conditions set")
+        PETSc.Sys.Print(f"Inital conditions set")
 
 
     def _set_boundary_conditions(self):
@@ -89,7 +90,7 @@ class HamiltonianWaveSolver(Solver):
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
-        PETSc.Sys.Print(f"System {self.operators.discretization} {self.operators.formulation}: boundary conditions set")
+        PETSc.Sys.Print(f"Boundary conditions set")
 
     
     def _set_solver(self):
@@ -131,6 +132,9 @@ class HamiltonianWaveSolver(Solver):
             self.global_multiplier = fdrk.Function(self.operators.space_global)
             linear_global_problem = fdrk.LinearVariationalProblem(A_global_operator, b_global_functional, self.global_multiplier, bcs=self.essential_bcs)
             self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+
+
+        PETSc.Sys.Print(f"Solver set")
 
 
     def integrate(self):
