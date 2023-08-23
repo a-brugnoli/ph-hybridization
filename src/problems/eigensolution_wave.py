@@ -130,4 +130,4 @@ class EigensolutionWave(Problem):
     
 
     def __str__(self):
-        return f"eigensolution_wave_bc_{self.bc_type}"
+        return f"eigensolution_wave_{self.dim}d_bc_{self.bc_type}"

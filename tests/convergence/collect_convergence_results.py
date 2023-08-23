@@ -31,7 +31,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [1,2] 
+pol_degree_vec = [1,2,3] 
 
 # systems = ["Wave", "Maxwell"]
 systems = ["Wave"]
@@ -52,9 +52,9 @@ for system in systems:
             time_step = 0.001
             t_end = 100*time_step
             discretization = "hybrid"
-            boundary_condition= "dirichlet"
-            quad = True
-            dim = 2
+            boundary_condition= "mixed"
+            quad = False
+            dim = 3
             
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 

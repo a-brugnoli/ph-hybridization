@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 n_elements = 5
 
-problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, dim=2)
-problem_maxwell = EigensolutionMaxwell(n_elements, n_elements, n_elements)
+problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, dim=2, quad=True)
+problem_maxwell = EigensolutionMaxwell(n_elements, n_elements, n_elements,quad=True)
 
 time = fdrk.Constant(0)
 

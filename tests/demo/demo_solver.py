@@ -13,8 +13,8 @@ from mpi4py import MPI
 
 
 n_elements = 4
-pol_degree = 3
-time_step = 10**(-1)
+pol_degree = 2
+time_step = 10**(-2)
 t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
 
@@ -24,12 +24,12 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 case = "Wave"
-quad=False
-dim=3
+quad=True
+dim=2
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="dirichlet", quad=quad, dim=dim)
 
 
 time_exact = fdrk.Constant(0)
@@ -40,13 +40,31 @@ CG_deg3, NED_deg3, RT_deg3, DG_deg3 = deRhamSpaces(problem.domain, 3).values()
 
 if case =="Maxwell":
     exact_first_function = fdrk.Function(RT_deg3)
-    exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
+    try:
+        interpolated_exact_first = fdrk.interpolate(exact_first, RT_deg3)
+    except NotImplementedError:
+        interpolated_exact_first = fdrk.project(exact_first, RT_deg3)
+
+
 else:
     exact_first_function = fdrk.Function(CG_deg3)
-    exact_first_function.assign(fdrk.interpolate(exact_first, CG_deg3))
+
+    try:
+        interpolated_exact_first = fdrk.interpolate(exact_first, CG_deg3)
+    except NotImplementedError:
+        interpolated_exact_first = fdrk.project(exact_first, CG_deg3)
+    
+exact_first_function.assign(interpolated_exact_first)
+
 
 exact_second_function = fdrk.Function(RT_deg3)
-exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
+
+try:
+    interpolated_exact_second = fdrk.interpolate(exact_second, RT_deg3)
+except NotImplementedError:
+    interpolated_exact_second = fdrk.project(exact_second, RT_deg3)
+
+exact_second_function.assign(interpolated_exact_second)
 
 mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
@@ -84,10 +102,12 @@ if rank==0:
         os.makedirs(directory_paraview)
 
     mixed_first_primal, mixed_second_primal = mixedsolver_primal.state_old.subfunctions
-    hybrid_first_primal, hybrid_second_primal = hybridsolver_primal.state_old.subfunctions[0:2]
+    hybrid_first_primal, hybrid_second_primal, hybrid_normal_primal, hybrid_tangential_primal = \
+        hybridsolver_primal.state_old.subfunctions
     
     mixed_first_dual, mixed_second_dual = mixedsolver_dual.state_old.subfunctions
-    hybrid_first_dual, hybrid_second_dual = hybridsolver_dual.state_old.subfunctions[0:2]
+    hybrid_first_dual, hybrid_second_dual, hybrid_normal_dual, hybrid_tangential_dual = \
+        hybridsolver_dual.state_old.subfunctions
 
     time_vec = np.linspace(0, time_step * n_time_iter, n_time_iter+1)
 
@@ -135,12 +155,22 @@ if rank==0:
     value_exact_second[0] = exact_second[0](point)
 
 
-    outfile_primal = fdrk.File(f"{directory_paraview}/Fields_primal.pvd")
-    outfile_dual = fdrk.File(f"{directory_paraview}/Fields_dual.pvd")
+    outfile_mixed_primal = fdrk.File(f"{directory_paraview}/Fields_mixed_primal.pvd")
+    outfile_mixed_dual = fdrk.File(f"{directory_paraview}/Fields_mixed_dual.pvd")
+
+    outfile_hybrid_primal = fdrk.File(f"{directory_paraview}/Fields_hybrid_primal.pvd")
+    outfile_hybrid_dual = fdrk.File(f"{directory_paraview}/Fields_hybrid_dual.pvd")
+    
     outfile_exact = fdrk.File(f"{directory_paraview}/Fields_exact.pvd")
 
-    outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
-    outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
+    outfile_mixed_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
+    outfile_mixed_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
+
+    outfile_hybrid_primal.write(hybrid_first_primal, hybrid_second_primal, \
+                                hybrid_normal_primal, hybrid_tangential_primal, time=float(mixedsolver_primal.time_old))
+    outfile_hybrid_dual.write(hybrid_first_dual, hybrid_second_dual, \
+                                hybrid_normal_dual, hybrid_tangential_dual, time=float(mixedsolver_dual.time_old))
+
 
     outfile_exact.write(exact_first_function, exact_second_function, time=0)
 
@@ -168,16 +198,38 @@ for ii in tqdm(range(1,n_time_iter+1)):
 
     if rank==0:
         time_exact.assign(actual_time)
+        
+        outfile_mixed_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
+        outfile_mixed_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
 
-        outfile_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
-        outfile_dual.write(mixed_first_dual, mixed_second_dual, time=float(mixedsolver_dual.time_old))
+        outfile_hybrid_primal.write(hybrid_first_primal, hybrid_second_primal, \
+                                    hybrid_normal_primal, hybrid_tangential_primal, time=float(mixedsolver_primal.time_old))
+        outfile_hybrid_dual.write(hybrid_first_dual, hybrid_second_dual, \
+                                    hybrid_normal_dual, hybrid_tangential_dual, time=float(mixedsolver_dual.time_old))
+
 
         if case =="Maxwell":
-            exact_first_function.assign(fdrk.interpolate(exact_first, RT_deg3))
-        else:
-            exact_first_function.assign(fdrk.interpolate(exact_first, CG_deg3))
+            try:
+                interpolated_exact_first = fdrk.interpolate(exact_first, RT_deg3)
+            except NotImplementedError:
+                interpolated_exact_first = fdrk.project(exact_first, RT_deg3)
 
-        exact_second_function.assign(fdrk.interpolate(exact_second, RT_deg3))
+        else:
+            try:
+                interpolated_exact_first= fdrk.interpolate(exact_first, CG_deg3)
+            except NotImplementedError:
+                interpolated_exact_first= fdrk.project(exact_first, CG_deg3)
+
+        exact_first_function.assign(interpolated_exact_first)
+
+        try:
+            interpolated_exact_second = fdrk.interpolate(exact_second, RT_deg3)
+        except NotImplementedError:
+            interpolated_exact_second = fdrk.project(exact_second, RT_deg3)
+
+        exact_second_function.assign(interpolated_exact_second)
+
+
         outfile_exact.write(exact_first_function, exact_second_function, time=actual_time)
 
         if case=="Maxwell":

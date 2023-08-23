@@ -42,16 +42,18 @@ hybridsolver_dual = HamiltonianWaveSolver(problem = problem_wave, pol_degree=pol
                                         system=system)
 
 mixed_first_primal, mixed_second_primal = mixedsolver_primal.state_old.subfunctions
-hybrid_first_primal, hybrid_second_primal, _, _ = hybridsolver_primal.state_old.subfunctions
+hybrid_first_primal, hybrid_second_primal, hybrid_normal_primal, hybrid_tangential_primal = hybridsolver_primal.state_old.subfunctions
 
 mixed_first_dual, mixed_second_dual = mixedsolver_dual.state_old.subfunctions
-hybrid_first_dual, hybrid_second_dual, _, _ = hybridsolver_dual.state_old.subfunctions
+hybrid_first_dual, hybrid_second_dual, hybrid_normal_dual, hybrid_tangential_dual = hybridsolver_dual.state_old.subfunctions
 
 errorvalue_first_primal = fdrk.norm(mixed_first_primal - hybrid_first_primal)
 errorvalue_second_primal = fdrk.norm(mixed_second_primal - hybrid_second_primal)
 
 errorvalue_first_dual = fdrk.norm(mixed_first_dual - hybrid_first_dual)
 errorvalue_second_dual = fdrk.norm(mixed_second_dual - hybrid_second_dual)
+
+
 
 print(f"Error at 0 first primal: {errorvalue_first_primal}")
 print(f"Error at 0 second primal: {errorvalue_second_primal}")

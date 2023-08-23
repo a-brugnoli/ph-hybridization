@@ -105,4 +105,4 @@ class EigensolutionMaxwell(Problem):
 
 
     def __str__(self):
-        return f"eigensolution_maxwell_bc_{self.bc_type}"
+        return f"eigensolution_maxwell_{self.dim}d_bc_{self.bc_type}"
