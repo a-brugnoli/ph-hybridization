@@ -50,11 +50,11 @@ for system in systems:
 
         if rank==0:
             time_step = 0.001
-            t_end = 100*time_step
+            t_end = 1
             discretization = "hybrid"
-            boundary_condition= "mixed"
-            quad = False
-            dim = 3
+            boundary_condition= "dirichlet"
+            quad = True
+            dim = 2
             
             dict_configuration = {"system": system,
                                 "pol_degree": pol_degree, 

@@ -4,10 +4,10 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "mixed" 
+bc_case = "dirichlet" 
 discretization = "hybrid"
-dim=3
-quad=False
+dim=2
+quad=True
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/" \
                   + f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 

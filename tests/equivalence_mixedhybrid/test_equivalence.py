@@ -30,7 +30,7 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="neumann", quad=quad)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="dirichlet", quad=quad)
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)

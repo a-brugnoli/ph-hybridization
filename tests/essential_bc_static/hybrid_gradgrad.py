@@ -46,9 +46,7 @@ forcing = -fdrk.div(fdrk.grad(exact_solution))
 
 b_functional = test_pressure*forcing*fdrk.dx + test_tangentialtrace*fdrk.dot(fdrk.grad(exact_solution), normal_versor)*fdrk.ds
 
-bc_dirichlet = fdrk.DirichletBC(facet_CG_space, fdrk.Constant(0), "on_boundary")
-
-# bc_dirichlet = fdrk.DirichletBC(facet_CG_space, exact_solution, "on_boundary")
+bc_dirichlet = fdrk.DirichletBC(facet_CG_space, exact_solution, "on_boundary")
 
 n_block_loc = 2
 _A = fdrk.Tensor(A_operator)
@@ -67,8 +65,6 @@ b_global_functional = F_blocks[n_block_loc] - A_blocks[n_block_loc, :n_block_loc
 global_multiplier = fdrk.Function(facet_CG_space)
 linear_global_problem = fdrk.LinearVariationalProblem(A_global_operator, b_global_functional, global_multiplier, bcs=bc_dirichlet)
 global_solver =  fdrk.LinearVariationalSolver(linear_global_problem)
-
-
 global_solver.solve()
 
 solution = fdrk.Function(mixed_space)
@@ -82,7 +78,6 @@ x_h = fdrk.assemble(A_blocks[:n_block_loc, :n_block_loc].inv *
 for ii in range(n_block_loc):
     solution.sub(ii).assign(x_h.sub(ii))
 solution.sub(n_block_loc).assign(global_multiplier)
-
 
 fdrk.trisurf(solution.sub(0))
 
