@@ -17,9 +17,9 @@ quad=True
 dim=2
 
 n_elements = 5
-pol_degree = 1
+pol_degree = 3
 time_step = 0.01
-t_end = 2*time_step
+t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
 
 comm = MPI.COMM_WORLD
@@ -30,7 +30,7 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="neumann", quad=quad)
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)

@@ -4,11 +4,11 @@ from src.problems.eigensolution_wave import EigensolutionWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import firedrake as fdrk
 
-n_elements = 3
+n_elements = 5
 pol_degree = 1
 
 quad = True
-problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, dim=2, bc_type="dirichlet")
+problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, dim=2, bc_type="mixed")
 
 time_step =0.001
 t_end = 10*time_step
@@ -54,9 +54,16 @@ errorvalue_first_dual = fdrk.norm(mixed_first_dual - hybrid_first_dual)
 errorvalue_second_dual = fdrk.norm(mixed_second_dual - hybrid_second_dual)
 
 
-
 print(f"Error at 0 first primal: {errorvalue_first_primal}")
 print(f"Error at 0 second primal: {errorvalue_second_primal}")
 print(f"Error at 0 first dual: {errorvalue_first_dual}")
 print(f"Error at 0 second dual: {errorvalue_second_dual}")
+
+
+if system=="Wave":
+    error_tangential_primal = hybridsolver_primal.operators.trace_norm_RT(hybrid_tangential_primal - hybrid_second_primal)
+    error_tangential_dual = hybridsolver_dual.operators.trace_norm_CG(hybrid_tangential_dual - hybrid_first_dual)
+
+    print(f"Error at 0 tangential primal: {error_tangential_primal}")
+    print(f"Error at 0 tangential dual: {error_tangential_dual}")
 

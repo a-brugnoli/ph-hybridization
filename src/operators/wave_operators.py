@@ -75,13 +75,12 @@ class WaveOperators(SystemOperators):
 
                 variable_normaltrace = self.project_RT_brokenfacet(exact_normaltrace)      
 
-
                 try:
                     variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
                 except NotImplementedError:
-                    print("Tangential trace cannot be interpolated")
-                    variable_tangentialtrace = fdrk.project(projected_velocity_expression, self.space_global)
-                
+                    print("Velocity tangential trace cannot be interpolated")
+                    variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
+
             else:
                 exact_normaltrace = velocity_field_exp
                 exact_tangtrace = pressure_field_exp 
@@ -91,8 +90,8 @@ class WaveOperators(SystemOperators):
                 try:
                     variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
                 except NotImplementedError:
-                    print("Tangential trace cannot be interpolated")
-                    variable_tangentialtrace = fdrk.project(pressure, self.space_global)
+                    print("Pressure tangential trace cannot be interpolated")
+                    variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
                 
 
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
@@ -338,6 +337,7 @@ class WaveOperators(SystemOperators):
                 + boundary_integrand * fdrk.ds
 
         return fdrk.sqrt(fdrk.assemble(square_norm))
+
 
     def trace_norm_RT(self, variable):
 
