@@ -16,8 +16,8 @@ from tests.basic.debug_solver import debug_wave
 quad=True
 dim=2
 
-n_elements = 5
-pol_degree = 3
+n_elements = 4
+pol_degree = 2
 time_step = 0.01
 t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
@@ -30,7 +30,7 @@ case = "Wave"
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="dirichlet", quad=quad)
+    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
@@ -99,16 +99,12 @@ if rank==0:
 for ii in tqdm(range(n_time_iter)):
     actual_time = (ii+1)*time_step
 
-    print("mixed primal start")
     mixedsolver_primal.integrate()
 
-    print("hybrid primal start")
     hybridsolver_primal.integrate()
 
-    print("mixed dual start")
     mixedsolver_dual.integrate()
 
-    print("hybrid dual start")
     hybridsolver_dual.integrate()
 
     mixedsolver_primal.update_variables()

@@ -50,9 +50,9 @@ for system in systems:
 
         if rank==0:
             time_step = 0.001
-            t_end = 1
+            t_end = 0.01
             discretization = "hybrid"
-            boundary_condition= "dirichlet"
+            boundary_condition= "mixed"
             quad = True
             dim = 2
             

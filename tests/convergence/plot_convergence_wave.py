@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "dirichlet" 
+bc_case = "mixed" 
 discretization = "hybrid"
 dim=2
 quad=True

@@ -54,8 +54,6 @@ class EigensolutionWave(Problem):
 
     def get_exact_solution(self, time: fdrk.Constant):
         omega_space = 1
-        print("WARNING: Spatial frequency modified to pi")
-        omega_space = pi
         omega_time = fdrk.sqrt(self.dim)*omega_space
 
         if self.dim==3:
@@ -109,9 +107,7 @@ class EigensolutionWave(Problem):
             if self.dim==3 and self.quad:
                 bd_dict = {"dirichlet": (["on_boundary", "top", "bottom"], exact_pressure), "neumann":([], null_bc_vec)} 
             else:
-                # bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
-                print("WARNING: Set dirichlet bc to zero")
-                bd_dict = {"dirichlet": (["on_boundary"], null_bc), "neumann":([], null_bc_vec)} 
+                bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
 
         elif self.bc_type == "neumann":
             if self.dim==3 and self.quad:

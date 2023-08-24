@@ -122,20 +122,24 @@ class HamiltonianWaveSolver(Solver):
             self.A_blocks = _A.blocks
             self.F_blocks = _F.blocks
 
-            A_global_operator = self.A_blocks[self.n_block_loc, self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
+            self.A_global_operator = self.A_blocks[self.n_block_loc, self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
                 * self.A_blocks[:self.n_block_loc, :self.n_block_loc].inv * self.A_blocks[:self.n_block_loc, self.n_block_loc]
             
-            b_global_functional = self.F_blocks[self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
+            self.b_global_functional = self.F_blocks[self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
                 * self.A_blocks[:self.n_block_loc, :self.n_block_loc].inv * self.F_blocks[:self.n_block_loc]
 
             # Global solver
             self.global_multiplier = fdrk.Function(self.operators.space_global)
-            linear_global_problem = fdrk.LinearVariationalProblem(A_global_operator, b_global_functional, self.global_multiplier, bcs=self.essential_bcs)
-            self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
 
+            if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+                PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
+                pass
+            else:
+                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier, bcs=self.essential_bcs)
+                self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+                PETSc.Sys.Print(f"Solver set")
 
-        PETSc.Sys.Print(f"Solver set")
-
+            
 
     def integrate(self):
         """
@@ -149,8 +153,19 @@ class HamiltonianWaveSolver(Solver):
         if self.operators.discretization=="mixed":
             self.solver.solve()
         else:
-            self.global_solver.solve()
-            self._assemble_solution_hybrid()
+
+            if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+                PETSc.Sys.Print("Because of BUG in DirichletBC, essential bcs need to be reset")
+
+                updated_bc=self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier,\
+                                                                       bcs=updated_bc)
+                global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+                global_solver.solve()
+                self._assemble_solution_hybrid()
+            else:
+                self.global_solver.solve()
+                self._assemble_solution_hybrid()
 
         self.state_midpoint.assign(0.5*(self.state_new + self.state_old))
         self.actual_time.assign(self.time_new)
