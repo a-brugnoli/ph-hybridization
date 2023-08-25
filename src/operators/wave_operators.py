@@ -2,7 +2,7 @@ from .system_operators import SystemOperators
 from src.problems.problem import Problem
 import firedrake as fdrk
 from firedrake.petsc import PETSc
-
+from .utils import facet_form
 
 class WaveOperators(SystemOperators):
 
@@ -98,8 +98,6 @@ class WaveOperators(SystemOperators):
     
     def essential_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         
-        essential_bc = []
-
         bc_dictionary = problem.get_boundary_conditions(time)
 
         if self.formulation=="primal":
@@ -131,18 +129,9 @@ class WaveOperators(SystemOperators):
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]
 
-        if self.discretization=="hybrid" and self.pol_degree>1 and "quadrilateral" in self.cell_name:
-            PETSc.Sys.Print("Projecting the boundary condition on the appropriate space")
-            if self.formulation=="primal":
-                value_bc = self.project_RT_facet(value_bc, broken=False)
-            else:
-                value_bc = self.project_CG_facet(value_bc, broken=False)
+        dict_essential_bc = {"space": space_bc, "value": value_bc, "list_id": list_id_bc}
 
-        for id in list_id_bc:
-            essential_bc_id = fdrk.DirichletBC(space_bc, value_bc, id)            
-            essential_bc.append(essential_bc_id)
-
-        return essential_bc
+        return dict_essential_bc
     
 
     def natural_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
@@ -188,24 +177,6 @@ class WaveOperators(SystemOperators):
                 control_global = fdrk.inner(test_normaltrace, self.normal_versor) * fdrk.inner(tangtrace_field, self.normal_versor)
                 control_global_adj = fdrk.inner(test_tangtrace, self.normal_versor) * fdrk.inner(normaltrace_field, self.normal_versor)
 
-                if self.domain.extruded:
-                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
-                                   + (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)
-                    
-                    constr_global = + (control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v \
-                                    + (control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb) 
-                    
-                else:
-                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-
-                    constr_global = + (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
-            
             else:           
                 control_local = fdrk.inner(test_pressure, normaltrace_field)
                 control_local_adj = fdrk.inner(test_normaltrace, pressure_field)
@@ -213,26 +184,11 @@ class WaveOperators(SystemOperators):
                 control_global = fdrk.inner(test_normaltrace, tangtrace_field)
                 control_global_adj = fdrk.inner(test_tangtrace, normaltrace_field)
 
-                if self.domain.extruded:
-                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
-                                + (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)                
-            
-                    constr_global = ((control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v) \
-                                  + ((control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb) \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb) 
-                else:
-                    constr_local = + (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-            
-                    constr_global = ((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+            constr_local = facet_form(control_local, self.domain.extruded) - facet_form(control_local_adj, self.domain.extruded)
+            constr_global = facet_form(control_global, self.domain.extruded) - facet_form(control_global_adj, self.domain.extruded)
 
             dynamics += constr_local + constr_global
         
-
         return mass, dynamics
     
  
@@ -276,7 +232,7 @@ class WaveOperators(SystemOperators):
         # project normal trace of u_e onto Vnor or Vtan for the Lagrange space
         if self.discretization!="hybrid":
             PETSc.Sys.Print("Formulation is not hybrid. Function not available")
-            pass
+            raise TypeError
 
         if broken:
             trial_function = fdrk.TrialFunction(self.brokenfacet_CG_space)
@@ -286,23 +242,16 @@ class WaveOperators(SystemOperators):
             test_function = fdrk.TestFunction(self.facet_CG_space)
             projected_variable = fdrk.Function(self.facet_CG_space)
 
-        a_form = fdrk.inner(test_function, trial_function)
+        a_integrand = fdrk.inner(test_function, trial_function)
 
         if broken:
-            l_form = test_function*fdrk.dot(variable_to_project, self.normal_versor)
+            l_integrand = test_function*fdrk.dot(variable_to_project, self.normal_versor)
         else:
-            l_form = fdrk.inner(test_function, variable_to_project)
+            l_integrand = fdrk.inner(test_function, variable_to_project)
 
-        if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
-                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
-             
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
-                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb 
-        else:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
-           
+        a_operator = facet_form(a_integrand, self.domain.extruded)
+        l_functional = facet_form(l_integrand, self.domain.extruded)
+          
         if broken:
             A_matrix = fdrk.Tensor(a_operator)
             b_vector = fdrk.Tensor(l_functional)
@@ -317,6 +266,10 @@ class WaveOperators(SystemOperators):
 
     def project_RT_facet(self, variable_to_project, broken):
         # project normal trace of u_e onto Vnor or Vtan for the Raviart Thomas space
+        if self.discretization!="hybrid":
+            PETSc.Sys.Print("Formulation is not hybrid. Function not available")
+            raise TypeError
+        
         if broken:
             trial_function = fdrk.TrialFunction(self.brokenfacet_RT_space)
             test_function = fdrk.TestFunction(self.brokenfacet_RT_space)
@@ -325,23 +278,16 @@ class WaveOperators(SystemOperators):
             test_function = fdrk.TestFunction(self.facet_RT_space)
             projected_variable = fdrk.Function(self.facet_RT_space)
 
-        a_form = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(trial_function, self.normal_versor)
+        a_integrand = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(trial_function, self.normal_versor)
 
         if broken:
-            l_form = fdrk.inner(test_function, self.normal_versor)*variable_to_project
+            l_integrand = fdrk.inner(test_function, self.normal_versor)*variable_to_project
         else:
-            l_form = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(variable_to_project, self.normal_versor)
+            l_integrand = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(variable_to_project, self.normal_versor)
 
-        if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
-                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
-             
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
-                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb 
-        else:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
-
+        a_operator = facet_form(a_integrand, self.domain.extruded)
+        l_functional = facet_form(l_integrand, self.domain.extruded)
+        
         if broken:
             A_matrix = fdrk.Tensor(a_operator)
             b_vector = fdrk.Tensor(l_functional)
@@ -355,33 +301,25 @@ class WaveOperators(SystemOperators):
 
 
     def trace_norm_CG(self, variable):
+        if self.discretization!="hybrid":
+            PETSc.Sys.Print("Formulation is not hybrid. Function not available")
+            raise TypeError
 
         boundary_integrand = self.cell_diameter * variable ** 2
 
-        if self.domain.extruded:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v \
-                +(boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h \
-                + boundary_integrand * fdrk.ds_v \
-                + boundary_integrand * fdrk.ds_tb 
-        else:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS \
-                + boundary_integrand * fdrk.ds
+        square_norm = facet_form(boundary_integrand, self.domain.extruded)
 
         return fdrk.sqrt(fdrk.assemble(square_norm))
 
 
     def trace_norm_RT(self, variable):
+        if self.discretization!="hybrid":
+            PETSc.Sys.Print("Formulation is not hybrid. Function not available")
+            raise TypeError
 
         boundary_integrand = self.cell_diameter * fdrk.inner(variable, self.normal_versor) ** 2
 
-        if self.domain.extruded:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v \
-                +(boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h \
-                + boundary_integrand * fdrk.ds_v \
-                + boundary_integrand * fdrk.ds_tb 
-        else:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS \
-                + boundary_integrand * fdrk.ds
+        square_norm = facet_form(boundary_integrand, self.domain.extruded)
 
         return fdrk.sqrt(fdrk.assemble(square_norm))
 
@@ -390,4 +328,3 @@ class WaveOperators(SystemOperators):
         return f"Wave Operators, discretization {self.discretization}, formulation {self.formulation}"
 
 
-    

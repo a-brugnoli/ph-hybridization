@@ -86,7 +86,14 @@ class HamiltonianWaveSolver(Solver):
 
 
     def _set_boundary_conditions(self):
-        self.essential_bcs = self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+        dict_essential_bcs = self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+
+        self.space_bc = dict_essential_bcs["space"]
+        self.value_bc = dict_essential_bcs["value"]
+        self.list_id_bc = dict_essential_bcs["list_id"]
+
+
+        self.essential_bcs = fdrk.DirichletBC(self.space_bc, self.value_bc, self.list_id_bc)            
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
@@ -111,6 +118,7 @@ class HamiltonianWaveSolver(Solver):
                     b_functional += self.time_step*fdrk.inner(self.tests[counter], force)*fdrk.dx
 
         if self.operators.discretization=="mixed":
+
             linear_problem = fdrk.LinearVariationalProblem(A_operator, b_functional, self.state_new, bcs=self.essential_bcs)
             self.solver =  fdrk.LinearVariationalSolver(linear_problem, solver_parameters=self.solver_parameters)
 
@@ -135,7 +143,8 @@ class HamiltonianWaveSolver(Solver):
                 PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
                 pass
             else:
-                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier, bcs=self.essential_bcs)
+                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional,\
+                                                                      self.global_multiplier, bcs=self.essential_bcs)
                 self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
                 PETSc.Sys.Print(f"Solver set")
 
@@ -153,13 +162,20 @@ class HamiltonianWaveSolver(Solver):
         if self.operators.discretization=="mixed":
             self.solver.solve()
         else:
-
             if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
-                PETSc.Sys.Print("Because of BUG in DirichletBC, essential bcs need to be reset")
+                # PETSc.Sys.Print("Projecting the boundary condition on the appropriate space")
+                if isinstance(self.operators, WaveOperators):
+                    if self.operators.formulation=="primal":
+                        projected_value_bc = self.operators.project_RT_facet(self.value_bc, broken=False)
+                    else:
+                        projected_value_bc = self.operators.project_CG_facet(self.value_bc, broken=False)
+                else:
+                    projected_value_bc = self.operators.project_NED_facet(self.value_bc, broken=False)
 
-                updated_bc=self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+                updated_bcs = fdrk.DirichletBC(self.space_bc, projected_value_bc, self.list_id_bc)          
+
                 linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier,\
-                                                                       bcs=updated_bc)
+                                                                       bcs=updated_bcs)
                 global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
                 global_solver.solve()
                 self._assemble_solution_hybrid()

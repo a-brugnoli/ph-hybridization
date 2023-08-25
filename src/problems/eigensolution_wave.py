@@ -20,7 +20,6 @@ class EigensolutionWave(Problem):
         self.dim=dim
         self.quad = quad
 
-
         if dim==3:
             if quad:
                 PETSc.Sys.Print("Hexahedral mesh requested")
@@ -87,8 +86,6 @@ class EigensolutionWave(Problem):
         return (pressure_field, velocity_field)
     
     
-
-
     def get_boundary_conditions(self, time: fdrk.Constant):
         """
         Parameters:
