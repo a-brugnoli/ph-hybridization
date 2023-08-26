@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "dirichlet" 
+bc_case = "mixed" 
 discretization = "hybrid"
 dim=2
 quad=True
@@ -15,9 +15,9 @@ deg_vec  = [1,2,3]
 
 h_list = []
 
-norm = "Linf"
+# norm = "Linf"
 # norm = "L2"
-# norm = "Tend"
+norm = "Tend"
 
 # Errors
 

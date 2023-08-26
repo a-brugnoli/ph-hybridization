@@ -1,0 +1,2 @@
+,system,pol_degree,bc,discretization,time_step,t_end,dim,quad
+0,Wave,3,dirichlet,mixed,0.001,0.1,2,False

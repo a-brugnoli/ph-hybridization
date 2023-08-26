@@ -102,7 +102,7 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     if solver_primal.operators.discretization=="hybrid":
         electric_primal, magnetic_primal, electric_normal_primal, magnetic_tangential_primal = solver_primal.state_old.subfunctions
         error_tangential_primal = solver_primal.operators.trace_norm_NED(exact_magnetic-magnetic_tangential_primal)
-        projected_exact_electric = solver_primal.operators.project_NED_facetbroken(exact_electric)
+        projected_exact_electric = solver_primal.operators.project_NED_facet(exact_electric, broken=True)
         error_normal_primal = solver_primal.operators.trace_norm_NED(projected_exact_electric-electric_normal_primal)
 
     else:
@@ -115,14 +115,11 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     error_Hdiv_electric_primal = fdrk.norm(exact_electric-electric_primal, norm_type="Hdiv")
     error_Hcurl_magnetic_primal = fdrk.norm(exact_magnetic-magnetic_primal, norm_type="Hcurl")
 
-    # error_Hdiv_electric_primal = fdrk.norm(fdrk.div(exact_electric-electric_primal))
-    # error_Hcurl_magnetic_primal = fdrk.norm(fdrk.curl(exact_magnetic-magnetic_primal))
-        
     # Error dual
     if solver_dual.operators.discretization=="hybrid":
         electric_dual, magnetic_dual, magnetic_normal_dual, electric_tangential_dual = solver_dual.state_old.subfunctions
         error_tangential_dual = solver_dual.operators.trace_norm_NED(exact_electric-electric_tangential_dual)
-        projected_exact_magnetic = solver_dual.operators.project_NED_facetbroken(exact_magnetic)
+        projected_exact_magnetic = solver_dual.operators.project_NED_facet(exact_magnetic, broken=True)
         error_normal_dual = solver_dual.operators.trace_norm_NED(projected_exact_magnetic-magnetic_normal_dual)
     else:
         electric_dual, magnetic_dual = solver_dual.state_old.subfunctions
@@ -133,9 +130,6 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     error_Hcurl_electric_dual = fdrk.norm(exact_electric-electric_dual, norm_type="Hcurl")
     error_Hdiv_magnetic_dual = fdrk.norm(exact_magnetic-magnetic_dual, norm_type="Hdiv")
 
-    # error_Hcurl_electric_dual = fdrk.norm(fdrk.curl(exact_electric-electric_dual))
-    # error_Hdiv_magnetic_dual = fdrk.norm(fdrk.div(exact_magnetic-magnetic_dual))
-        
     # Error dual field
     error_L2_electric_df = fdrk.norm(electric_primal - electric_dual)
     error_L2_magnetic_df = fdrk.norm(magnetic_primal - magnetic_dual)
@@ -182,7 +176,6 @@ def dict_error_maxwell(state_exact, solver_primal: HamiltonianWaveSolver, solver
     return error_dictionary
 
 
-
 def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_dual: HamiltonianWaveSolver):
     exact_pressure, exact_velocity = state_exact
     
@@ -190,7 +183,7 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     if solver_primal.operators.discretization=="hybrid":
         pressure_primal, velocity_primal, pressure_normal_primal, velocity_tangential_primal = solver_primal.state_old.subfunctions
         error_tangential_primal = solver_primal.operators.trace_norm_RT(exact_velocity-velocity_tangential_primal)
-        projected_exact_pressure = solver_primal.operators.project_RT_brokenfacet(exact_pressure)
+        projected_exact_pressure = solver_primal.operators.project_RT_facet(exact_pressure, broken=True)
         error_normal_primal = solver_primal.operators.trace_norm_RT(projected_exact_pressure-pressure_normal_primal)
 
     else:
@@ -201,14 +194,12 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     error_L2_velocity_primal = fdrk.norm(exact_velocity-velocity_primal)
 
     error_Hdiv_velocity_primal = fdrk.norm(exact_velocity-velocity_primal, norm_type="Hdiv")
-    
-    # error_Hdiv_velocity_primal = fdrk.norm(fdrk.div(exact_velocity-velocity_primal))
-        
+            
     # Error dual
     if solver_dual.operators.discretization=="hybrid":
         pressure_dual, velocity_dual, velocity_normal_dual, pressure_tangential_dual = solver_dual.state_old.subfunctions
         error_tangential_dual = solver_dual.operators.trace_norm_CG(exact_pressure-pressure_tangential_dual)
-        projected_exact_velocity = solver_dual.operators.project_CG_brokenfacet(exact_velocity)
+        projected_exact_velocity = solver_dual.operators.project_CG_facet(exact_velocity, broken=True)
         error_normal_dual = solver_dual.operators.trace_norm_CG(projected_exact_velocity-velocity_normal_dual)
     else:
         pressure_dual, velocity_dual = solver_dual.state_old.subfunctions
@@ -219,9 +210,6 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
     error_H1_pressure_dual = fdrk.norm(exact_pressure-pressure_dual, norm_type="H1")
     error_Hcurl_velocity_dual = fdrk.norm(exact_velocity-velocity_dual, norm_type="Hcurl")
 
-    # error_H1_pressure_dual = fdrk.norm(fdrk.grad(exact_pressure-pressure_dual))
-    # error_Hcurl_velocity_dual = fdrk.norm(fdrk.curl(exact_velocity-velocity_dual))
-        
     # Error dual field
     error_L2_pressure_df = fdrk.norm(pressure_primal - pressure_dual)
     error_L2_velocity_df = fdrk.norm(velocity_primal - velocity_dual)

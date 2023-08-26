@@ -86,7 +86,14 @@ class HamiltonianWaveSolver(Solver):
 
 
     def _set_boundary_conditions(self):
-        self.essential_bcs = self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+        dict_essential_bcs = self.operators.essential_boundary_conditions(self.problem, time=self.time_new)
+
+        self.space_bc = dict_essential_bcs["space"]
+        self.value_bc = dict_essential_bcs["value"]
+        self.list_id_bc = dict_essential_bcs["list_id"]
+
+
+        self.essential_bcs = fdrk.DirichletBC(self.space_bc, self.value_bc, self.list_id_bc)            
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
@@ -111,6 +118,7 @@ class HamiltonianWaveSolver(Solver):
                     b_functional += self.time_step*fdrk.inner(self.tests[counter], force)*fdrk.dx
 
         if self.operators.discretization=="mixed":
+
             linear_problem = fdrk.LinearVariationalProblem(A_operator, b_functional, self.state_new, bcs=self.essential_bcs)
             self.solver =  fdrk.LinearVariationalSolver(linear_problem, solver_parameters=self.solver_parameters)
 
@@ -122,20 +130,25 @@ class HamiltonianWaveSolver(Solver):
             self.A_blocks = _A.blocks
             self.F_blocks = _F.blocks
 
-            A_global_operator = self.A_blocks[self.n_block_loc, self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
+            self.A_global_operator = self.A_blocks[self.n_block_loc, self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
                 * self.A_blocks[:self.n_block_loc, :self.n_block_loc].inv * self.A_blocks[:self.n_block_loc, self.n_block_loc]
             
-            b_global_functional = self.F_blocks[self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
+            self.b_global_functional = self.F_blocks[self.n_block_loc] - self.A_blocks[self.n_block_loc, :self.n_block_loc] \
                 * self.A_blocks[:self.n_block_loc, :self.n_block_loc].inv * self.F_blocks[:self.n_block_loc]
 
             # Global solver
             self.global_multiplier = fdrk.Function(self.operators.space_global)
-            linear_global_problem = fdrk.LinearVariationalProblem(A_global_operator, b_global_functional, self.global_multiplier, bcs=self.essential_bcs)
-            self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
 
+            if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+                PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
+                pass
+            else:
+                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional,\
+                                                                      self.global_multiplier, bcs=self.essential_bcs)
+                self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+                PETSc.Sys.Print(f"Solver set")
 
-        PETSc.Sys.Print(f"Solver set")
-
+            
 
     def integrate(self):
         """
@@ -149,8 +162,26 @@ class HamiltonianWaveSolver(Solver):
         if self.operators.discretization=="mixed":
             self.solver.solve()
         else:
-            self.global_solver.solve()
-            self._assemble_solution_hybrid()
+            if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+                # PETSc.Sys.Print("Projecting the boundary condition on the appropriate space")
+                if isinstance(self.operators, WaveOperators):
+                    if self.operators.formulation=="primal":
+                        projected_value_bc = self.operators.project_RT_facet(self.value_bc, broken=False)
+                    else:
+                        projected_value_bc = self.operators.project_CG_facet(self.value_bc, broken=False)
+                else:
+                    projected_value_bc = self.operators.project_NED_facet(self.value_bc, broken=False)
+
+                updated_bcs = fdrk.DirichletBC(self.space_bc, projected_value_bc, self.list_id_bc)          
+
+                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier,\
+                                                                       bcs=updated_bcs)
+                global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+                global_solver.solve()
+                self._assemble_solution_hybrid()
+            else:
+                self.global_solver.solve()
+                self._assemble_solution_hybrid()
 
         self.state_midpoint.assign(0.5*(self.state_new + self.state_old))
         self.actual_time.assign(self.time_new)

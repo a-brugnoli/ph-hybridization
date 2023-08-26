@@ -1,8 +1,8 @@
 from .system_operators import SystemOperators
 from src.problems.problem import Problem
 import firedrake as fdrk
-from ufl.tensors import ListTensor 
 from firedrake.petsc import PETSc
+from .utils import facet_form
 
 class MaxwellOperators(SystemOperators):
 
@@ -22,9 +22,9 @@ class MaxwellOperators(SystemOperators):
                 facet_NED_element = self.NED_element[fdrk.facet]
                 brokenfacet_NED_element = fdrk.BrokenElement(facet_NED_element)
                 self.brokenfacet_NED_space = fdrk.FunctionSpace(self.domain, brokenfacet_NED_element)
-                facet_NED_space = fdrk.FunctionSpace(self.domain, facet_NED_element)
+                self.facet_NED_space = fdrk.FunctionSpace(self.domain, facet_NED_element)
 
-                self.space_global = facet_NED_space
+                self.space_global = self.facet_NED_space
 
                 if self.formulation == "primal":
                     self.mixedspace_local = broken_RT_space * broken_NED_space * self.brokenfacet_NED_space 
@@ -48,13 +48,13 @@ class MaxwellOperators(SystemOperators):
         electric_field_exp, magnetic_field_exp = expression_initial
 
         # Interpolation on broken spacs has been fixed in recent versions of firedrake
-        cell_name = str(self.domain.ufl_cell())
-        if self.domain.extruded:
-            electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
-            magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
-        else:
+        try:
             electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
+        except NotImplementedError:
+            print("Initial condition cannot be interpolated")
+            electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))
+            magnetic = fdrk.project(magnetic_field_exp, self.fullspace.sub(1))
 
         if self.discretization=="hybrid":
             if self.formulation == "primal":
@@ -65,14 +65,14 @@ class MaxwellOperators(SystemOperators):
                 exact_normaltrace = magnetic_field_exp
                 exact_tangtrace = electric_field_exp 
 
+            variable_normaltrace = self.project_NED_facet(exact_normaltrace, broken=True)
 
-            variable_normaltrace = self.project_NED_facetbroken(exact_normaltrace)
-
-            if self.domain.extruded:
-                variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
-            else:
+            try:
                 variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-            
+            except NotImplementedError:
+                PETSc.Sys.Print("Tangential trace cannot be interpolated, project on the appropriate space")     
+                variable_tangentialtrace = self.project_NED_facet(exact_tangtrace, broken=False)
+
             return (electric, magnetic, variable_normaltrace, variable_tangentialtrace)
         else:
             return (electric, magnetic)
@@ -109,11 +109,10 @@ class MaxwellOperators(SystemOperators):
         list_id_bc = tuple_bc_data[0]
         value_bc = tuple_bc_data[1]
 
-        for id in list_id_bc:
-                essential_bc.append(fdrk.DirichletBC(space_bc, value_bc, id))
-        
-        return essential_bc
-    
+        dict_essential_bc = {"space": space_bc, "value": value_bc, "list_id": list_id_bc}
+
+        return dict_essential_bc
+
 
     def natural_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         bc_dictionary = problem.get_boundary_conditions(time)
@@ -157,45 +156,15 @@ class MaxwellOperators(SystemOperators):
                 control_local = fdrk.inner(fdrk.cross(test_magnetic, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
                 control_local_adj = fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(magnetic_field, self.normal_versor))
 
-                if self.domain.extruded:
-                    constr_local = (control_local('+') + control_local('-')) * fdrk.dS_v + control_local * fdrk.ds_v \
-                                +  (control_local('+') + control_local('-')) * fdrk.dS_h + control_local * fdrk.ds_tb \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb) 
-                    
-                    constr_global = (control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v \
-                                   +(control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb \
-                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
-                                - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb)
-
-                else:
-                    constr_local = (control_local('+') + control_local('-')) * fdrk.dS + control_local * fdrk.ds \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-                    
-                    constr_global = (control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds \
-                                    - ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                constr_local = facet_form(control_local, self.domain.extruded) - facet_form(control_local_adj, self.domain.extruded)
+                constr_global = facet_form(control_global, self.domain.extruded) - facet_form(control_global_adj, self.domain.extruded)
 
             else:   
-                control_loc = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
+                control_local = -fdrk.inner(fdrk.cross(test_electric, self.normal_versor), fdrk.cross(normaltrace_field, self.normal_versor))
                 control_local_adj = -fdrk.inner(fdrk.cross(test_normaltrace, self.normal_versor), fdrk.cross(electric_field, self.normal_versor))
 
-                if self.domain.extruded:
-                    constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS_v + control_loc * fdrk.ds_v) \
-                                  +((control_loc('+') + control_loc('-')) * fdrk.dS_h + control_loc * fdrk.ds_tb) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_v + control_local_adj * fdrk.ds_v) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS_h + control_local_adj * fdrk.ds_tb)
-                    
-                    constr_global = -((control_global('+') + control_global('-')) * fdrk.dS_v + control_global * fdrk.ds_v) \
-                                    -((control_global('+') + control_global('-')) * fdrk.dS_h + control_global * fdrk.ds_tb) \
-                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_v + control_global_adj * fdrk.ds_v) \
-                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS_h + control_global_adj * fdrk.ds_tb)
-                    
-                else:
-                    constr_local = ((control_loc('+') + control_loc('-')) * fdrk.dS + control_loc * fdrk.ds) \
-                                - ((control_local_adj('+') + control_local_adj('-')) * fdrk.dS + control_local_adj * fdrk.ds)
-                    
-                    constr_global = -((control_global('+') + control_global('-')) * fdrk.dS + control_global * fdrk.ds) \
-                                    + ((control_global_adj('+') + control_global_adj('-')) * fdrk.dS + control_global_adj * fdrk.ds)
+                constr_local = facet_form(control_local, self.domain.extruded) - facet_form(control_local_adj, self.domain.extruded)
+                constr_global = - facet_form(control_global, self.domain.extruded) + facet_form(control_global_adj, self.domain.extruded)
 
             dynamics += constr_local + constr_global
         
@@ -237,41 +206,42 @@ class MaxwellOperators(SystemOperators):
 
     
 
-    def project_NED_facetbroken(self, variable_to_project):
+    def project_NED_facet(self, variable_to_project, broken):
 
         if self.discretization!="hybrid":
             PETSc.Sys.Print("Formulation is not hybrid. Function not available")
             pass
 
         # project normal trace of field on the broken facet NED space
-        trial_function = fdrk.TrialFunction(self.brokenfacet_NED_space)
-        test_function = fdrk.TestFunction(self.brokenfacet_NED_space)
-
-        a_form = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
-                            fdrk.cross(trial_function, self.normal_versor))
-        l_form = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
-                fdrk.cross(fdrk.cross(variable_to_project, self.normal_versor), self.normal_versor))
-        
-
-        if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v \
-                       + (a_form('+') + a_form('-')) * fdrk.dS_h \
-                       + a_form * fdrk.ds_v \
-                       + a_form * fdrk.ds_t \
-                       + a_form * fdrk.ds_b
-            
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v \
-                         + (l_form('+') + l_form('-')) * fdrk.dS_h \
-                         + l_form * fdrk.ds_v \
-                         + l_form * fdrk.ds_t \
-                         + l_form * fdrk.ds_b
+        if broken:
+            trial_function = fdrk.TrialFunction(self.brokenfacet_NED_space)
+            test_function = fdrk.TestFunction(self.brokenfacet_NED_space)
         else:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
+            trial_function = fdrk.TrialFunction(self.facet_NED_space)
+            test_function = fdrk.TestFunction(self.facet_NED_space)
+            projected_variable = fdrk.Function(self.facet_NED_space)
 
-        A_matrix = fdrk.Tensor(a_operator)
-        b_vector = fdrk.Tensor(l_functional)
-        projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+        a_integrand = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
+                                 fdrk.cross(trial_function, self.normal_versor))
+        
+        if broken:
+            l_integrand = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
+                fdrk.cross(fdrk.cross(variable_to_project, self.normal_versor), self.normal_versor))
+        else:
+            l_integrand = fdrk.inner(fdrk.cross(test_function, self.normal_versor), \
+                                     fdrk.cross(variable_to_project, self.normal_versor))
+
+        a_operator = facet_form(a_integrand, self.domain.extruded)
+        l_functional = facet_form(l_integrand, self.domain.extruded)
+        
+        if broken:
+            A_matrix = fdrk.Tensor(a_operator)
+            b_vector = fdrk.Tensor(l_functional)
+            projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+        else:
+            A_mat = fdrk.assemble(a_operator)
+            b_vec = fdrk.assemble(l_functional)
+            fdrk.solve(A_mat, projected_variable, b_vec)
 
         return projected_variable
 
@@ -280,16 +250,8 @@ class MaxwellOperators(SystemOperators):
 
         boundary_integrand = self.cell_diameter * fdrk.cross(variable, self.normal_versor) ** 2
 
-        if self.domain.extruded:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_v \
-                +(boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS_h \
-                + boundary_integrand * fdrk.ds_v \
-                + boundary_integrand * fdrk.ds_b \
-                + boundary_integrand * fdrk.ds_t
-        else:
-            square_norm = (boundary_integrand('+') + boundary_integrand('-')) * fdrk.dS + boundary_integrand * fdrk.ds
+        square_norm = facet_form(boundary_integrand, self.domain.extruded)
 
-        
         return fdrk.sqrt(fdrk.assemble(square_norm))
     
         
