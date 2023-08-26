@@ -5,9 +5,9 @@ from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import firedrake as fdrk
 
 n_elements = 5
-pol_degree = 1
+pol_degree = 3
 
-quad = True
+quad = False
 problem_wave = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, dim=2, bc_type="mixed")
 
 time_step =0.001
