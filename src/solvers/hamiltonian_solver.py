@@ -4,8 +4,6 @@ from src.problems.problem import Problem
 from src.operators.maxwell_operators import MaxwellOperators
 from src.operators.wave_operators import WaveOperators
 from firedrake.petsc import PETSc
-from firedrake.tsfc_interface import TSFCKernel
-from pyop2.global_kernel import GlobalKernel
 import gc
 
 class HamiltonianWaveSolver(Solver):
@@ -16,7 +14,8 @@ class HamiltonianWaveSolver(Solver):
                  pol_degree=1, 
                  discretization="hybrid",
                  formulation="primal", 
-                 solver_parameters={}
+                 solver_parameters={}, 
+                 verbose=False
                 ):
         """
         Constructor for the solver class using implicit Midpoint
@@ -33,6 +32,7 @@ class HamiltonianWaveSolver(Solver):
         self.pol_degree = pol_degree
         self.solver_parameters = solver_parameters
         self.time_step = time_step
+        self.verbose = verbose
 
         if system=="Maxwell":
             if discretization=="hybrid" :
@@ -47,7 +47,8 @@ class HamiltonianWaveSolver(Solver):
         else:
             ValueError(f"System type {system} is not a valid option")
 
-        PETSc.Sys.Print(f"{str(self.operators)}")
+        if self.verbose:
+            PETSc.Sys.Print(f"{str(self.operators)}")
         self._set_spaces()
         self._set_initial_conditions()
         self._set_boundary_conditions()
@@ -63,7 +64,8 @@ class HamiltonianWaveSolver(Solver):
         self.state_new = fdrk.Function(self.space_operators)
         self.state_midpoint = fdrk.Function(self.space_operators)
 
-        PETSc.Sys.Print(f"Dimension of space: {self.space_operators.dim()} ")
+        if self.verbose:
+            PETSc.Sys.Print(f"Dimension of space: {self.space_operators.dim()} ")
                  
 
     def _set_initial_conditions(self):
@@ -85,7 +87,8 @@ class HamiltonianWaveSolver(Solver):
         self.time_new = fdrk.Constant(self.time_step)
         self.actual_time = fdrk.Constant(0)
 
-        PETSc.Sys.Print(f"Inital conditions set")
+        if self.verbose:
+            PETSc.Sys.Print(f"Inital conditions set")
 
 
     def _set_boundary_conditions(self):
@@ -95,12 +98,14 @@ class HamiltonianWaveSolver(Solver):
         self.value_bc = dict_essential_bcs["value"]
         self.list_id_bc = dict_essential_bcs["list_id"]
 
-
-        self.essential_bcs = fdrk.DirichletBC(self.space_bc, self.value_bc, self.list_id_bc)            
+        self.essential_bcs = []
+        for id_bc in self.list_id_bc:
+            self.essential_bcs.append(fdrk.DirichletBC(self.space_bc, self.value_bc, id_bc))            
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
-        PETSc.Sys.Print(f"Boundary conditions set")
+        if self.verbose:
+            PETSc.Sys.Print(f"Boundary conditions set")
 
     
     def _set_solver(self):
@@ -113,7 +118,8 @@ class HamiltonianWaveSolver(Solver):
                     self.tests, states_old, control=self.natural_bcs)
         
         if self.problem.forcing:
-            PETSc.Sys.Print("Problem with forcing term")
+            if self.verbose:
+                PETSc.Sys.Print("Problem with forcing term")
             tuple_forcing = self.problem.get_forcing(self.time_midpoint)
 
             for counter, force in enumerate(tuple_forcing):
@@ -143,13 +149,16 @@ class HamiltonianWaveSolver(Solver):
             self.global_multiplier = fdrk.Function(self.operators.space_global)
 
             if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
-                PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
+                if self.verbose:
+                    PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
                 pass
             else:
                 linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional,\
                                                                       self.global_multiplier, bcs=self.essential_bcs)
                 self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
-                PETSc.Sys.Print(f"Solver set")
+                
+                if self.verbose:
+                    PETSc.Sys.Print(f"Solver set")
 
             
 
@@ -177,18 +186,16 @@ class HamiltonianWaveSolver(Solver):
 
                 updated_bcs = fdrk.DirichletBC(self.space_bc, projected_value_bc, self.list_id_bc)          
 
-                A_mat= fdrk.assemble(self.A_global_operator, bcs=updated_bcs)
-                b_vec=fdrk.assemble(self.b_global_functional)
+                A_mat = fdrk.assemble(self.A_global_operator, bcs=updated_bcs)
+                b_vec = fdrk.assemble(self.b_global_functional)
                 fdrk.solve(A_mat, self.global_multiplier, b_vec, solver_parameters=self.solver_parameters)
 
-                PETSc.Sys.Print("Cleaning up memory ")
-                gc.collect()
-                PETSc.garbage_cleanup(self.operators.domain._comm)
-                PETSc.garbage_cleanup(self.operators.domain.comm)
-                PETSc.garbage_cleanup(PETSc.COMM_SELF)
-                PETSc.Sys.Print("Clearing cache (speed slows down increasingsly)")
-                TSFCKernel._cache.clear()
-                GlobalKernel._cache.clear()
+                # PETSc.Sys.Print("Cleaning up memory")
+                # gc.collect()
+                # PETSc.garbage_cleanup(self.operators.domain._comm)
+                # #PETSc.garbage_cleanup(self.operators.domain.comm)
+                # PETSc.garbage_cleanup(PETSc.COMM_SELF)
+                
             else:
                 self.global_solver.solve()
 

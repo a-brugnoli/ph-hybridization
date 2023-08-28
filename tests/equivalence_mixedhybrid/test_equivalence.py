@@ -13,12 +13,10 @@ from mpi4py import MPI
 from firedrake.petsc import PETSc
 from tests.basic.debug_solver import debug_wave
 
-quad=True
-dim=2
 
 n_elements = 4
-pol_degree = 2
-time_step = 0.01
+pol_degree = 1
+time_step = 1/500
 t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
 
@@ -26,7 +24,9 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-case = "Wave"
+quad=True
+dim=3
+case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:

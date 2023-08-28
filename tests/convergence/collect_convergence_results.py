@@ -31,20 +31,20 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [2] 
+pol_degree_vec = [1,2,3] 
 
-# systems = ["Wave", "Maxwell"]
-# systems = ["Wave"]
-systems = ["Maxwell"]
+# cases = ["Wave", "Maxwell"]
+# cases = ["Wave"]
+cases = ["Maxwell"]
 
 
-for system in systems:
+for case in cases:
     for pol_degree in pol_degree_vec:
 
         if pol_degree==1:
             n_elem_vector = [1, 2, 4, 8, 16] 
         elif pol_degree==2:
-            n_elem_vector = [8] #[1, 2, 4, 8]
+            n_elem_vector = [1, 2, 4, 8]
         elif pol_degree==3:
             n_elem_vector = [1, 2, 4]
 
@@ -53,10 +53,10 @@ for system in systems:
             t_end = 1
             discretization = "hybrid"
             boundary_condition= "mixed"
-            quad = True
+            quad = False
             dim = 3
             
-            dict_configuration = {"system": system,
+            dict_configuration = {"case": case,
                                 "pol_degree": pol_degree, 
                                 "bc": boundary_condition, 
                                 "discretization": discretization, 
@@ -87,7 +87,7 @@ for system in systems:
 
         if rank==0:
             directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" + \
-                                f"{system}/{discretization}_discretization/{boundary_condition}_bc/dimension_{dim}/quad_mesh_{quad}/"
+                                f"{case}/{discretization}_discretization/{boundary_condition}_bc/dimension_{dim}/quad_mesh_{quad}/"
             if not os.path.exists(directory_results):
                 os.makedirs(directory_results)
 

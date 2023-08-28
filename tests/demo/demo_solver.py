@@ -11,13 +11,11 @@ import os
 import numpy as np
 from mpi4py import MPI
 
-
-n_elements = 4
-pol_degree = 2
-time_step = 10**(-2)
+n_elements = 8
+pol_degree = 1
+time_step = 1/500
 t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
-
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
@@ -26,11 +24,11 @@ size = comm.Get_size()
 case = "Wave"
 quad=True
 dim=2
+
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 else:
     problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="dirichlet", quad=quad, dim=dim)
-
 
 time_exact = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time_exact)
@@ -48,7 +46,6 @@ if case =="Maxwell":
 
 else:
     exact_first_function = fdrk.Function(CG_deg3)
-
     try:
         interpolated_exact_first = fdrk.interpolate(exact_first, CG_deg3)
     except NotImplementedError:

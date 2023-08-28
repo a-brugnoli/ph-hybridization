@@ -11,9 +11,9 @@ import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
 
-n_elements = 4
-pol_degree = 3
-time_step = 0.01
+n_elements = 16
+pol_degree = 1
+time_step = 1/500
 t_end = 10*time_step
 n_time_iter = math.ceil(t_end/time_step)
 
@@ -21,9 +21,9 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-case = "Wave"
 dim=3
-quad = True
+quad = False
+case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
@@ -57,9 +57,17 @@ exact_first_new, exact_second_new = problem.get_exact_solution(time_new)
 # Exact quantities
 
 if case=="Maxwell":
-    exact_bdflow = fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds
+    if problem.domain.extruded:
+        exact_bdflow = fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds_v \
+                      +fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds_tb
+    else:
+        exact_bdflow = fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds
 else:
-    exact_bdflow = exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds
+    if problem.domain.extruded:
+        exact_bdflow = exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds_v \
+                      +exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds_tb
+    else:
+        exact_bdflow = exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds
 
 exact_energyrate = 1/time_step * (fdrk.dot(exact_first_midpoint, exact_first_new - exact_first_old) * fdrk.dx\
                                 + fdrk.dot(exact_second_midpoint, exact_second_new - exact_second_old) * fdrk.dx)
@@ -76,9 +84,18 @@ first_dual_new, second_dual_new, _, _ = hybridsolver_dual.state_new.subfunctions
 
 # Power balance combining primal and dual
 if case=="Maxwell":
-    discrete_bdflow = fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds
+    if problem.domain.extruded:
+        discrete_bdflow = fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds_v \
+                         +fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds_tb
+
+    else:
+        discrete_bdflow = fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds
 else:
-    discrete_bdflow = first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds
+    if problem.domain.extruded:
+        discrete_bdflow = first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds_v \
+                         +first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds_tb
+    else:
+        discrete_bdflow = first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds
 
 discrete_energyrate = 1/time_step * (fdrk.dot(first_dual_midpoint, first_primal_new - first_primal_old) * fdrk.dx\
                             + fdrk.dot(second_primal_midpoint, second_dual_new - second_dual_old) * fdrk.dx)
@@ -148,15 +165,15 @@ if rank==0:
 
     if case=="Maxwell":
         basic_plotting.plot_signal(time_vec, div_first_primal, 
-                                            title=r"$L^2$ morm of $\mathrm{div} E_h^2$",
+                                            title=r"$L^2$ norm of $\mathrm{div} E_h^2$",
                                             save_path=f"{directory_results}div_electric_{case}")
         
         basic_plotting.plot_signal(time_vec, div_second_dual,  
-                                        title=r"$L^2$ morm of $\mathrm{div} H^2_h$",
+                                        title=r"$L^2$ norm of $\mathrm{div} H^2_h$",
                                         save_path=f"{directory_results}div_magnetic_{case}")
     else:
         basic_plotting.plot_signal(time_vec, curl_second_dual,  
-                                        title=r"$L^2$ morm of $\mathrm{curl} u^1_h$",
+                                        title=r"$L^2$ norm of $\mathrm{curl} u^1_h$",
                                         save_path=f"{directory_results}curl_velocity_{case}")
 
     

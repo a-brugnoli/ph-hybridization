@@ -5,7 +5,7 @@ import math
 from tqdm import tqdm
 import firedrake as fdrk
 from firedrake.petsc import PETSc
-import numpy as np
+import gc
 
 def compute_error(n_elements, dict_configuration):
     """
@@ -14,7 +14,7 @@ def compute_error(n_elements, dict_configuration):
 
     pol_degree = dict_configuration["pol_degree"]
     bc_type = dict_configuration["bc"]
-    system = dict_configuration["system"]
+    case = dict_configuration["case"]
     discretization = dict_configuration["discretization"]
     time_step = dict_configuration["time_step"]
     t_end = dict_configuration["t_end"]
@@ -24,32 +24,31 @@ def compute_error(n_elements, dict_configuration):
     n_time_iter = math.ceil(t_end/time_step)
     actual_t_end = n_time_iter*time_step
 
-    if system=="Maxwell":
+    if case=="Maxwell":
         problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type, quad=quad)
-    elif system=="Wave":
+    elif case=="Wave":
         problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad)
     else: 
         raise TypeError("Physics not valid")
         
     hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, time_step=time_step,
-                                                system=system, 
+                                                system=case, 
                                                 discretization=discretization, 
                                                 formulation="primal")
 
     hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, time_step=time_step,
-                                                system=system, 
+                                                system=case, 
                                                 discretization=discretization, 
                                                 formulation="dual")
     
     exact_time = fdrk.Constant(0)
     state_exact = problem.get_exact_solution(exact_time)
 
-    if system=="Maxwell":
-            error_dict_0 = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
+    if case=="Maxwell":
+        error_dict_0 = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
     else:
-            error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
+        error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
-    # return {"Linf": error_dict_0, "L2": error_dict_0, "Tend": error_dict_0}
     error_dict_Linf = error_dict_0
 
     error_dict_L2 = {}
@@ -61,13 +60,22 @@ def compute_error(n_elements, dict_configuration):
 
         hybridsolver_primal.integrate()
         hybridsolver_dual.integrate()
-        
+
+        if quad and ii%100==0:
+            PETSc.Sys.Print("Cleaning up memory (necessary for hexahedral meshes)")
+            gc.collect()
+            PETSc.garbage_cleanup(hybridsolver_primal.operators.domain._comm)
+            PETSc.garbage_cleanup(hybridsolver_dual.operators.domain._comm)
+            #PETSc.garbage_cleanup(hybridsolver_primal.operators.domain.comm)
+            #PETSc.garbage_cleanup(hybridsolver_dual.operators.domain.comm)
+            PETSc.garbage_cleanup(PETSc.COMM_SELF)
+            
         hybridsolver_primal.update_variables()
         hybridsolver_dual.update_variables()
 
         exact_time.assign(actual_time)
 
-        if system=="Maxwell":
+        if case=="Maxwell":
             error_dict_actual = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
         else:
             error_dict_actual = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)

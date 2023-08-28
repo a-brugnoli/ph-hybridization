@@ -6,8 +6,8 @@ from src.postprocessing import basic_plotting
 
 bc_case = "mixed" 
 discretization = "hybrid"
-dim=2
-quad=False
+dim=3
+quad=True
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/" \
                   + f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
@@ -15,9 +15,9 @@ deg_vec  = [1,2,3]
 
 h_list = []
 
-norm = "Linf"
+# norm = "Linf"
 # norm = "L2"
-# norm = "Tend"
+norm = "Tend"
 
 # Errors
 
