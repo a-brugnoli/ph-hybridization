@@ -1,2 +1,0 @@
-,system,pol_degree,bc,discretization,time_step,t_end,dim,quad
-0,Maxwell,1,mixed,mixed,0.001,0.1,3,False

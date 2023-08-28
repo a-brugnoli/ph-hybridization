@@ -7,7 +7,7 @@ from src.postprocessing import basic_plotting
 bc_case = "mixed" 
 discretization = "hybrid"
 dim=2
-quad=True
+quad=False
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/" \
                   + f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
@@ -15,9 +15,9 @@ deg_vec  = [1,2,3]
 
 h_list = []
 
-# norm = "Linf"
+norm = "Linf"
 # norm = "L2"
-norm = "Tend"
+# norm = "Tend"
 
 # Errors
 
@@ -212,13 +212,13 @@ if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
     
 # # Plot primal/dual
 basic_plotting.plot_convergence(deg_vec, h_list=h_list, variable_list=error_pressure_df, 
-                                label="deg",
+                                label="s",
                                 ylabel=r'$\log|| {p}^0_h - \widehat{p}^3_{h} ||_{L^2}$',
                                 title=r'Error ${p}^0_h - \widehat{p}^3_{h}$', 
                                 save_path=f"{directory_results}error_pressure_df")
                                 
 basic_plotting.plot_convergence(deg_vec, h_list=h_list, variable_list=error_velocity_df, 
-                                label="deg", 
+                                label="s", 
                                 ylabel=r'$\log|| \widehat{u}^2_h - {u}^1_{h} ||_{L^2}$',
                                 title=r'Error $\widehat{u}^2_h - {u}^1_{h}$', 
                                 save_path=f"{directory_results}error_velocity_df")

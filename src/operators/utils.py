@@ -5,7 +5,8 @@ def facet_form(integrand, extruded):
         facet_form = (integrand('+') + integrand('-')) * fdrk.dS_v \
                     +(integrand('+') + integrand('-')) * fdrk.dS_h \
                     + integrand * fdrk.ds_v \
-                    + integrand * fdrk.ds_tb 
+                    + integrand * fdrk.ds_t \
+                    + integrand * fdrk.ds_b
     else:
         facet_form = (integrand('+') + integrand('-')) * fdrk.dS + integrand * fdrk.ds
 

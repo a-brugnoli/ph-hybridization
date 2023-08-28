@@ -12,7 +12,7 @@ directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" \
                    +f"Maxwell/{discretization}_discretization/" \
                    +f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
-deg_vec  = [1]
+deg_vec  = [2]
 
 h_list = []
 
@@ -210,13 +210,13 @@ if len(error_normal_dual) > 0 and  len(error_tangential_dual) > 0:
     
 # # Plot primal/dual
 basic_plotting.plot_convergence(deg_vec, h_list=h_list, variable_list=error_electric_df, 
-                                label="deg",
+                                label="s",
                                 ylabel=r'$\log|| {E}^1_h - \widehat{E}^2_{h} ||_{L^2}$',
                                 title=r'Error ${E}^1_h - \widehat{E}^2_{h}$', 
                                 save_path=f"{directory_results}error_electric_df")
                                 
 basic_plotting.plot_convergence(deg_vec, h_list=h_list, variable_list=error_magnetic_df, 
-                                label="deg", 
+                                label="s", 
                                 ylabel=r'$\log|| \widehat{H}^1_h - {H}^2_{h} ||_{L^2}$',
                                 title=r'Error $\widehat{H}^1_h - {H}^2_{h}$', 
                                 save_path=f"{directory_results}error_magnetic_df")

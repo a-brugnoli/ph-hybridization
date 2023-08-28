@@ -42,16 +42,14 @@ def compute_error(n_elements, dict_configuration):
                                                 formulation="dual")
     
     exact_time = fdrk.Constant(0)
-    
     state_exact = problem.get_exact_solution(exact_time)
+
     if system=="Maxwell":
             error_dict_0 = dict_error_maxwell(state_exact, hybridsolver_primal, hybridsolver_dual)
     else:
             error_dict_0 = dict_error_wave(state_exact, hybridsolver_primal, hybridsolver_dual)
 
     # return {"Linf": error_dict_0, "L2": error_dict_0, "Tend": error_dict_0}
-
-    # Linf error in time, L2 error in time and error at final time
     error_dict_Linf = error_dict_0
 
     error_dict_L2 = {}
@@ -185,6 +183,9 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
         error_tangential_primal = solver_primal.operators.trace_norm_RT(exact_velocity-velocity_tangential_primal)
         projected_exact_pressure = solver_primal.operators.project_RT_facet(exact_pressure, broken=True)
         error_normal_primal = solver_primal.operators.trace_norm_RT(projected_exact_pressure-pressure_normal_primal)
+        # print("WARNING: exact pressure used for computation of the normal trace ")
+        # error_normal_primal = solver_primal.operators.trace_norm_RT(exact_pressure*solver_primal.operators.normal_versor\
+        #                                                             -pressure_normal_primal)
 
     else:
         pressure_primal, velocity_primal = solver_primal.state_old.subfunctions
@@ -201,6 +202,10 @@ def dict_error_wave(state_exact, solver_primal: HamiltonianWaveSolver, solver_du
         error_tangential_dual = solver_dual.operators.trace_norm_CG(exact_pressure-pressure_tangential_dual)
         projected_exact_velocity = solver_dual.operators.project_CG_facet(exact_velocity, broken=True)
         error_normal_dual = solver_dual.operators.trace_norm_CG(projected_exact_velocity-velocity_normal_dual)
+        # print("WARNING: exact velocity used for computation of the normal trace ")
+        # error_normal_dual = solver_dual.operators.trace_norm_CG(fdrk.dot(exact_velocity, solver_dual.operators.normal_versor)\
+        #                                                         -velocity_normal_dual)
+
     else:
         pressure_dual, velocity_dual = solver_dual.state_old.subfunctions
 

@@ -52,7 +52,7 @@ class WaveOperators(SystemOperators):
     def get_initial_conditions(self, expression_initial: tuple):
         pressure_field_exp, velocity_field_exp = expression_initial
 
-        # Interpolation on broken spaces has been fixed in recent versions of firedrake
+        # # Interpolation on broken spaces has been fixed in recent versions of firedrake
         pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
         
         try:
@@ -79,14 +79,6 @@ class WaveOperators(SystemOperators):
                     PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
                     variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
 
-                try:
-                    variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-                except NotImplementedError:
-                    print("Tangential trace cannot be interpolated")
-                    # variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
-                    variable_tangentialtrace = fdrk.project(velocity, self.space_global)
-                
-
             else:
                 exact_normaltrace = velocity_field_exp
                 exact_tangtrace = pressure_field_exp 
@@ -96,15 +88,8 @@ class WaveOperators(SystemOperators):
                 try:
                     variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
                 except NotImplementedError:
-<<<<<<< HEAD
-                    print("Tangential trace cannot be interpolated")
-                    # variable_tangentialtrace = fdrk.project(exact_tangtrace, self.space_global)
-                    variable_tangentialtrace = self.project_CG_facet(exact_tangtrace)
-
-=======
                     PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
                     variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
->>>>>>> origin/main
 
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
         else:
@@ -259,58 +244,8 @@ class WaveOperators(SystemOperators):
 
         a_integrand = fdrk.inner(test_function, trial_function)
 
-<<<<<<< HEAD
-        return projected_variable
-    
-
-    def project_CG_facet(self, variable_to_project):
-        if self.discretization!="hybrid":
-            PETSc.Sys.Print("Formulation is not hybrid. Function not available")
-            pass
-
-        # project normal trace of u_e onto Vnor
-        trial_function = fdrk.TrialFunction(self.facet_CG_space)
-        test_function = fdrk.TestFunction(self.facet_CG_space)
-
-        a_form = fdrk.inner(test_function, trial_function)
-        l_form = fdrk.inner(test_function, variable_to_project)
-
-        if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
-                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
-            
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
-                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb
-        else:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS + a_form * fdrk.ds
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS + l_form * fdrk.ds
-
-        A_matrix = fdrk.Tensor(a_operator)
-        b_vector = fdrk.Tensor(l_functional)
-        projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
-
-        return projected_variable
-
-
-
-    def project_RT_brokenfacet(self, variable_to_project):
-        # project normal trace of u_e onto Vnor
-        trial_function = fdrk.TrialFunction(self.brokenfacet_RT_space)
-        test_function = fdrk.TestFunction(self.brokenfacet_RT_space)
-
-        a_form = fdrk.inner(test_function, self.normal_versor)*fdrk.inner(trial_function, self.normal_versor)
-        l_form = fdrk.inner(test_function, self.normal_versor)*variable_to_project
-
-        if self.domain.extruded:
-            a_operator = (a_form('+') + a_form('-')) * fdrk.dS_v + a_form * fdrk.ds_v \
-                        +(a_form('+') + a_form('-')) * fdrk.dS_h + a_form * fdrk.ds_tb
-             
-            l_functional = (l_form('+') + l_form('-')) * fdrk.dS_v + l_form * fdrk.ds_v \
-                          +(l_form('+') + l_form('-')) * fdrk.dS_h + l_form * fdrk.ds_tb 
-=======
         if broken:
             l_integrand = test_function*fdrk.dot(variable_to_project, self.normal_versor)
->>>>>>> origin/main
         else:
             l_integrand = fdrk.inner(test_function, variable_to_project)
 

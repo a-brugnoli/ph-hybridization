@@ -35,11 +35,6 @@ class Problem(ABC):
 
     def _get_time_function(self, time: fdrk.Constant, omega):
         f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
-<<<<<<< HEAD
-        # print("WARNING: f time is sin")
-        # f_time = fdrk.sin(omega * time)
-=======
->>>>>>> origin/main
 
         df_dtime = fdrk.diff(f_time, time)
         return f_time, df_dtime

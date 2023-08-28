@@ -4,6 +4,9 @@ from src.problems.problem import Problem
 from src.operators.maxwell_operators import MaxwellOperators
 from src.operators.wave_operators import WaveOperators
 from firedrake.petsc import PETSc
+from firedrake.tsfc_interface import TSFCKernel
+from pyop2.global_kernel import GlobalKernel
+import gc
 
 class HamiltonianWaveSolver(Solver):
     def __init__(self, 
@@ -174,14 +177,22 @@ class HamiltonianWaveSolver(Solver):
 
                 updated_bcs = fdrk.DirichletBC(self.space_bc, projected_value_bc, self.list_id_bc)          
 
-                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional, self.global_multiplier,\
-                                                                       bcs=updated_bcs)
-                global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
-                global_solver.solve()
-                self._assemble_solution_hybrid()
+                A_mat= fdrk.assemble(self.A_global_operator, bcs=updated_bcs)
+                b_vec=fdrk.assemble(self.b_global_functional)
+                fdrk.solve(A_mat, self.global_multiplier, b_vec, solver_parameters=self.solver_parameters)
+
+                PETSc.Sys.Print("Cleaning up memory ")
+                gc.collect()
+                PETSc.garbage_cleanup(self.operators.domain._comm)
+                PETSc.garbage_cleanup(self.operators.domain.comm)
+                PETSc.garbage_cleanup(PETSc.COMM_SELF)
+                PETSc.Sys.Print("Clearing cache (speed slows down increasingsly)")
+                TSFCKernel._cache.clear()
+                GlobalKernel._cache.clear()
             else:
                 self.global_solver.solve()
-                self._assemble_solution_hybrid()
+
+            self._assemble_solution_hybrid()
 
         self.state_midpoint.assign(0.5*(self.state_new + self.state_old))
         self.actual_time.assign(self.time_new)

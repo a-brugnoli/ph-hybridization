@@ -4,11 +4,7 @@ from src.problems.eigensolution_wave import EigensolutionWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import firedrake as fdrk
 
-<<<<<<< HEAD
-n_elements = 5
-=======
 n_elements = 4
->>>>>>> origin/main
 pol_degree = 3
 
 quad = False

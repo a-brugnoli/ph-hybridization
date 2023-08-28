@@ -81,8 +81,6 @@ class MaxwellOperators(SystemOperators):
 
     def essential_boundary_conditions(self, problem: Problem, time: fdrk.Constant):
         
-        essential_bc = []
-
         bc_dictionary = problem.get_boundary_conditions(time)
 
         if self.formulation=="primal":

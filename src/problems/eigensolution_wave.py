@@ -105,11 +105,6 @@ class EigensolutionWave(Problem):
                 bd_dict = {"dirichlet": (["on_boundary", "top", "bottom"], exact_pressure), "neumann":([], null_bc_vec)} 
             else:
                 bd_dict = {"dirichlet": (["on_boundary"], exact_pressure), "neumann":([], null_bc_vec)} 
-<<<<<<< HEAD
-                
-=======
-
->>>>>>> origin/main
         elif self.bc_type == "neumann":
             if self.dim==3 and self.quad:
                 bd_dict = {"dirichlet": ([], null_bc), "neumann": (["on_boundary", "top", "bottom"], exact_velocity)}
