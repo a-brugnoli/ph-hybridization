@@ -6,8 +6,8 @@ from .utils import facet_form
 
 class MaxwellOperators(SystemOperators):
 
-    def __init__(self, discretization, formulation, domain: fdrk.MeshGeometry, pol_degree: int):
-        super().__init__(discretization, formulation, domain, pol_degree)
+    def __init__(self, discretization, formulation, problem: Problem, pol_degree: int):
+        super().__init__(discretization, formulation, problem, pol_degree)
       
 
     def _set_space(self):
@@ -133,7 +133,14 @@ class MaxwellOperators(SystemOperators):
             test_electric, test_magnetic = testfunctions
             electric_field, magnetic_field = functions
 
-        mass = fdrk.inner(test_electric, electric_field) * fdrk.dx\
+        if self.problem.material_coefficients:
+            coeff_electric, coeff_magnetic = self.problem.get_material_coefficients()     
+
+            mass = fdrk.inner(test_electric, coeff_electric * electric_field) * fdrk.dx\
+                    + fdrk.inner(test_magnetic, coeff_magnetic * magnetic_field) * fdrk.dx
+          
+        else:
+            mass = fdrk.inner(test_electric, electric_field) * fdrk.dx\
                     + fdrk.inner(test_magnetic, magnetic_field) * fdrk.dx
         
         if self.formulation=="primal":

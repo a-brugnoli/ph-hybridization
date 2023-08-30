@@ -37,9 +37,13 @@ class EigensolutionMaxwell(Problem):
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
         self.forcing = False
+        self.material_coefficients = False
+
+
+    def get_material_coefficients(self):
+        return (fdrk.Constant(1), fdrk.Constant(1))
 
         
-
     def get_exact_solution(self, time: fdrk.Constant):
         omega_space = 1
         omega_time = fdrk.sqrt(3)*omega_space
@@ -68,7 +72,7 @@ class EigensolutionMaxwell(Problem):
 
         force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
 
-        return (force_electric, None)
+        return (force_electric, fdrk.Constant((0,) * self.dim))
     
 
     def get_initial_conditions(self):

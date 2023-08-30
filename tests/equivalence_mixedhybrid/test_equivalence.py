@@ -14,7 +14,7 @@ from firedrake.petsc import PETSc
 from tests.basic.debug_solver import debug_wave
 
 
-n_elements = 4
+n_elements = 16
 pol_degree = 1
 time_step = 1/500
 t_end = 10*time_step

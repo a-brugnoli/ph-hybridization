@@ -14,7 +14,7 @@ from mpi4py import MPI
 n_elements = 16
 pol_degree = 1
 time_step = 1/500
-t_end = 10*time_step
+t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
 
 comm = MPI.COMM_WORLD
@@ -22,7 +22,7 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 dim=3
-quad = False
+quad = True
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)

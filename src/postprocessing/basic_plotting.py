@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rcParams
 
-SMALL_SIZE = 20
-MEDIUM_SIZE = 22
-BIGGER_SIZE = 24
+SMALL_SIZE = 18
+MEDIUM_SIZE = 20
+BIGGER_SIZE = 22
 
 plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
 plt.rc('axes', titlesize=BIGGER_SIZE)  # fontsize of the axes title
@@ -51,7 +51,7 @@ def plot_signal(t_vec, signal_vec, title=None, save_path=None):
     if title is not None:
         plt.title(title)
     if save_path is not None:
-        plt.savefig(save_path, dpi='figure', format='eps')
+        plt.savefig(save_path+".eps", dpi='figure', format='eps')
 
 
 
@@ -66,7 +66,7 @@ def plot_signals(t_vec, *signals_vec, **options):
     if "title" in options:
         plt.title(options["title"])
     if "save_path" in options:
-        plt.savefig(options["save_path"], dpi='figure', format='eps')
+        plt.savefig(options["save_path"]+".eps", dpi='figure', format='eps')
 
 
 def plot_convergence(deg_vec, h_list, variable_list, **options):
@@ -121,5 +121,5 @@ def plot_convergence(deg_vec, h_list, variable_list, **options):
         if "ylabel" in options:
             plt.ylabel(options["ylabel"])
         if "save_path" in options:
-            plt.savefig(options["save_path"], dpi='figure', format='eps')
+            plt.savefig(options["save_path"]+".eps", dpi='figure', format='eps')
 

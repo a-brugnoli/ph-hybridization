@@ -11,6 +11,7 @@ class Problem(ABC):
         self.dim=None
         self.normal_versor = None
         self.quad = None
+        self.material_coefficients = None
 
 
 
@@ -23,6 +24,9 @@ class Problem(ABC):
     def get_exact_solution(self, time: fdrk.Constant):
         pass
     
+    @abstractmethod    
+    def get_material_coefficients(self):
+        pass
 
     @abstractmethod
     def get_forcing(self, time: fdrk.Constant):

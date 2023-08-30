@@ -36,14 +36,14 @@ class HamiltonianWaveSolver(Solver):
 
         if system=="Maxwell":
             if discretization=="hybrid" :
-                self.operators = MaxwellOperators(discretization, formulation, problem.domain, pol_degree)
+                self.operators = MaxwellOperators(discretization, formulation, problem, pol_degree)
             elif discretization=="mixed":
-                self.operators = MaxwellOperators(discretization, formulation, problem.domain, pol_degree)
+                self.operators = MaxwellOperators(discretization, formulation, problem, pol_degree)
         elif system=="Wave":
             if discretization=="hybrid" :
-                self.operators = WaveOperators(discretization, formulation, problem.domain, pol_degree)
+                self.operators = WaveOperators(discretization, formulation, problem, pol_degree)
             elif discretization=="mixed":
-                self.operators = WaveOperators(discretization, formulation, problem.domain, pol_degree)
+                self.operators = WaveOperators(discretization, formulation, problem, pol_degree)
         else:
             ValueError(f"System type {system} is not a valid option")
 
@@ -149,6 +149,7 @@ class HamiltonianWaveSolver(Solver):
             self.global_multiplier = fdrk.Function(self.operators.space_global)
 
             if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+            # if "quadrilateral" in self.operators.cell_name:
                 if self.verbose:
                     PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
                 pass
@@ -175,6 +176,7 @@ class HamiltonianWaveSolver(Solver):
             self.solver.solve()
         else:
             if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
+            # if "quadrilateral" in self.operators.cell_name:
                 # PETSc.Sys.Print("Projecting the boundary condition on the appropriate space")
                 if isinstance(self.operators, WaveOperators):
                     if self.operators.formulation=="primal":
@@ -184,7 +186,9 @@ class HamiltonianWaveSolver(Solver):
                 else:
                     projected_value_bc = self.operators.project_NED_facet(self.value_bc, broken=False)
 
-                updated_bcs = fdrk.DirichletBC(self.space_bc, projected_value_bc, self.list_id_bc)          
+                updated_bcs = []
+                for id_bc in self.list_id_bc:
+                    updated_bcs.append(fdrk.DirichletBC(self.space_bc, projected_value_bc, id_bc))            
 
                 A_mat = fdrk.assemble(self.A_global_operator, bcs=updated_bcs)
                 b_vec = fdrk.assemble(self.b_global_functional)

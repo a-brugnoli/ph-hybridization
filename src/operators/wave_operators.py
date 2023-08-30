@@ -6,8 +6,8 @@ from .utils import facet_form
 
 class WaveOperators(SystemOperators):
 
-    def __init__(self, discretization, formulation, domain: fdrk.MeshGeometry, pol_degree: int):
-        super().__init__(discretization, formulation, domain, pol_degree)
+    def __init__(self, discretization, formulation, problem: Problem, pol_degree: int):
+        super().__init__(discretization, formulation, problem, pol_degree)
       
 
     def _set_space(self):
@@ -52,18 +52,21 @@ class WaveOperators(SystemOperators):
     def get_initial_conditions(self, expression_initial: tuple):
         pressure_field_exp, velocity_field_exp = expression_initial
 
-        # # Interpolation on broken spaces has been fixed in recent versions of firedrake
-        pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
+        # Interpolation on broken spaces has been fixed in recent versions of firedrake
         
-        try:
+        if "quadrilateral" not in self.cell_name:
+            pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
             velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
-        except NotImplementedError:
+        else:
             print("Velocity cannot be interpolated")
             if self.formulation == "primal":
+                projected_pressure_expression = fdrk.project(pressure_field_exp, self.DG_space)
                 projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
             else:
+                projected_pressure_expression = fdrk.project(pressure_field_exp, self.CG_space)
                 projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
 
+            pressure = fdrk.project(projected_pressure_expression, self.fullspace.sub(0))
             velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
 
         if self.discretization=="hybrid":
@@ -73,9 +76,9 @@ class WaveOperators(SystemOperators):
 
                 variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
 
-                try:
+                if "quadrilateral" not in self.cell_name:
                     variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-                except NotImplementedError:
+                else:
                     PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
                     variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
 
@@ -85,11 +88,50 @@ class WaveOperators(SystemOperators):
 
                 variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
 
-                try:
+                if "quadrilateral" not in self.cell_name:
                     variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-                except NotImplementedError:
+                else:
                     PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
                     variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
+
+        # # Interpolation on broken spaces has been fixed in recent versions of firedrake
+        # pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
+        
+        # try:
+        #     velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
+        # except NotImplementedError:
+        #     print("Velocity cannot be interpolated")
+        #     if self.formulation == "primal":
+        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
+        #     else:
+        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
+
+        #     velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
+
+        # if self.discretization=="hybrid":
+        #     if self.formulation == "primal":
+        #         exact_normaltrace = pressure_field_exp
+        #         exact_tangtrace = velocity_field_exp              
+
+        #         variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
+
+        #         try:
+        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+        #         except NotImplementedError:
+        #             PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
+        #             variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
+
+        #     else:
+        #         exact_normaltrace = velocity_field_exp
+        #         exact_tangtrace = pressure_field_exp 
+
+        #         variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
+
+        #         try:
+        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+        #         except NotImplementedError:
+        #             PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
+        #             variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
 
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
         else:
@@ -155,7 +197,14 @@ class WaveOperators(SystemOperators):
             test_pressure, test_velocity = testfunctions
             pressure_field, velocity_field = functions
 
-        mass = fdrk.inner(test_pressure, pressure_field) * fdrk.dx\
+        if self.problem.material_coefficients:
+            coeff_pressure, coeff_velocity = self.problem.get_material_coefficients()     
+
+            mass = fdrk.inner(test_pressure, coeff_pressure * pressure_field) * fdrk.dx\
+                    + fdrk.inner(test_velocity, coeff_velocity * velocity_field) * fdrk.dx
+               
+        else:
+            mass = fdrk.inner(test_pressure, pressure_field) * fdrk.dx\
                     + fdrk.inner(test_velocity, velocity_field) * fdrk.dx
         
         if self.formulation=="primal":

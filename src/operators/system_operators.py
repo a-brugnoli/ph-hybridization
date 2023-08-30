@@ -1,9 +1,10 @@
 from .spaces_deRham import deRhamElements, deRhamSpaces
 import firedrake as fdrk
+from src.problems.problem import Problem
 from abc import ABC, abstractmethod
 
 class SystemOperators(ABC):
-    def __init__(self, discretization, formulation, domain: fdrk.MeshGeometry, pol_degree):
+    def __init__(self, discretization, formulation, problem: Problem, pol_degree):
         """
         Constructor for the MaxwellOperators class
         Parameters
@@ -20,17 +21,18 @@ class SystemOperators(ABC):
         self.discretization=discretization
         self.formulation=formulation
 
-        self.domain = domain
+        self.problem = problem
+        self.domain = problem.domain
         self.pol_degree = pol_degree
         self.normal_versor = fdrk.FacetNormal(self.domain)
         self.cell_diameter = fdrk.CellDiameter(self.domain)
         self.cell_name = str(self.domain.ufl_cell())
 
         self.CG_element, self.NED_element, self.RT_element, self.DG_element = \
-            deRhamElements(domain, pol_degree).values()
+            deRhamElements(self.domain, pol_degree).values()
         
         self.CG_space, self.NED_space, self.RT_space, self.DG_space = \
-            deRhamSpaces(domain, pol_degree).values()
+            deRhamSpaces(self.domain, pol_degree).values()
 
         self._set_space()
 

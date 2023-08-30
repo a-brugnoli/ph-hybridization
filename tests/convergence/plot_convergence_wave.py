@@ -7,7 +7,7 @@ from src.postprocessing import basic_plotting
 bc_case = "mixed" 
 discretization = "hybrid"
 dim=3
-quad=True
+quad=False
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/" \
                   + f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 

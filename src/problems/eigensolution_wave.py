@@ -23,7 +23,7 @@ class EigensolutionWave(Problem):
         if dim==3:
             if quad:
                 PETSc.Sys.Print("Hexahedral mesh requested")
-                quad_mesh = fdrk.UnitSquareMesh(n_elements_x, n_elements_x, quadrilateral=quad)
+                quad_mesh = fdrk.UnitSquareMesh(n_elements_x, n_elements_y, quadrilateral=quad)
                 self.domain = fdrk.ExtrudedMesh(quad_mesh, layers=n_elements_z)
 
             else:
@@ -49,7 +49,12 @@ class EigensolutionWave(Problem):
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
         self.forcing = False
-       
+        self.material_coefficients = False
+
+
+    def get_material_coefficients(self):
+        return (fdrk.Constant(1), fdrk.Constant(1))
+
 
     def get_exact_solution(self, time: fdrk.Constant):
         omega_space = 1
@@ -77,7 +82,7 @@ class EigensolutionWave(Problem):
 
         force_pressure = fdrk.diff(exact_pressure, time) - fdrk.div(exact_velocity)
 
-        return (force_pressure, None)
+        return (force_pressure, fdrk.Constant((0,) * self.dim))
     
 
     def get_initial_conditions(self):

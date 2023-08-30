@@ -85,7 +85,7 @@ for case in cases:
                 results_reduction_wave["Primal"][pol_degree].append(dim_globalspace_hybrid_primal/dim_fullspace_mixed_primal*100)
 
                 results_mixed_wave["Dual"][pol_degree].append(dim_fullspace_mixed_dual)
-                results_hybrid_wave["Dual"][pol_degree].append(dim_fullspace_mixed_primal)
+                results_hybrid_wave["Dual"][pol_degree].append(dim_globalspace_hybrid_dual)
                 results_reduction_wave["Dual"][pol_degree].append(dim_globalspace_hybrid_dual/dim_fullspace_mixed_dual*100)
             else:
                 results_mixed_maxwell["Primal"][pol_degree].append(dim_fullspace_mixed_primal)
@@ -93,7 +93,7 @@ for case in cases:
                 results_reduction_maxwell["Primal"][pol_degree].append(dim_globalspace_hybrid_primal/dim_fullspace_mixed_primal*100)
 
                 results_mixed_maxwell["Dual"][pol_degree].append(dim_fullspace_mixed_dual)
-                results_hybrid_maxwell["Dual"][pol_degree].append(dim_fullspace_mixed_primal)
+                results_hybrid_maxwell["Dual"][pol_degree].append(dim_globalspace_hybrid_dual)
                 results_reduction_maxwell["Dual"][pol_degree].append(dim_globalspace_hybrid_dual/dim_fullspace_mixed_dual*100)
 
 
