@@ -1,2 +1,2 @@
-,system,pol_degree,bc,discretization,time_step,t_end,dim,quad
+,case,pol_degree,bc,discretization,time_step,t_end,dim,quad
 0,Wave,2,mixed,hybrid,0.002,1,2,False

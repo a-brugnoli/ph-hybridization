@@ -33,8 +33,8 @@ size = comm.Get_size()
 
 pol_degree_vec = [1,2,3] 
 
-cases = ["Wave", "Maxwell"]
-# cases = ["Wave"]
+# cases = ["Wave", "Maxwell"]
+cases = ["Wave"]
 # cases = ["Maxwell"]
 
 
@@ -53,8 +53,8 @@ for case in cases:
             t_end = 1
             discretization = "hybrid"
             boundary_condition= "mixed"
-            quad = True
-            dim = 3
+            quad = False
+            dim = 2
             
             dict_configuration = {"case": case,
                                 "pol_degree": pol_degree, 
