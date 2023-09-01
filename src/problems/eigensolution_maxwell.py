@@ -55,11 +55,14 @@ class EigensolutionMaxwell(Problem):
         g_z = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.cos(omega_space * self.z)
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
-
         curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
 
         exact_electric = g_fun * dft
         exact_magnetic = -curl_g * ft
+
+        # print("Manufactured solution")
+        # exact_electric = g_fun * fdrk.sin(time)
+        # exact_magnetic = -curl_g * fdrk.sin(time)
 
         return (exact_electric, exact_magnetic)
     
@@ -72,7 +75,9 @@ class EigensolutionMaxwell(Problem):
 
         force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
 
-        return (force_electric, fdrk.Constant((0,) * self.dim))
+        force_magnetic = fdrk.diff(exact_magnetic, time) + fdrk.curl(exact_electric)
+
+        return (force_electric, force_magnetic)
     
 
     def get_initial_conditions(self):

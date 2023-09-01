@@ -16,9 +16,9 @@ deg_vec  = [1,2,3]
 
 h_list = []
 
-# norm = "Linf"
+norm = "Linf"
 # norm = "L2"
-norm = "Tend"
+# norm = "Tend"
 
 # Errors
 

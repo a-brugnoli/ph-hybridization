@@ -38,10 +38,11 @@ class Problem(ABC):
         pass
 
     def _get_time_function(self, time: fdrk.Constant, omega):
-        # f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
-        # f_time = fdrk.sin(omega * time)   ## velocity (Hdiv) well approximated
-        f_time = fdrk.cos(omega * time)   ## pressure (H1) well approximated
+        f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
+        # f_time = fdrk.sin(omega * time)   # Interpolation: pressure well approximated
+        # f_time = fdrk.cos(omega * time) # Interpolation: velocity well approximated
 
+        # First variable df_dt(t), second variable f(t)
         df_dtime = fdrk.diff(f_time, time)
         return f_time, df_dtime
     

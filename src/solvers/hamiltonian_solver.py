@@ -118,11 +118,14 @@ class HamiltonianWaveSolver(Solver):
                     self.tests, states_old, control=self.natural_bcs)
         
         if self.problem.forcing:
-            if self.verbose:
-                PETSc.Sys.Print("Problem with forcing term")
+            PETSc.Sys.Print("Problem with forcing term")
+
+            # if self.verbose:
+            #     PETSc.Sys.Print("Problem with forcing term")
             tuple_forcing = self.problem.get_forcing(self.time_midpoint)
 
             for counter, force in enumerate(tuple_forcing):
+                PETSc.Sys.Print(f"Force {counter} : {force}")
                 if force is not None:
                     b_functional += self.time_step*fdrk.inner(self.tests[counter], force)*fdrk.dx
 

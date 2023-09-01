@@ -49,6 +49,7 @@ class EigensolutionWave(Problem):
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
         self.forcing = False
+
         self.material_coefficients = False
 
 
@@ -64,13 +65,15 @@ class EigensolutionWave(Problem):
             g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
         else:
             g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y)
-
-        ft, dft = self._get_time_function(time, omega=omega_time)
-        
         grad_g = fdrk.grad(g_fun)
 
+        ft, dft = self._get_time_function(time, omega=omega_time)
         exact_pressure = g_fun * dft
         exact_velocity = grad_g * ft
+
+        # print("Manufactured solution")
+        # exact_pressure = g_fun * fdrk.sin(time)
+        # exact_velocity = grad_g * fdrk.sin(time)
 
         return (exact_pressure, exact_velocity)
     
@@ -82,7 +85,9 @@ class EigensolutionWave(Problem):
 
         force_pressure = fdrk.diff(exact_pressure, time) - fdrk.div(exact_velocity)
 
-        return (force_pressure, fdrk.Constant((0,) * self.dim))
+        force_velocity = fdrk.diff(exact_velocity, time) - fdrk.grad(exact_pressure)
+
+        return (force_pressure, force_velocity)
     
 
     def get_initial_conditions(self):
