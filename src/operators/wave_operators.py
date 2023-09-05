@@ -54,7 +54,17 @@ class WaveOperators(SystemOperators):
 
         # Interpolation on broken spaces has been fixed in recent versions of firedrake
         pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
-        velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
+        
+        try:
+            velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
+        except NotImplementedError:
+            print("Velocity cannot be interpolated")
+            if self.formulation == "primal":
+                projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
+            else:
+                projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
+
+            velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
 
         if self.discretization=="hybrid":
             if self.formulation == "primal":
@@ -63,122 +73,23 @@ class WaveOperators(SystemOperators):
 
                 variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
 
+                try:
+                    variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+                except NotImplementedError:
+                    PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
+                    variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
+
             else:
                 exact_normaltrace = velocity_field_exp
                 exact_tangtrace = pressure_field_exp 
 
                 variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
-            
-            variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
 
-
-        # print("Velocity cannot be interpolated")
-        # if self.formulation == "primal":
-        #     projected_pressure_expression = fdrk.project(pressure_field_exp, self.DG_space)
-        #     projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
-        # else:
-        #     projected_pressure_expression = fdrk.project(pressure_field_exp, self.CG_space)
-        #     projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
-
-        # pressure = fdrk.project(projected_pressure_expression, self.fullspace.sub(0))
-        # velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
-
-        # if self.discretization=="hybrid":
-        #     if self.formulation == "primal":
-        #         exact_normaltrace = pressure_field_exp
-        #         exact_tangtrace = velocity_field_exp              
-
-        #         variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
-
-        #         variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
-
-        #     else:
-        #         exact_normaltrace = velocity_field_exp
-        #         exact_tangtrace = pressure_field_exp 
-
-        #         variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
-
-        #         variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
-
-        # # Interpolation on broken spaces has been fixed in recent versions of firedrake
-        # if "quadrilateral" not in self.cell_name:
-        #     pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
-        #     velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
-        # else:
-        #     print("Velocity cannot be interpolated")
-        #     if self.formulation == "primal":
-        #         projected_pressure_expression = fdrk.project(pressure_field_exp, self.DG_space)
-        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
-        #     else:
-        #         projected_pressure_expression = fdrk.project(pressure_field_exp, self.CG_space)
-        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
-
-        #     pressure = fdrk.project(projected_pressure_expression, self.fullspace.sub(0))
-        #     velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
-
-        # if self.discretization=="hybrid":
-        #     if self.formulation == "primal":
-        #         exact_normaltrace = pressure_field_exp
-        #         exact_tangtrace = velocity_field_exp              
-
-        #         variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
-
-        #         if "quadrilateral" not in self.cell_name:
-        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-        #         else:
-        #             PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
-        #             variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
-
-        #     else:
-        #         exact_normaltrace = velocity_field_exp
-        #         exact_tangtrace = pressure_field_exp 
-
-        #         variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
-
-        #         if "quadrilateral" not in self.cell_name:
-        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-        #         else:
-        #             PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
-        #             variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
-
-        # # Interpolation on broken spaces has been fixed in recent versions of firedrake
-        # pressure = fdrk.interpolate(pressure_field_exp, self.fullspace.sub(0))
-        
-        # try:
-        #     velocity = fdrk.interpolate(velocity_field_exp, self.fullspace.sub(1))
-        # except NotImplementedError:
-        #     print("Velocity cannot be interpolated")
-        #     if self.formulation == "primal":
-        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.RT_space)
-        #     else:
-        #         projected_velocity_expression = fdrk.project(velocity_field_exp, self.NED_space)
-
-        #     velocity = fdrk.project(projected_velocity_expression, self.fullspace.sub(1))
-
-        # if self.discretization=="hybrid":
-        #     if self.formulation == "primal":
-        #         exact_normaltrace = pressure_field_exp
-        #         exact_tangtrace = velocity_field_exp              
-
-        #         variable_normaltrace = self.project_RT_facet(exact_normaltrace, broken=True)      
-
-        #         try:
-        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-        #         except NotImplementedError:
-        #             PETSc.Sys.Print("Tangential velocity trace cannot be interpolated, project on the appropriate space")     
-        #             variable_tangentialtrace = self.project_RT_facet(exact_tangtrace, broken=False)
-
-        #     else:
-        #         exact_normaltrace = velocity_field_exp
-        #         exact_tangtrace = pressure_field_exp 
-
-        #         variable_normaltrace = self.project_CG_facet(exact_normaltrace, broken=True)
-
-        #         try:
-        #             variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
-        #         except NotImplementedError:
-        #             PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
-        #             variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
+                try:
+                    variable_tangentialtrace = fdrk.interpolate(exact_tangtrace, self.space_global)
+                except NotImplementedError:
+                    PETSc.Sys.Print("Tangential pressure trace cannot be interpolated, project on the appropriate space")     
+                    variable_tangentialtrace = self.project_CG_facet(exact_tangtrace, broken=False)
 
             return (pressure, velocity, variable_normaltrace, variable_tangentialtrace)
         else:

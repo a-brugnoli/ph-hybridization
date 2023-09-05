@@ -42,19 +42,19 @@ for case in cases:
     for pol_degree in pol_degree_vec:
 
         if pol_degree==1:
-            n_elem_vector = [1, 2, 4] #, 8, 16] 
+            n_elem_vector = [1, 2, 4, 8, 16] 
         elif pol_degree==2:
-            n_elem_vector = [1, 2, 4] #, 8]
+            n_elem_vector = [1, 2, 4, 8]
         elif pol_degree==3:
             n_elem_vector = [1, 2, 4]
 
         if rank==0:
             time_step = 1/500
             t_end = 0.1
-            discretization = "hybrid"
+            discretization = "mixed"
             boundary_condition= "mixed"
             quad = False
-            dim = 3
+            dim = 2
             
             dict_configuration = {"case": case,
                                 "pol_degree": pol_degree, 

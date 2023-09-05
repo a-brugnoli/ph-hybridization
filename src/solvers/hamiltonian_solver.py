@@ -101,6 +101,7 @@ class HamiltonianWaveSolver(Solver):
         self.essential_bcs = []
         for id_bc in self.list_id_bc:
             self.essential_bcs.append(fdrk.DirichletBC(self.space_bc, self.value_bc, id_bc))            
+            # self.essential_bcs.append(fdrk.DirichletBC(self.space_bc, fdrk.interpolate(self.value_bc, self.space_bc), id_bc))            
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 
@@ -189,13 +190,8 @@ class HamiltonianWaveSolver(Solver):
                 else:
                     projected_value_bc = self.operators.project_NED_facet(self.value_bc, broken=False)
 
-                updated_bcs = []
-                for id_bc in self.list_id_bc:
-                    updated_bcs.append(fdrk.DirichletBC(self.space_bc, projected_value_bc, id_bc))            
-
-                A_mat = fdrk.assemble(self.A_global_operator, bcs=updated_bcs)
-                b_vec = fdrk.assemble(self.b_global_functional)
-                fdrk.solve(A_mat, self.global_multiplier, b_vec, solver_parameters=self.solver_parameters)
+                for iii in range(len(self.list_id_bc)):    
+                    self.essential_bcs[iii].function_arg = projected_value_bc
 
                 # PETSc.Sys.Print("Cleaning up memory")
                 # gc.collect()
@@ -204,7 +200,13 @@ class HamiltonianWaveSolver(Solver):
                 # PETSc.garbage_cleanup(PETSc.COMM_SELF)
                 
             else:
-                self.global_solver.solve()
+                interpolated_value_bc = fdrk.interpolate(self.value_bc, self.space_bc)
+
+                for iii in range(len(self.list_id_bc)):    
+                    self.essential_bcs[iii].function_arg = interpolated_value_bc
+
+                
+            self.global_solver.solve()
 
             self._assemble_solution_hybrid()
 
