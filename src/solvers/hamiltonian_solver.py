@@ -125,7 +125,6 @@ class HamiltonianWaveSolver(Solver):
             tuple_forcing = self.problem.get_forcing(self.time_midpoint)
 
             for counter, force in enumerate(tuple_forcing):
-                PETSc.Sys.Print(f"Force {counter} : {force}")
                 if force is not None:
                     b_functional += self.time_step*fdrk.inner(self.tests[counter], force)*fdrk.dx
 
