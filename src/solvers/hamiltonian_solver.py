@@ -101,7 +101,6 @@ class HamiltonianWaveSolver(Solver):
         self.essential_bcs = []
         for id_bc in self.list_id_bc:
             self.essential_bcs.append(fdrk.DirichletBC(self.space_bc, self.value_bc, id_bc))            
-            # self.essential_bcs.append(fdrk.DirichletBC(self.space_bc, fdrk.interpolate(self.value_bc, self.space_bc), id_bc))            
 
         self.natural_bcs = self.operators.natural_boundary_conditions(self.problem, time=self.time_midpoint)
 

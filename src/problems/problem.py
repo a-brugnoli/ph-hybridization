@@ -40,8 +40,9 @@ class Problem(ABC):
     def _get_time_function(self, time: fdrk.Constant, omega):
         # f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
         # f_time = fdrk.sin(omega * time)   # Interpolation: pressure well approximated
-        f_time = fdrk.cos(omega * time) # Interpolation: velocity well approximated
+        # f_time = fdrk.cos(omega * time) # Interpolation: velocity well approximated
 
+        f_time = fdrk.sin(omega*time+pi/2)
         # First variable df_dt(t), second variable f(t)
         df_dtime = fdrk.diff(f_time, time)
         return f_time, df_dtime
