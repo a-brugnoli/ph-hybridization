@@ -17,7 +17,7 @@ def dict_error_primal(exact_solution, approximate_solution: Function):
     return dict_error
 
 
-def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1):
+def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     """
     Solve an analytical problem for the 2d wave equation with dirichlet
     """
@@ -25,7 +25,7 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1):
     mesh_size = 1/n_elements
     # unstructured_unitsquaremesh(mesh_size)
     # mesh = Mesh("unit_square_mesh.msh")
-    mesh = UnitSquareMesh(n_elements, n_elements)
+    mesh = UnitSquareMesh(n_elements, n_elements, quadrilateral=quad)
     x, y = SpatialCoordinate(mesh)
 
 
@@ -55,7 +55,12 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1):
     # Set spaces (primal formulation)
     cell = mesh.ufl_cell()
     DG_element = FiniteElement("DG", cell, degree-1) 
-    RT_element = FiniteElement("RT", cell, degree, variant=f"integral({degree+1})") 
+
+    if quad:
+        RT_element = FiniteElement("RTCF", cell, degree) 
+    else:
+        RT_element = FiniteElement("RT", cell, degree, variant=f"integral({degree+1})") 
+
     DG_space = FunctionSpace(mesh, DG_element)
     RT_space = FunctionSpace(mesh, RT_element)
 
@@ -71,8 +76,13 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1):
     time = Constant(0)
     exact_state = exact_solution(time)
     exact_pressure, exact_velocity = exact_state
-    pressure_primal_old.assign(interpolate(exact_pressure, DG_space))
-    velocity_primal_old.assign(interpolate(exact_velocity, RT_space))
+
+    if quad:
+        pressure_primal_old.assign(project(exact_pressure, DG_space))
+        velocity_primal_old.assign(project(exact_velocity, RT_space))
+    else:
+        pressure_primal_old.assign(interpolate(exact_pressure, DG_space))
+        velocity_primal_old.assign(interpolate(exact_velocity, RT_space))
 
     mass_operator = mass_form(test_pressure_primal, trial_pressure_primal, test_velocity_primal, trial_velocity_primal)
     j_div_operator = j_form_div(test_pressure_primal, trial_pressure_primal, test_velocity_primal, trial_velocity_primal)

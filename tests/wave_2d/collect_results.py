@@ -2,12 +2,13 @@ import numpy as np
 from compute_err import compute_err
 
 pol_degree = int(input("Enter polynomial degree: "))
+quad = False
 
 n_elements_vec = [2,4,8,16]
 h_vec = 1./np.array(n_elements_vec)
 
-time_step = 1/500
-t_end = 0.1
+time_step = 1/1000
+t_end = 1000*time_step
 
 L2_error_pressure = {"Linf":[], "L2": [], "Tend":[]}
 L2_error_velocity = {"Linf":[], "L2": [], "Tend":[]}
@@ -19,7 +20,7 @@ Hdiv_rate_velocity = {"Linf":[], "L2": [], "Tend":[]}
 
 for ii, n_elem in enumerate(n_elements_vec):
 
-    dict_error_time = compute_err(n_elem, pol_degree, time_step, t_end)
+    dict_error_time = compute_err(n_elem, pol_degree, time_step, t_end, quad=quad)
 
     dict_error_Tend = dict_error_time["Tend"]
     dict_error_Linf = dict_error_time["Linf"]
