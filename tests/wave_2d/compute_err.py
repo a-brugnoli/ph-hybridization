@@ -22,19 +22,23 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     Solve an analytical problem for the 2d wave equation with dirichlet
     """
 
-    mesh_size = 1/n_elements
+    # mesh_size = 1/n_elements
     # unstructured_unitsquaremesh(mesh_size)
     # mesh = Mesh("unit_square_mesh.msh")
     mesh = UnitSquareMesh(n_elements, n_elements, quadrilateral=quad)
     x, y = SpatialCoordinate(mesh)
-
+    normal = FacetNormal(mesh)
 
     def exact_solution(t: Constant):
     # Define exact eigensolution (homogeneous boundary condition)
         g_fun = sin(pi*x)*sin(pi*y)
+        omega = pi*sqrt(2)
+
+        # g_fun = sin(pi*x) + sin(pi*y)
+        # omega = pi
+
         grad_g = grad(g_fun)
         
-        omega = pi*sqrt(2)
         f_time = sin(omega*t) + cos(omega*t)
         df_dtime = diff(f_time, t)
 
@@ -92,7 +96,12 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     mass_functional = mass_form(test_pressure_primal, pressure_primal_old, test_velocity_primal, velocity_primal_old)
     j_div_functional = j_form_div(test_pressure_primal, pressure_primal_old, test_velocity_primal, velocity_primal_old)
 
-    b_functional_midpoint = mass_functional + 0.5 * time_step * j_div_functional
+    time_midpoint = Constant(time_step/2)
+    exact_pressure_midpoint, _ = exact_solution(time_midpoint)
+
+    natural_control = dot(test_velocity_primal, normal) * exact_pressure_midpoint * ds
+
+    b_functional_midpoint = mass_functional + 0.5 * time_step * j_div_functional + time_step * natural_control
 
     primal_problem = LinearVariationalProblem(a_operator_midpoint, b_functional_midpoint, state_primal_new)
     primal_solver = LinearVariationalSolver(primal_problem)
@@ -114,6 +123,8 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
 
         actual_time = (ii+1)*time_step
         time.assign(actual_time)
+
+        time_midpoint.assign(actual_time + time_step/2)
 
         error_dict_actual = dict_error_primal(exact_state, state_primal_old)
 
