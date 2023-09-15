@@ -37,12 +37,9 @@ class Problem(ABC):
     def get_boundary_conditions(self, time: fdrk.Constant):
         pass
 
-    def _get_time_function(self, time: fdrk.Constant, omega):
-        f_time = fdrk.cos(omega * time) + fdrk.sin(omega * time) 
-        # f_time = fdrk.sin(omega * time)   # Interpolation: pressure well approximated
-        # f_time = fdrk.cos(omega * time) # Interpolation: velocity well approximated
+    def _get_time_function(self, time: fdrk.Constant):
+        f_time = 1/2*time**2
 
-        # First variable df_dt(t), second variable f(t)
         df_dtime = fdrk.diff(f_time, time)
         return f_time, df_dtime
     

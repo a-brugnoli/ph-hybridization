@@ -4,21 +4,21 @@ import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "mixed" #input("Enter the boundary conditions (pressure, velocity, mixed):")
-discretization = "hybrid"
+bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
+discretization = "mixed"
 dim=3
 quad=False
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" \
                    +f"Maxwell/{discretization}_discretization/" \
                    +f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
-deg_vec  = [1,2,3]
+deg_vec  = [1,2]
 
 h_list = []
 
-norm = "Linf"
+# norm = "Linf"
 # norm = "L2"
-# norm = "Tend"
+norm = "Tend"
 
 # Errors
 

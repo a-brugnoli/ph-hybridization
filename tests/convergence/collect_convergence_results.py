@@ -31,20 +31,20 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [1,2,3] 
+pol_degree_vec = [1,2] 
 
 # cases = ["Wave", "Maxwell"]
-cases = ["Wave"]
-# cases = ["Maxwell"]
+# cases = ["Wave"]
+cases = ["Maxwell"]
 
 
 for case in cases:
     for pol_degree in pol_degree_vec:
 
         if pol_degree==1:
-            n_elem_vector = [1, 2, 4, 8, 16] 
+            n_elem_vector = [1, 2, 4] # , 8, 16] 
         elif pol_degree==2:
-            n_elem_vector = [1, 2, 4, 8]
+            n_elem_vector = [1, 2, 4]
         elif pol_degree==3:
             n_elem_vector = [1, 2, 4]
 
@@ -54,7 +54,7 @@ for case in cases:
             discretization = "mixed"
             boundary_condition= "mixed"
             quad = False
-            dim = 2
+            dim = 3
             
             dict_configuration = {"case": case,
                                 "pol_degree": pol_degree, 

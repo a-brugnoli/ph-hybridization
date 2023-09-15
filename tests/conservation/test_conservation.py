@@ -11,8 +11,8 @@ import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
 
-n_elements = 16
-pol_degree = 1
+n_elements = 4
+pol_degree = 3
 time_step = 1/500
 t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
@@ -22,7 +22,8 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 
 dim=3
-quad = True
+quad = False 
+
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
@@ -54,6 +55,7 @@ exact_first_midpoint, exact_second_midpoint = problem.get_exact_solution(time_mi
 exact_first_old, exact_second_old = problem.get_exact_solution(time_old)
 exact_first_new, exact_second_new = problem.get_exact_solution(time_new)
 
+
 # Exact quantities
 
 if case=="Maxwell":
@@ -68,6 +70,7 @@ else:
                       +exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds_tb
     else:
         exact_bdflow = exact_first_midpoint * fdrk.dot(exact_second_midpoint, norm_versor) * fdrk.ds
+
 
 exact_energyrate = 1/time_step * (fdrk.dot(exact_first_midpoint, exact_first_new - exact_first_old) * fdrk.dx\
                                 + fdrk.dot(exact_second_midpoint, exact_second_new - exact_second_old) * fdrk.dx)
@@ -96,6 +99,19 @@ else:
                          +first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds_tb
     else:
         discrete_bdflow = first_dual_midpoint * fdrk.dot(second_primal_midpoint, norm_versor) * fdrk.ds
+
+
+if problem.forcing:
+    forcing_first_midpoint, forcing_second_midpoint = problem.get_forcing(time_midpoint)
+
+    exact_volumeflow = fdrk.inner(exact_first_midpoint, forcing_first_midpoint) * fdrk.dx \
+                   + fdrk.inner(exact_second_midpoint, forcing_second_midpoint) * fdrk.dx
+    
+    discrete_volumeflow = fdrk.inner(first_dual_midpoint, forcing_first_midpoint) * fdrk.dx \
+                   + fdrk.inner(second_primal_midpoint, forcing_second_midpoint) * fdrk.dx
+else:
+    exact_volume_flow = 0
+
 
 discrete_energyrate = 1/time_step * (fdrk.dot(first_dual_midpoint, first_primal_new - first_primal_old) * fdrk.dx\
                             + fdrk.dot(second_primal_midpoint, second_dual_new - second_dual_old) * fdrk.dx)
@@ -165,15 +181,15 @@ if rank==0:
 
     if case=="Maxwell":
         basic_plotting.plot_signal(time_vec, div_first_primal, 
-                                            title=r"$L^2$ norm of $\mathrm{div} E_h^2$",
+                                            title=r"$H^{\mathrm{div}}(\mathcal{T}_h)$ seminorm of $E_h^2$",
                                             save_path=f"{directory_results}div_electric_{case}")
         
         basic_plotting.plot_signal(time_vec, div_second_dual,  
-                                        title=r"$L^2$ norm of $\mathrm{div} H^2_h$",
+                                        title=r"$H^{\mathrm{div}}(\mathcal{T}_h)$ seminorm of $H^2_h$",
                                         save_path=f"{directory_results}div_magnetic_{case}")
     else:
         basic_plotting.plot_signal(time_vec, curl_second_dual,  
-                                        title=r"$L^2$ norm of $\mathrm{curl} u^1_h$",
+                                        title=r"$H^{\mathrm{curl}}(\mathcal{T}_h)$ seminorm of $u^1_h$",
                                         save_path=f"{directory_results}curl_velocity_{case}")
 
     

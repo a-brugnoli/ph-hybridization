@@ -2,7 +2,7 @@ from firedrake import *
 import math
 from tqdm import tqdm
 from firedrake.petsc import PETSc
-from tests.generate_mesh.gmsh_mesh import unstructured_unitsquaremesh
+from src.meshing.unitsquare import unstructured_unit_square
 
 def dict_error_primal(exact_solution, approximate_solution: Function):
 
@@ -22,9 +22,10 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     Solve an analytical problem for the 2d wave equation with dirichlet
     """
 
-    mesh_size = 1/n_elements
+    # mesh_size = 1/n_elements
     # unstructured_unitsquaremesh(mesh_size)
     # mesh = Mesh("unit_square_mesh.msh")
+
     mesh = UnitSquareMesh(n_elements, n_elements, quadrilateral=quad)
     x, y = SpatialCoordinate(mesh)
 

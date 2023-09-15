@@ -5,7 +5,7 @@ import pandas as pd
 from src.postprocessing import basic_plotting
 
 bc_case = "mixed" 
-discretization = "mixed"
+discretization = "hybrid"
 dim=2
 quad=False
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/Wave/{discretization}_discretization/" \
@@ -15,9 +15,9 @@ deg_vec  = [1,2,3]
 
 h_list = []
 
-norm = "Linf"
+# norm = "Linf"
 # norm = "L2"
-# norm = "Tend"
+norm = "Tend"
 
 # Errors
 

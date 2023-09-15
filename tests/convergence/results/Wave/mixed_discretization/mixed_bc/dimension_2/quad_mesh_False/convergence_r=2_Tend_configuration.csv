@@ -1,2 +1,0 @@
-,case,pol_degree,bc,discretization,time_step,t_end,dim,quad
-0,Wave,2,mixed,mixed,0.002,0.1,2,False

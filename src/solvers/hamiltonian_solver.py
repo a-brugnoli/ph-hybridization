@@ -118,10 +118,8 @@ class HamiltonianWaveSolver(Solver):
                     self.tests, states_old, control=self.natural_bcs)
         
         if self.problem.forcing:
-            PETSc.Sys.Print("Problem with forcing term")
-
-            # if self.verbose:
-            #     PETSc.Sys.Print("Problem with forcing term")
+            if self.verbose:
+                PETSc.Sys.Print("Problem with forcing term")
             tuple_forcing = self.problem.get_forcing(self.time_midpoint)
 
             for counter, force in enumerate(tuple_forcing):
@@ -150,18 +148,12 @@ class HamiltonianWaveSolver(Solver):
             # Global solver
             self.global_multiplier = fdrk.Function(self.operators.space_global)
 
-            if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
-            # if "quadrilateral" in self.operators.cell_name:
-                if self.verbose:
-                    PETSc.Sys.Print("Because of bug in DirichletBC, no solver set")
-                pass
-            else:
-                linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional,\
+            linear_global_problem = fdrk.LinearVariationalProblem(self.A_global_operator, self.b_global_functional,\
                                                                       self.global_multiplier, bcs=self.essential_bcs)
-                self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
+            self.global_solver =  fdrk.LinearVariationalSolver(linear_global_problem, solver_parameters=self.solver_parameters)
                 
-                if self.verbose:
-                    PETSc.Sys.Print(f"Solver set")
+            if self.verbose:
+                PETSc.Sys.Print(f"Solver set")
 
             
 
@@ -175,11 +167,14 @@ class HamiltonianWaveSolver(Solver):
         """
 
         if self.operators.discretization=="mixed":
+            interpolated_value_bc = fdrk.interpolate(self.value_bc, self.space_bc)
+            for iii in range(len(self.list_id_bc)):    
+                self.essential_bcs[iii].function_arg = interpolated_value_bc
+
             self.solver.solve()
         else:
             if "quadrilateral" in self.operators.cell_name and self.pol_degree>1:
-            # if "quadrilateral" in self.operators.cell_name:
-                # PETSc.Sys.Print("Projecting the boundary condition on the appropriate space")
+
                 if isinstance(self.operators, WaveOperators):
                     if self.operators.formulation=="primal":
                         projected_value_bc = self.operators.project_RT_facet(self.value_bc, broken=False)

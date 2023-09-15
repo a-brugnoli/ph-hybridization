@@ -2,6 +2,8 @@ import firedrake as fdrk
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import rcParams
+from matplotlib.animation import FuncAnimation
+
 
 SMALL_SIZE = 18
 MEDIUM_SIZE = 20
@@ -123,3 +125,24 @@ def plot_convergence(deg_vec, h_list, variable_list, **options):
         if "save_path" in options:
             plt.savefig(options["save_path"]+".eps", dpi='figure', format='eps')
 
+
+
+def save_animation(list_frames, domain, interval, path_save):
+
+    nsp = 16
+    fn_plotter = fdrk.FunctionPlotter(domain, num_sample_points=nsp)
+
+    # Displacement animation
+    fig, axes = plt.subplots()
+    axes.set_aspect('equal')
+
+    colors = fdrk.tripcolor(list_frames[0], num_sample_points=nsp, axes=axes)
+    fig.colorbar(colors)
+    def animate(q):
+        colors.set_array(fn_plotter(q))
+
+    animation = FuncAnimation(fig, animate, frames=list_frames, interval=interval)
+    try:
+        animation.save(path_save, writer="ffmpeg")
+    except:
+        print("Failed to write movie! Try installing `ffmpeg`.")

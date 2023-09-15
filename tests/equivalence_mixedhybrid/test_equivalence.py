@@ -14,17 +14,18 @@ from firedrake.petsc import PETSc
 from tests.basic.debug_solver import debug_wave
 
 
-n_elements = 16
-pol_degree = 1
+n_elements = 4
+pol_degree = 3
 time_step = 1/500
-t_end = 10*time_step
+t_end = 1
 n_time_iter = math.ceil(t_end/time_step)
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-quad=True
+quad=False
+
 dim=3
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
