@@ -5,14 +5,14 @@ import pandas as pd
 from src.postprocessing import basic_plotting
 
 bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
-discretization = "mixed"
+discretization = "hybrid"
 dim=3
 quad=False
 directory_results = f"{os.path.dirname(os.path.abspath(__file__))}/results/" \
                    +f"Maxwell/{discretization}_discretization/" \
                    +f"{bc_case}_bc/dimension_{dim}/quad_mesh_{quad}/"
 
-deg_vec  = [1,2]
+deg_vec  = [1] # [1,2,3]
 
 h_list = []
 
@@ -127,6 +127,13 @@ for count, deg in enumerate(deg_vec):
     columns_rate_Hcurl = df.columns[df.columns.str.contains('rate_Hcurl')]
 
     for column in columns_rate_Hcurl:
+        print(column)
+        for value in df[column]:
+            print(value)
+
+    columns_rate_Hdiv = df.columns[df.columns.str.contains('rate_Hdiv')]
+
+    for column in columns_rate_Hdiv:
         print(column)
         for value in df[column]:
             print(value)

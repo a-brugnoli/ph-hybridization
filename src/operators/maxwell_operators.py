@@ -51,6 +51,7 @@ class MaxwellOperators(SystemOperators):
         try:
             electric = fdrk.interpolate(electric_field_exp, self.fullspace.sub(0))
             magnetic = fdrk.interpolate(magnetic_field_exp, self.fullspace.sub(1))
+
         except NotImplementedError:
             print("Initial condition cannot be interpolated")
             electric = fdrk.project(electric_field_exp, self.fullspace.sub(0))

@@ -205,7 +205,61 @@ class HamiltonianWaveSolver(Solver):
 
         self.state_midpoint.assign(0.5*(self.state_new + self.state_old))
         self.actual_time.assign(self.time_new)
-       
+
+        # if isinstance(self.operators, MaxwellOperators):
+        #     electric_forcing, magnetic_forcing = self.problem.get_forcing(self.time_midpoint)
+        #     # print(f"Hdiv seminorm electric forcing: {fdrk.assemble(fdrk.div(electric_forcing)**2*fdrk.dx)}")
+        #     # print(f"Hdiv seminorm magnetic forcing: {fdrk.assemble(fdrk.div(magnetic_forcing)**2*fdrk.dx)}")
+
+        #     if self.operators.formulation=="primal":
+        #         # test_electric = self.tests[0]
+        #         electric_old = self.state_old.subfunctions[0]
+        #         electric_new = self.state_new.subfunctions[0]
+        #         # magnetic_midpoint = self.state_midpoint.subfunctions[1]
+        #         # residual_electric = fdrk.inner(test_electric, (electric_new-electric_old)/self.time_step)*fdrk.dx \
+        #         #             -fdrk.inner(test_electric, fdrk.curl(magnetic_midpoint))*fdrk.dx \
+        #         #             -fdrk.inner(test_electric, electric_forcing)*fdrk.dx
+                
+        #         # vector_weak_residual_electric = fdrk.assemble(residual_electric).vector()
+         
+        #         # l2_weak_res_electric = vector_weak_residual_electric.inner(vector_weak_residual_electric)
+        #         # PETSc.Sys.Print(f"l2 Weak residual electric equation: {l2_weak_res_electric}")
+
+        #         # projected_electric_forcing = fdrk.project(electric_forcing, self.space_operators.sub(0))
+        #         # strong_equation_electric = (electric_new-electric_old)/self.time_step \
+        #         #                 - fdrk.curl(magnetic_midpoint) \
+        #         #                 - projected_electric_forcing
+
+        #         # max_strong_res_electric = fdrk.assemble(fdrk.inner(strong_equation_electric,strong_equation_electric)*fdrk.dx)
+        #         # PETSc.Sys.Print(f"L2 norm strong residual electric equation: {max_strong_res_electric}")
+
+        #         print(f"Hdiv semi norm delta electric: {fdrk.assemble(fdrk.div((electric_new - electric_old)/self.time_step)**2*fdrk.dx)}")
+        #         projected_electric_forcing = fdrk.project(electric_forcing, self.space_operators.sub(0))
+        #         print(f"Hdiv semi norm projected forcing: {fdrk.assemble(fdrk.div(projected_electric_forcing)**2*fdrk.dx)}")
+        #     # if self.operators.formulation=="dual":
+        #     #     print("Dual system div constraint")
+
+        #     #     test_magnetic = self.tests[1]
+        #     #     magnetic_old = self.state_old.subfunctions[1]
+        #     #     magnetic_new = self.state_new.subfunctions[1]
+        #     #     electric_midpoint = self.state_midpoint.subfunctions[0]
+        #     #     residual_magnetic = fdrk.inner(test_magnetic, (magnetic_new-magnetic_old)/self.time_step)*fdrk.dx \
+        #     #                 +fdrk.inner(test_magnetic, fdrk.curl(electric_midpoint))*fdrk.dx \
+        #     #                 -fdrk.inner(test_magnetic, magnetic_forcing)*fdrk.dx
+                
+        #     #     vector_weak_residual_magnetic = fdrk.assemble(residual_magnetic).vector()
+         
+        #     #     l2_weak_res_magnetic = vector_weak_residual_magnetic.inner(vector_weak_residual_magnetic)
+        #     #     PETSc.Sys.Print(f"l2 Weak residual magnetic equation: {l2_weak_res_magnetic}")
+
+        #     #     strong_equation_magnetic = (magnetic_new-magnetic_old)/self.time_step \
+        #     #                     + fdrk.curl(electric_midpoint) \
+        #     #                     - magnetic_forcing
+
+        #     #     max_strong_res_magnetic = fdrk.assemble(fdrk.inner(strong_equation_magnetic,strong_equation_magnetic)*fdrk.dx)
+        #     #     PETSc.Sys.Print(f"L2 norm strong residual magnetic equation: {max_strong_res_magnetic}")
+
+
 
     def update_variables(self):
         self.state_old.assign(self.state_new)

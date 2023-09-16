@@ -48,9 +48,15 @@ class EigensolutionMaxwell(Problem):
 
         ft, dft = self._get_time_function(time)
 
-        g_x = -fdrk.cos(self.x) * fdrk.sin(self.y) * fdrk.sin(self.z)
-        g_y = fdrk.Constant(0.0)
-        g_z = fdrk.sin(self.x) * fdrk.sin(self.y) * fdrk.cos(self.z)
+        potential_y = - fdrk.cos(self.x) * fdrk.sin(self.y) * fdrk.cos(self.z)
+
+        g_x = - potential_y.dx(2)
+        g_y = fdrk.Constant(0)
+        g_z = + potential_y.dx(0)
+
+        # g_x = -fdrk.cos(self.x) * fdrk.sin(self.y) * fdrk.sin(self.z)
+        # g_y = fdrk.Constant(0.0)
+        # g_z = fdrk.sin(self.x) * fdrk.sin(self.y) * fdrk.cos(self.z)
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
@@ -69,7 +75,6 @@ class EigensolutionMaxwell(Problem):
         exact_electric, exact_magnetic = self.get_exact_solution(time)
 
         force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
-
         force_magnetic = fdrk.diff(exact_magnetic, time) + fdrk.curl(exact_electric)
 
         return (force_electric, force_magnetic)
