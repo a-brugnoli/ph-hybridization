@@ -31,7 +31,7 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-pol_degree_vec = [1] 
+pol_degree_vec = [1,2,3] 
 
 # cases = ["Wave", "Maxwell"]
 # cases = ["Wave"]
@@ -50,7 +50,7 @@ for case in cases:
 
         if rank==0:
             time_step = 1/500
-            t_end = 1 
+            t_end = 1
             discretization = "mixed"
             boundary_condition= "mixed"
             quad = False

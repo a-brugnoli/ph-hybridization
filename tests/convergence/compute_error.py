@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell
-from src.problems.eigensolution_wave import EigensolutionWave
+from src.problems.analytical_maxwell import AnalyticalMaxwell
+from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import math
 from tqdm import tqdm
@@ -25,9 +25,9 @@ def compute_error(n_elements, dict_configuration):
     actual_t_end = n_time_iter*time_step
 
     if case=="Maxwell":
-        problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type, quad=quad)
+        problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type, quad=quad, manufactured=True)
     elif case=="Wave":
-        problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad)
+        problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad, manufactured=True)
     else: 
         raise TypeError("Physics not valid")
         

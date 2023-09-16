@@ -3,9 +3,9 @@ from math import pi
 import firedrake as fdrk
 from firedrake.petsc import PETSc
 
-class EigensolutionMaxwell(Problem):
+class AnalyticalMaxwell(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", quad = False):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", quad = False, manufactured=False):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -36,9 +36,14 @@ class EigensolutionMaxwell(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = True
         self.material_coefficients = False
 
+        self.manufactured= manufactured
+        if self.manufactured:
+            self.forcing = True
+        else:
+            self.forcing = False
+        
 
     def get_material_coefficients(self):
         return (fdrk.Constant(1), fdrk.Constant(1))
@@ -46,17 +51,20 @@ class EigensolutionMaxwell(Problem):
         
     def get_exact_solution(self, time: fdrk.Constant):
 
-        ft, dft = self._get_time_function(time)
+        omega_space = 1
 
-        potential_y = - fdrk.cos(self.x) * fdrk.sin(self.y) * fdrk.cos(self.z)
+        if self.manufactured:
+            ft, dft = self._get_manufactured_time_function(time)
+        else:
+            omega_time = omega_space*fdrk.sqrt(self.dim)
+            ft, dft = self._get_eigensolution_time_function(time, omega_time)
+
+
+        potential_y = - fdrk.cos(omega_space*self.x) * fdrk.sin(omega_space*self.y) * fdrk.cos(omega_space*self.z)
 
         g_x = - potential_y.dx(2)
         g_y = fdrk.Constant(0)
         g_z = + potential_y.dx(0)
-
-        # g_x = -fdrk.cos(self.x) * fdrk.sin(self.y) * fdrk.sin(self.z)
-        # g_y = fdrk.Constant(0.0)
-        # g_z = fdrk.sin(self.x) * fdrk.sin(self.y) * fdrk.cos(self.z)
 
         g_fun = fdrk.as_vector([g_x, g_y, g_z])
 
@@ -114,4 +122,4 @@ class EigensolutionMaxwell(Problem):
 
 
     def __str__(self):
-        return f"eigensolution_maxwell_{self.dim}d_bc_{self.bc_type}"
+        return f"analytical_maxwell_{self.dim}d_bc_{self.bc_type}_manufactured_{self.manufactured}"

@@ -1,6 +1,6 @@
 from tests.basic.debug_solver import debug_wave
 import math
-from src.problems.eigensolution_wave import EigensolutionWave
+from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from tqdm import tqdm
 import firedrake as fdrk
@@ -9,9 +9,9 @@ n_elements = 3
 pol_degree = 1
 
 quad = True
-problem_wave_dirichlet = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, bc_type="dirichlet")
+problem_wave_dirichlet = AnalyticalWave(n_elements, n_elements, n_elements, quad=quad, bc_type="dirichlet")
 
-problem_wave_neumann = EigensolutionWave(n_elements, n_elements, n_elements, quad=quad, bc_type="neumann")
+problem_wave_neumann = AnalyticalWave(n_elements, n_elements, n_elements, quad=quad, bc_type="neumann")
 
 time_step =0.001
 t_end = 10*time_step

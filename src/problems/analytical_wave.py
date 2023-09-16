@@ -3,9 +3,9 @@ from math import pi
 import firedrake as fdrk
 from firedrake.petsc import PETSc
 
-class EigensolutionWave(Problem):
+class AnalyticalWave(Problem):
     "Maxwell eigenproblem"
-    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3, quad=False):
+    def __init__(self, n_elements_x, n_elements_y, n_elements_z, bc_type="mixed", dim=3, quad=False, manufactured=False):
         """Generate a mesh of a cube
         The boundary surfaces are numbered as follows:
 
@@ -48,9 +48,13 @@ class EigensolutionWave(Problem):
 
         self.normal_versor = fdrk.FacetNormal(self.domain)
 
-        self.forcing = True
-
         self.material_coefficients = False
+
+        self.manufactured= manufactured
+        if self.manufactured:
+            self.forcing = True
+        else:
+            self.forcing = False
 
 
     def get_material_coefficients(self):
@@ -59,13 +63,19 @@ class EigensolutionWave(Problem):
 
     def get_exact_solution(self, time: fdrk.Constant):
         omega_space = 1
+
+        if self.manufactured:
+            ft, dft = self._get_manufactured_time_function(time)
+        else:
+            omega_time = omega_space*fdrk.sqrt(self.dim)
+            ft, dft = self._get_eigensolution_time_function(time, omega_time)
+
         if self.dim==3:
             g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
         else:
             g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y)
         grad_g = fdrk.grad(g_fun)
 
-        ft, dft = self._get_time_function(time)
         exact_pressure = g_fun * dft
         exact_velocity = grad_g * ft
 

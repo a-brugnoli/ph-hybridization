@@ -37,8 +37,15 @@ class Problem(ABC):
     def get_boundary_conditions(self, time: fdrk.Constant):
         pass
 
-    def _get_time_function(self, time: fdrk.Constant):
+    def _get_manufactured_time_function(self, time: fdrk.Constant):
         f_time = 1/2*time**2
+
+        df_dtime = fdrk.diff(f_time, time)
+        return f_time, df_dtime
+    
+
+    def _get_eigensolution_time_function(self, time: fdrk.Constant, omega):
+        f_time = fdrk.sin(omega*time) + fdrk.cos(omega*time)
 
         df_dtime = fdrk.diff(f_time, time)
         return f_time, df_dtime

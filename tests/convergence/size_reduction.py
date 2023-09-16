@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell
-from src.problems.eigensolution_wave import EigensolutionWave
+from src.problems.analytical_maxwell import AnalyticalMaxwell
+from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 import pandas as pd
 
@@ -30,9 +30,9 @@ for case in cases:
         for n_elem in n_elem_vector:
         
             if case=="Maxwell":
-                problem = EigensolutionMaxwell(n_elem, n_elem, n_elem, quad=quad)
+                problem = AnalyticalMaxwell(n_elem, n_elem, n_elem, quad=quad)
             else:
-                problem = EigensolutionWave(n_elem, n_elem, n_elem, quad=quad, dim=3)
+                problem = AnalyticalWave(n_elem, n_elem, n_elem, quad=quad, dim=3)
 
 
             mixedsolver_primal = HamiltonianWaveSolver(problem = problem, 

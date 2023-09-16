@@ -1,6 +1,6 @@
 import firedrake as fdrk
-from src.problems.eigensolution_wave import EigensolutionWave
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell
+from src.problems.analytical_wave import AnalyticalWave
+from src.problems.analytical_maxwell import AnalyticalMaxwell
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.operators.spaces_deRham import deRhamSpaces
 import matplotlib.pyplot as plt
@@ -24,9 +24,9 @@ quad=False
 dim=2
 
 if case=="Maxwell":
-    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
+    problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
+    problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
 
 time_exact = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time_exact)

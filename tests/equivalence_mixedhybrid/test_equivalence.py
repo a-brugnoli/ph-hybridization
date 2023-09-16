@@ -1,5 +1,5 @@
-from src.problems.eigensolution_maxwell import EigensolutionMaxwell
-from src.problems.eigensolution_wave import EigensolutionWave
+from src.problems.analytical_maxwell import AnalyticalMaxwell
+from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.postprocessing import basic_plotting
 import matplotlib.pyplot as plt
@@ -29,9 +29,9 @@ quad=False
 dim=3
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
-    problem = EigensolutionMaxwell(n_elements, n_elements, n_elements, quad=quad)
+    problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, quad=quad)
 else:
-    problem = EigensolutionWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
+    problem = AnalyticalWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
 
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
