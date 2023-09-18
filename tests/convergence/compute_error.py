@@ -27,7 +27,7 @@ def compute_error(n_elements, dict_configuration):
     if case=="Maxwell":
         problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, bc_type=bc_type, quad=quad, manufactured=True)
     elif case=="Wave":
-        problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad, manufactured=True)
+        problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type=bc_type, dim=dim, quad=quad, manufactured=False)
     else: 
         raise TypeError("Physics not valid")
         

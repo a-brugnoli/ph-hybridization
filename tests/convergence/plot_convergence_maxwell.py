@@ -138,7 +138,7 @@ for count, deg in enumerate(deg_vec):
         for value in df[column]:
             print(value)
 
-# Plot primal
+# # Plot primal
 basic_plotting.plot_convergence(deg_vec, h_list=h_list, variable_list=error_L2_electric_primal, 
                                 label="RT", 
                                 ylabel=r'$\log||\widehat{E}^2_h - \widehat{E}^2_{\mathrm{ex}}||_{L^2}$',
