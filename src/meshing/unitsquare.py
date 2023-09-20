@@ -26,5 +26,3 @@ def unstructured_unit_square(lc):
 
     gmsh.finalize()
 
-
-unstructured_unit_square(0.1)

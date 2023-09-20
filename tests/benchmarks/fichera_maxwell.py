@@ -1,6 +1,6 @@
 import firedrake as fdrk
 import matplotlib.pyplot as plt
-from src.problems.maxwell_fichera import MaxwellFichera
+from src.problems.fichera_maxwell import MaxwellFichera
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 
 import os

@@ -2,7 +2,7 @@ from firedrake import *
 import math
 from tqdm import tqdm
 from firedrake.petsc import PETSc
-from src.meshing.unitsquare import unstructured_unit_square
+# from src.meshing.unitsquare import unstructured_unit_square
 
 def dict_error_primal(exact_solution, approximate_solution: Function):
 
@@ -30,7 +30,7 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     x, y = SpatialCoordinate(mesh)
     normal = FacetNormal(mesh)
 
-    def exact_solution(t: Constant):
+    def exact_solution(t):
     # Define exact eigensolution (homogeneous boundary condition)
         g_fun = sin(pi*x)*sin(pi*y)
         omega = pi*sqrt(2)
@@ -79,6 +79,7 @@ def compute_err(n_elements, degree, time_step = 0.002, t_end = 0.1, quad=False):
     state_primal_new = Function(primal_space)
 
     time = Constant(0)
+
     exact_state = exact_solution(time)
     exact_pressure, exact_velocity = exact_state
 

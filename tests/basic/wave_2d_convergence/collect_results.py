@@ -8,7 +8,7 @@ n_elements_vec = [2,4,8,16]
 h_vec = 1./np.array(n_elements_vec)
 
 time_step = 1/1000
-t_end = 1000*time_step
+t_end = 100*time_step
 
 L2_error_pressure = {"Linf":[], "L2": [], "Tend":[]}
 L2_error_velocity = {"Linf":[], "L2": [], "Tend":[]}

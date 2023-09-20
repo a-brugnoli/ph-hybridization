@@ -14,8 +14,8 @@ from src.postprocessing import basic_plotting
 
 save_output_file = input("Do you want to save in your home directory into the folder StoreResults (True or False)? ")
 
-n_elements_x = 48
-n_elements_y = 48
+n_elements_x = 64
+n_elements_y = 64
 
 
 pol_degree = 2
