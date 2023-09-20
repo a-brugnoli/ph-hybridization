@@ -9,6 +9,7 @@ from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from os.path import expanduser
+from math import pi
 
 import matplotlib.pyplot as plt
 
@@ -17,12 +18,12 @@ from src.postprocessing import basic_plotting
 save_output_file = input("Do you want to save in your home directory into the folder StoreResults (True or False)? ")
 
 pol_degree = 2
-time_step = 1/500
-t_end = 1
+t_end = pi
+time_step = t_end/100
 
 n_time_iter = math.ceil(t_end/time_step)
 
-mesh_size = 1/4
+mesh_size = 1/8
 problem = MaxwellFichera(mesh_size)
 
 coeff_electric, coeff_magnetic = problem.get_material_coefficients()
@@ -74,7 +75,6 @@ if save_output_file:
     outfile_hybrid_dual.write(electric_dual_old, magnetic_dual_old, \
                             normal_dual_old, tangential_dual_old, time=float(hybridsolver_dual.time_old))
 
-    output_freq = 10
 
 time_vec = np.linspace(0, time_step * n_time_iter, n_time_iter+1)
 
@@ -90,7 +90,7 @@ energy_dual = fdrk.inner(electric_dual_old, coeff_electric * electric_dual_old) 
 energy_primal_vec[0] = fdrk.assemble(energy_primal)
 energy_dual_vec[0] = fdrk.assemble(energy_dual)
 
-save_figure_time = [0.2, 0.6, 1.8, 4]
+save_figure_time = [t_end/4, t_end/2, 3*t_end/4, t_end]
 kk=0
 
 for ii in tqdm(range(1,n_time_iter+1)):
@@ -106,12 +106,13 @@ for ii in tqdm(range(1,n_time_iter+1)):
     energy_dual_vec[ii] = fdrk.assemble(energy_dual)
 
     if save_output_file:
-        if ii % output_freq == 0:
+        if abs(actual_time - save_figure_time[kk])< 1e-9:
             outfile_hybrid_primal.write(electric_primal_old, magnetic_primal_old, \
                                 normal_primal_old, tangential_primal_old, time=float(hybridsolver_primal.time_old))
             outfile_hybrid_dual.write(electric_dual_old, magnetic_dual_old, \
                             normal_dual_old, tangential_dual_old, time=float(hybridsolver_dual.time_old))
    
+            kk = kk +1
 
 basic_plotting.plot_signals(time_vec, energy_primal_vec, energy_dual_vec,\
                             legend=["primal", "dual"], title="Energy", save_path=f"{directory_matplotlib}energy.eps")
