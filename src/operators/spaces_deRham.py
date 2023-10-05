@@ -18,10 +18,9 @@ def deRhamElements(domain, pol_degree):
     else:
         tang_cont_element = ufl.FiniteElement("N1curl", cell, pol_degree, variant=f"integral({pol_degree+1})") 
         nor_cont_element = ufl.FiniteElement("RT", cell, pol_degree, variant=f"integral({pol_degree+1})")
-
             
     disc_element  = ufl.FiniteElement("DG", cell, pol_degree-1) 
-    
+
     dict_elements = {"continuous": cont_element, 
                      "tangential continuous": tang_cont_element, 
                      "normal continuous": nor_cont_element, 
