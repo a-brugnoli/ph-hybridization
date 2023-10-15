@@ -244,6 +244,8 @@ class WaveOperators(SystemOperators):
         if broken:
             trial_function = fdrk.TrialFunction(self.brokenfacet_CG_space)
             test_function = fdrk.TestFunction(self.brokenfacet_CG_space)
+            projected_variable = fdrk.Function(self.brokenfacet_CG_space)
+
         else:
             trial_function = fdrk.TrialFunction(self.facet_CG_space)
             test_function = fdrk.TestFunction(self.facet_CG_space)
@@ -262,7 +264,8 @@ class WaveOperators(SystemOperators):
         if broken:
             A_matrix = fdrk.Tensor(a_operator)
             b_vector = fdrk.Tensor(l_functional)
-            projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+            coeff_projected = fdrk.assemble(A_matrix.inv * b_vector).vector().get_local()
+            projected_variable.vector().set_local(coeff_projected)
         else:
             A_mat = fdrk.assemble(a_operator)
             b_vec = fdrk.assemble(l_functional)
@@ -280,6 +283,8 @@ class WaveOperators(SystemOperators):
         if broken:
             trial_function = fdrk.TrialFunction(self.brokenfacet_RT_space)
             test_function = fdrk.TestFunction(self.brokenfacet_RT_space)
+            projected_variable = fdrk.Function(self.brokenfacet_RT_space)
+
         else:
             trial_function = fdrk.TrialFunction(self.facet_RT_space)
             test_function = fdrk.TestFunction(self.facet_RT_space)
@@ -298,7 +303,8 @@ class WaveOperators(SystemOperators):
         if broken:
             A_matrix = fdrk.Tensor(a_operator)
             b_vector = fdrk.Tensor(l_functional)
-            projected_variable = fdrk.assemble(A_matrix.inv * b_vector)
+            coeff_projected = fdrk.assemble(A_matrix.inv * b_vector).vector().get_local()
+            projected_variable.vector().set_local(coeff_projected)
         else:
             A_mat = fdrk.assemble(a_operator)
             b_vec = fdrk.assemble(l_functional)

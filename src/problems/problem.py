@@ -40,13 +40,13 @@ class Problem(ABC):
     def _get_manufactured_time_function(self, time: fdrk.Constant):
         f_time = 1/2*time**2
 
-        df_dtime = fdrk.diff(f_time, time)
+        df_dtime = time
         return f_time, df_dtime
     
 
     def _get_eigensolution_time_function(self, time: fdrk.Constant, omega):
         f_time = fdrk.sin(omega*time) + fdrk.cos(omega*time)
 
-        df_dtime = fdrk.diff(f_time, time)
+        df_dtime = omega*fdrk.cos(omega*time) - omega*fdrk.sin(omega*time)
         return f_time, df_dtime
     

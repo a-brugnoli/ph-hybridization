@@ -185,12 +185,6 @@ class HamiltonianWaveSolver(Solver):
                 for iii in range(len(self.list_id_bc)):    
                     self.essential_bcs[iii].function_arg = projected_value_bc
 
-                # PETSc.Sys.Print("Cleaning up memory")
-                # gc.collect()
-                # PETSc.garbage_cleanup(self.operators.domain._comm)
-                # #PETSc.garbage_cleanup(self.operators.domain.comm)
-                # PETSc.garbage_cleanup(PETSc.COMM_SELF)
-                
             else:
                 interpolated_value_bc = fdrk.interpolate(self.value_bc, self.space_bc)
 
@@ -226,7 +220,9 @@ class HamiltonianWaveSolver(Solver):
                         (self.F_blocks[:self.n_block_loc] - self.A_blocks[:self.n_block_loc, self.n_block_loc] * Lambda))
 
         for ii in range(self.n_block_loc):
-            self.state_new.sub(ii).assign(x_h.sub(ii))
+            coeff_ii = x_h.sub(ii).vector().get_local()
+            self.state_new.sub(ii).vector().set_local(coeff_ii)
+
         self.state_new.sub(self.n_block_loc).assign(self.global_multiplier)
 
 
