@@ -1,5 +1,9 @@
 # ph_hybridization
-Firedrake implmentation for the article [Finite element hybridization of port-Hamiltonian systems](https://arxiv.org/abs/2302.06239).
+Firedrake implementation for the article [Finite element hybridization of port-Hamiltonian systems](https://arxiv.org/abs/2302.06239).
+
+Additional librairies needed: \
+tqdm \
+pandas 
 
 The results reported in the paper can be reproduced by running scripts in the folder tests. 
 
