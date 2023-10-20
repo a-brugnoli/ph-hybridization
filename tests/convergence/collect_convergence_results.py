@@ -51,7 +51,7 @@ for case in cases:
         if rank==0:
             time_step = 1/500
             t_end = 1
-            discretization = "mixed"
+            discretization = "hybrid"
             boundary_condition= "mixed"
             quad = False
             dim = 3

@@ -80,10 +80,27 @@ class AnalyticalMaxwell(Problem):
     def get_forcing(self, time):
         assert isinstance(time, fdrk.Constant)
 
-        exact_electric, exact_magnetic = self.get_exact_solution(time)
+        omega_space = 1
 
-        force_electric = fdrk.diff(exact_electric, time) - fdrk.curl(exact_magnetic)
-        force_magnetic = fdrk.diff(exact_magnetic, time) + fdrk.curl(exact_electric)
+        # Quadratic polynomial
+        ft, dft = self._get_manufactured_time_function(time)
+        
+        potential_y = - fdrk.cos(omega_space*self.x) * fdrk.sin(omega_space*self.y) * fdrk.cos(omega_space*self.z)
+
+        g_x = - potential_y.dx(2)
+        g_y = fdrk.Constant(0)
+        g_z = + potential_y.dx(0)
+
+        g_fun = fdrk.as_vector([g_x, g_y, g_z])
+
+        curl_g = fdrk.as_vector([g_z.dx(1), g_x.dx(2) - g_z.dx(0), -g_x.dx(1)])
+
+        exact_electric = g_fun * dft
+        exact_magnetic = -curl_g * ft
+
+        
+        force_electric = g_fun - fdrk.curl(exact_magnetic)
+        force_magnetic = -curl_g * dft + fdrk.curl(exact_electric)
 
         return (force_electric, force_magnetic)
     

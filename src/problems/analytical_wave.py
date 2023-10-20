@@ -86,11 +86,23 @@ class AnalyticalWave(Problem):
     def get_forcing(self, time):
         assert isinstance(time, fdrk.Constant)
 
-        exact_pressure, exact_velocity = self.get_exact_solution(time)
+        omega_space = 1
 
-        force_pressure = fdrk.diff(exact_pressure, time) - fdrk.div(exact_velocity)
+        ft, dft = self._get_manufactured_time_function(time)
 
-        force_velocity = fdrk.diff(exact_velocity, time) - fdrk.grad(exact_pressure)
+        if self.dim==3:
+            g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y) * fdrk.sin(omega_space * self.z)
+        else:
+            g_fun = fdrk.sin(omega_space * self.x) * fdrk.sin(omega_space * self.y)
+        grad_g = fdrk.grad(g_fun)
+
+        exact_pressure = g_fun * dft
+        exact_velocity = grad_g * ft
+
+
+        force_pressure = g_fun - fdrk.div(exact_velocity)
+
+        force_velocity = grad_g * dft - fdrk.grad(exact_pressure)
 
         return (force_pressure, force_velocity)
     
