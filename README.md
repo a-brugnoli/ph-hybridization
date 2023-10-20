@@ -3,7 +3,7 @@ Firedrake implementation for the article [Finite element hybridization of port-H
 
 Additional librairies needed: \
 tqdm \
-pandas \
+pandas 
 
 The results reported in the paper can be reproduced by running scripts in the folder tests. 
 
