@@ -30,9 +30,10 @@ dim=3
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, quad=quad)
-else:
+elif case=="Wave":
     problem = AnalyticalWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
-
+else:
+    raise ValueError("Invalid model")
 time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
 

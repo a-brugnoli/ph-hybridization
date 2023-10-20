@@ -54,7 +54,7 @@ for case in cases:
             discretization = "mixed"
             boundary_condition= "mixed"
             quad = False
-            dim = 2
+            dim = 3
             
             dict_configuration = {"case": case,
                                 "pol_degree": pol_degree, 

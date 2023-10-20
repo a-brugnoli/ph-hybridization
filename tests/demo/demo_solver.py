@@ -25,8 +25,10 @@ dim=2
 
 if case=="Maxwell":
     problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
-else:
+elif case=="Wave":
     problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
+else:
+    raise ValueError("Invalid model")
 
 time_exact = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time_exact)

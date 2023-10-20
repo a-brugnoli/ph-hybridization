@@ -27,8 +27,10 @@ quad = False
 case = input("Which model (Wave or Maxwell)? ")
 if case=="Maxwell":
     problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, quad=quad)
-else:
+elif case=="Wave":
     problem = AnalyticalWave(n_elements, n_elements, n_elements, quad=quad, dim=dim)
+else:
+    raise ValueError("Invalid model")
 
 norm_versor = problem.normal_versor
 
