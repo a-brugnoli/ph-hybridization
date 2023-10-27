@@ -4,6 +4,9 @@ Firedrake implementation for the article
 
 The numerical examples can be reproduced as follows:
 * install the Zenodo-archived release of firedrake hosted at https://zenodo.org/records/10047121
+  ```
+  firedrake-install --doi 10.5281/zenodo.10047121
+  ```
 * actiivate the environment and run ```pip install tqdm pandas gmsh``` to install required librairies
 * from the project root run ```source set_project.sh``` to set the ```PYTHONPATH```
 * the different simulation are located into ```./run_results```
