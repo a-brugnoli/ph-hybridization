@@ -1,3 +1,5 @@
+from src.preprocessing.parser import *
+
 from src.problems.analytical_maxwell import AnalyticalMaxwell
 from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
@@ -9,7 +11,6 @@ from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
-from src.preprocessing.parser import *
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()

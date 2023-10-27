@@ -1,3 +1,5 @@
+from src.preprocessing.parser import *
+
 import firedrake as fdrk
 from src.problems.analytical_wave import AnalyticalWave
 from src.problems.analytical_maxwell import AnalyticalMaxwell
@@ -9,9 +11,6 @@ from tqdm import tqdm
 import os 
 import numpy as np
 from os.path import expanduser
-from src.preprocessing.parser import *
-
-
 if save_out:
     print("File will be saved in your home in the directory Store Results")
 

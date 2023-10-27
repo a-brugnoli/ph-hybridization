@@ -10,7 +10,7 @@ parser = argparse.ArgumentParser(description="Full Parser for simulation options
 parser.add_argument("--model", type=str, default="Wave", choices=["Wave", "Maxwell"], help="The considered system (Wave or Maxwell)")
 parser.add_argument('--nel', type=int, nargs='+', default=[4], help="Array containing the number of elements of each side")
 parser.add_argument('--degree', type=int, default=1, help="An integer parameter for the polynomial degree")
-parser.add_argument('--ndim', type=int, default=3, choices=[2, 3])
+parser.add_argument('--ndim', type=int, default=3, choices=[2, 3], help="Geometrical dimension of the problem")
 
 parser.add_argument("--dt", type=float, default=0.01, help="Time step")
 parser.add_argument("--t_end", type=float, default=1, help="Final time of the simulation")

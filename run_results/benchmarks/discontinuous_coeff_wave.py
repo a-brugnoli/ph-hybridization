@@ -1,13 +1,13 @@
+from src.preprocessing.basic_parser import *
+
 from src.problems.discontinuous_coefficients_wave import DiscontinuousWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
-
 import os
 import math
 from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from os.path import expanduser
-from src.preprocessing.basic_parser import *
 from src.postprocessing import basic_plotting
 
 n_elements_x = 64

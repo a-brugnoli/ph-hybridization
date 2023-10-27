@@ -1,3 +1,4 @@
+from src.preprocessing.basic_parser import *
 import firedrake as fdrk
 from src.problems.fichera_maxwell import MaxwellFichera
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
@@ -10,7 +11,6 @@ from os.path import expanduser
 from math import pi
 import matplotlib.pyplot as plt
 from src.postprocessing import basic_plotting
-from src.preprocessing.parser import *
 
 pol_degree = 2
 t_end = pi
