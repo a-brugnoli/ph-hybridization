@@ -1,7 +1,6 @@
 from src.problems.analytical_maxwell import AnalyticalMaxwell
 from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
-import pandas as pd
 
 pol_degree_vec = [1,2,3] 
 cases = ["Wave", "Maxwell"]

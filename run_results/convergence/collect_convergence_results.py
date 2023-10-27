@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from mpi4py import MPI
 import os
-from tests.convergence.compute_error import compute_error
-
+from run_results.convergence.compute_error import compute_error
+os.environ['OMP_NUM_THREADS'] = "1"
 
 def save_csv(dict_configuration, dict_result, n_elem_vector, pol_degree, directory_results, norm):
     # get list of error dictionaries and store in pandas DataFrame

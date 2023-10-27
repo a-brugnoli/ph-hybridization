@@ -5,33 +5,23 @@ from src.postprocessing import basic_plotting
 import matplotlib.pyplot as plt
 
 import os
-import math
 from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
 from firedrake.petsc import PETSc
-from tests.basic.debug_solver import debug_wave
+from src.preprocessing.parser import *
+# Access the parsed values
 
-
-n_elements = 4
-pol_degree = 3
-time_step = 1/500
-t_end = 1
-n_time_iter = math.ceil(t_end/time_step)
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-quad=False
-
-dim=3
-case = input("Which model (Wave or Maxwell)? ")
-if case=="Maxwell":
-    problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, quad=quad)
-elif case=="Wave":
-    problem = AnalyticalWave(n_elements, n_elements, n_elements, dim=dim, bc_type="mixed", quad=quad)
+if model=="Maxwell":
+    problem = AnalyticalMaxwell(nx, ny, nz, quad=False)
+elif model=="Wave":
+    problem = AnalyticalWave(nx, ny, nz, dim=dim, bc_type="mixed", quad=False)
 else:
     raise ValueError("Invalid model")
 
@@ -39,28 +29,28 @@ time = fdrk.Constant(0)
 exact_first, exact_second = problem.get_exact_solution(time)
 
 mixedsolver_primal = HamiltonianWaveSolver(problem = problem, 
-                                           system=case, 
+                                           system=model, 
                                            time_step=time_step, 
                                            pol_degree=pol_degree, 
                                             discretization="mixed", 
                                             formulation="primal")
 
 hybridsolver_primal = HamiltonianWaveSolver(problem = problem,
-                                            system=case,
+                                            system=model,
                                             time_step=time_step,
                                             pol_degree=pol_degree, 
                                             discretization="hybrid", 
                                             formulation="primal")
 
 mixedsolver_dual = HamiltonianWaveSolver(problem = problem, 
-                                         system=case, 
+                                         system=model, 
                                          time_step=time_step, 
                                          pol_degree=pol_degree, 
                                          discretization="mixed", 
                                          formulation="dual")
 
 hybridsolver_dual = HamiltonianWaveSolver(problem = problem,
-                                        system=case, 
+                                        system=model, 
                                         time_step=time_step, 
                                         pol_degree=pol_degree, 
                                         discretization="hybrid", 
@@ -142,7 +132,7 @@ for ii in tqdm(range(n_time_iter)):
         else:
             point = (1/7, 1/10)
 
-        if case=="Maxwell":
+        if model=="Maxwell":
             value_mixed_first_primal[ii] = mixed_first_primal.at(point)[0]
             value_hybrid_first_primal[ii] = hybrid_first_primal.at(point)[0]
 
@@ -165,7 +155,7 @@ for ii in tqdm(range(n_time_iter)):
         value_exact_second[ii] = exact_second[0](point)
 
 
-if case=="Maxwell":
+if model=="Maxwell":
     first_primal = "E^2"
     first_dual = "E^1"
 
@@ -181,19 +171,19 @@ else:
 
 basic_plotting.plot_signal(time_vec, error_first_primal,
                                     title=r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=first_primal),
-                                    save_path=f"{directory_results}equiv_mixedhybrid_{case}_{first_primal}")
+                                    save_path=f"{directory_results}equiv_mixedhybrid_{model}_{first_primal}")
 
 basic_plotting.plot_signal(time_vec, error_second_primal,
                                     title=r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=second_primal),
-                                    save_path=f"{directory_results}equiv_mixedhybrid_{case}_{second_primal}")
+                                    save_path=f"{directory_results}equiv_mixedhybrid_{model}_{second_primal}")
 
 basic_plotting.plot_signal(time_vec, error_first_dual,
                                     title=r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=first_dual),
-                                    save_path=f"{directory_results}equiv_mixedhybrid_{case}_{first_dual}")
+                                    save_path=f"{directory_results}equiv_mixedhybrid_{model}_{first_dual}")
 
 basic_plotting.plot_signal(time_vec, error_second_dual,
                                     title=r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=second_dual),
-                                    save_path=f"{directory_results}equiv_mixedhybrid__{case}_{second_dual}")
+                                    save_path=f"{directory_results}equiv_mixedhybrid__{model}_{second_dual}")
 
 basic_plotting.plot_signals(time_vec, value_mixed_first_primal, value_hybrid_first_primal,\
                                     value_mixed_first_dual, value_hybrid_first_dual, value_exact_first, \
@@ -211,7 +201,7 @@ basic_plotting.plot_signals(time_vec, error_first_primal,
                                             r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=second_primal),
                                             r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=first_dual),
                                             r"$||{field}_{{\mathrm{{mix}}}} - {field}_{{\mathrm{{hyb}}}}||_{{L^2}}$".format(field=second_dual)],  
-                                    title=f"Equivalence mixed/hybrid {case}",
-                                    save_path=f"{directory_results}equiv_mixedhybrid_{case}")
+                                    title=f"Equivalence mixed/hybrid {model}",
+                                    save_path=f"{directory_results}equiv_mixedhybrid_{model}")
 
 plt.show()

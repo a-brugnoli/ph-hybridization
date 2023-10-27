@@ -5,28 +5,20 @@ from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.operators.spaces_deRham import deRhamSpaces
 import matplotlib.pyplot as plt
 from src.postprocessing import basic_plotting
-import math
 from tqdm import tqdm
 import os 
 import numpy as np
 from os.path import expanduser
-
-n_elements = 32
-pol_degree = 1
-time_step = 1/500
-t_end = 1
-n_time_iter = math.ceil(t_end/time_step)
+from src.preprocessing.parser import *
 
 
-save_output_file = input("Do you want to save in your home directory into the folder StoreResults? ")
-case = input("Which case do you want to consider (Wave or Maxwell)? ")
-quad=False
-dim=2
+if save_out:
+    print("File will be saved in your home in the directory Store Results")
 
-if case=="Maxwell":
-    problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
-elif case=="Wave":
-    problem = AnalyticalWave(n_elements, n_elements, n_elements, bc_type="mixed", quad=quad, dim=dim)
+if model=="Maxwell":
+    problem = AnalyticalMaxwell(nx, ny, nz, bc_type="mixed", quad=quad)
+elif model=="Wave":
+    problem = AnalyticalWave(nx, ny, nz, bc_type="mixed", quad=quad, dim=dim)
 else:
     raise ValueError("Invalid model")
 
@@ -36,7 +28,7 @@ exact_first, exact_second = problem.get_exact_solution(time_exact)
 CG_deg3, NED_deg3, RT_deg3, DG_deg3 = deRhamSpaces(problem.domain, 3).values()
 
 
-if case =="Maxwell":
+if model =="Maxwell":
     exact_first_function = fdrk.Function(RT_deg3)
     try:
         interpolated_exact_first = fdrk.interpolate(exact_first, RT_deg3)
@@ -67,25 +59,25 @@ mixedsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_deg
                                         time_step=time_step, \
                                         discretization="mixed", \
                                         formulation="primal", \
-                                        system=case)
+                                        system=model)
 
 mixedsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
                                         discretization="mixed", \
                                         formulation="dual", \
-                                        system=case)
+                                        system=model)
 
 hybridsolver_primal = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
                                         discretization="hybrid", \
                                         formulation="primal", \
-                                        system=case)
+                                        system=model)
 
 hybridsolver_dual = HamiltonianWaveSolver(problem = problem, pol_degree=pol_degree, \
                                         time_step=time_step, \
                                         discretization="hybrid", \
                                         formulation="dual", \
-                                        system=case)
+                                        system=model)
 
 mixed_first_primal, mixed_second_primal = mixedsolver_primal.state_old.subfunctions
 
@@ -115,7 +107,7 @@ value_exact_first = np.zeros((n_time_iter+1, ))
 value_exact_second = np.zeros((n_time_iter+1, ))
 
 
-if case=="Maxwell":
+if model=="Maxwell":
     point = (9/17, 15/19, 2/13)
     value_mixed_first_primal[0] = mixed_first_primal.at(point)[0]
     value_hybrid_first_primal[0] = hybrid_first_primal.at(point)[0]
@@ -143,7 +135,7 @@ value_hybrid_second_dual[0] = hybrid_second_dual.at(point)[0]
 value_exact_second[0] = exact_second[0](point)
 
 
-if save_output_file:
+if save_out:
     output_freq = 20
 
     # directory_results = os.path.dirname(os.path.abspath(__file__)) + '/results/'
@@ -195,7 +187,7 @@ for ii in tqdm(range(1,n_time_iter+1)):
     time_exact.assign(actual_time)
 
 
-    if case =="Maxwell":
+    if model =="Maxwell":
 
         try:
             interpolated_exact_first = fdrk.interpolate(exact_first, RT_deg3)
@@ -237,7 +229,7 @@ for ii in tqdm(range(1,n_time_iter+1)):
     
     value_exact_second[ii] = exact_second[0](point)
         
-    if save_output_file:
+    if save_out:
         if ii % output_freq == 0:  
             print("Saving output to pvd")          
             outfile_mixed_primal.write(mixed_first_primal, mixed_second_primal, time=float(mixedsolver_primal.time_old))
@@ -252,7 +244,7 @@ for ii in tqdm(range(1,n_time_iter+1)):
 
 
 
-if case=="Maxwell":
+if model=="Maxwell":
     first_primal = "E^2"
     first_dual = "E^1"
 

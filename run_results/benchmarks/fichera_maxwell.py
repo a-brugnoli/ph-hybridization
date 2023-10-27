@@ -1,8 +1,6 @@
 import firedrake as fdrk
-import matplotlib.pyplot as plt
 from src.problems.fichera_maxwell import MaxwellFichera
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
-
 import os
 import math
 from tqdm import tqdm
@@ -10,12 +8,9 @@ import firedrake as fdrk
 import numpy as np
 from os.path import expanduser
 from math import pi
-
 import matplotlib.pyplot as plt
-
 from src.postprocessing import basic_plotting
-
-save_output_file = input("Do you want to save in your home directory into the folder StoreResults (True or False)? ")
+from src.preprocessing.parser import *
 
 pol_degree = 2
 t_end = pi
@@ -56,7 +51,7 @@ electric_dual_midpoint, _, _, _ = hybridsolver_dual.state_midpoint.subfunctions
 # electric_primal_new, magnetic_primal_new, _, _ = hybridsolver_primal.state_new.subfunctions
 # electric_dual_new, magnetic_dual_new, _, _ = hybridsolver_dual.state_new.subfunctions
 
-if save_output_file:
+if save_out:
     directory_paraview = expanduser("~") + f"/StoreResults/Ph_Hybridization/{str(problem)}/Paraview/"
     if not os.path.exists(directory_paraview):
         # If it doesn't exist, create it
@@ -105,7 +100,7 @@ for ii in tqdm(range(1,n_time_iter+1)):
     energy_primal_vec[ii] = fdrk.assemble(energy_primal)
     energy_dual_vec[ii] = fdrk.assemble(energy_dual)
 
-    if save_output_file:
+    if save_out:
         if abs(actual_time - save_figure_time[kk])< 1e-9:
             outfile_hybrid_primal.write(electric_primal_old, magnetic_primal_old, \
                                 normal_primal_old, tangential_primal_old, time=float(hybridsolver_primal.time_old))

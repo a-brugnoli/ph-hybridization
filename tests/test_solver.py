@@ -1,9 +1,7 @@
-from tests.basic.debug_solver import debug_wave
 import math
 from src.problems.analytical_wave import AnalyticalWave
 from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from tqdm import tqdm
-import firedrake as fdrk
 
 n_elements = 3
 pol_degree = 1
@@ -65,12 +63,6 @@ for ii in tqdm(range(1,n_time_iter+1)):
 
     # assert fdrk.norm(mixed_first_dual - hybrid_first_dual)  < tol
     # assert fdrk.norm(mixed_second_dual - hybrid_second_dual) < tol
-
-    debug_wave(mixedsolver_primal, time_test)
-    debug_wave(mixedsolver_dual, time_test)
-
-    debug_wave(hybridsolver_primal, time_test)
-    debug_wave(hybridsolver_dual, time_test)
 
     mixedsolver_primal.update_variables()
     hybridsolver_primal.update_variables()

@@ -5,30 +5,20 @@ from src.solvers.hamiltonian_solver import HamiltonianWaveSolver
 from src.postprocessing import basic_plotting
 import matplotlib.pyplot as plt
 import os
-import math
 from tqdm import tqdm
 import firedrake as fdrk
 import numpy as np
 from mpi4py import MPI
-
-n_elements = 4
-pol_degree = 3
-time_step = 1/500
-t_end = 1
-n_time_iter = math.ceil(t_end/time_step)
+from src.preprocessing.parser import *
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-dim=3
-quad = False 
-
-case = input("Which model (Wave or Maxwell)? ")
-if case=="Maxwell":
-    problem = AnalyticalMaxwell(n_elements, n_elements, n_elements, quad=quad)
-elif case=="Wave":
-    problem = AnalyticalWave(n_elements, n_elements, n_elements, quad=quad, dim=dim)
+if model=="Maxwell":
+    problem = AnalyticalMaxwell(nx, ny, nz, quad=quad)
+elif model=="Wave":
+    problem = AnalyticalWave(nx, ny, nz, quad=quad, dim=dim)
 else:
     raise ValueError("Invalid model")
 
@@ -37,14 +27,14 @@ norm_versor = problem.normal_versor
 hybridsolver_primal = HamiltonianWaveSolver(problem = problem, 
                                             pol_degree=pol_degree,
                                             time_step=time_step, 
-                                            system=case, 
+                                            system=model, 
                                             discretization="hybrid", 
                                             formulation="primal")
 
 hybridsolver_dual = HamiltonianWaveSolver(problem = problem, 
                                           pol_degree=pol_degree, 
                                             time_step=time_step, 
-                                            system=case,
+                                            system=model,
                                             discretization="hybrid", 
                                             formulation="dual")
 
@@ -60,7 +50,7 @@ exact_first_new, exact_second_new = problem.get_exact_solution(time_new)
 
 # Exact quantities
 
-if case=="Maxwell":
+if model=="Maxwell":
     if problem.domain.extruded:
         exact_bdflow = fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds_v \
                       +fdrk.dot(fdrk.cross(exact_second_midpoint, exact_first_midpoint), norm_versor) * fdrk.ds_tb
@@ -88,7 +78,7 @@ first_primal_new, second_primal_new, _, _ = hybridsolver_primal.state_new.subfun
 first_dual_new, second_dual_new, _, _ = hybridsolver_dual.state_new.subfunctions
 
 # Power balance combining primal and dual
-if case=="Maxwell":
+if model=="Maxwell":
     if problem.domain.extruded:
         discrete_bdflow = fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds_v \
                          +fdrk.dot(fdrk.cross(second_primal_midpoint, first_dual_midpoint), norm_versor) * fdrk.ds_tb
@@ -136,7 +126,7 @@ if rank==0:
     exact_energyrate_vec = np.zeros((n_time_iter, ))
     discrete_energyrate_vec = np.zeros((n_time_iter, ))
 
-    if case=="Maxwell":
+    if model=="Maxwell":
         div_first_primal = np.zeros((n_time_iter, ))
         div_second_dual = np.zeros((n_time_iter, ))
     else:
@@ -160,7 +150,7 @@ for ii in tqdm(range(n_time_iter)):
         exact_energyrate_vec[ii] = fdrk.assemble(exact_energyrate)
         discrete_energyrate_vec[ii] = fdrk.assemble(discrete_energyrate)
 
-        if case=="Maxwell":
+        if model=="Maxwell":
             div_first_primal[ii] = fdrk.norm(fdrk.div(first_primal_new))
             div_second_dual[ii] = fdrk.norm(fdrk.div(second_dual_new))
         else:
@@ -175,24 +165,24 @@ if rank==0:
 
     basic_plotting.plot_signal(time_vec, error_exact_inter_powerbalance,
                                         title=r"Error numerical and exact boundary flow",
-                                        save_path=f"{directory_results}error_bdflow_{case}")
+                                        save_path=f"{directory_results}error_bdflow_{model}")
 
     basic_plotting.plot_signal(time_vec, powerbalance_conservation,
                                         title=r"Power balance conservation",
-                                        save_path=f"{directory_results}power_balance_{case}")
+                                        save_path=f"{directory_results}power_balance_{model}")
 
-    if case=="Maxwell":
+    if model=="Maxwell":
         basic_plotting.plot_signal(time_vec, div_first_primal, 
                                             title=r"$H^{\mathrm{div}}(\mathcal{T}_h)$ seminorm of $E_h^2$",
-                                            save_path=f"{directory_results}div_electric_{case}")
+                                            save_path=f"{directory_results}div_electric_{model}")
         
         basic_plotting.plot_signal(time_vec, div_second_dual,  
                                         title=r"$H^{\mathrm{div}}(\mathcal{T}_h)$ seminorm of $H^2_h$",
-                                        save_path=f"{directory_results}div_magnetic_{case}")
+                                        save_path=f"{directory_results}div_magnetic_{model}")
     else:
         basic_plotting.plot_signal(time_vec, curl_second_dual,  
                                         title=r"$H^{\mathrm{curl}}(\mathcal{T}_h)$ seminorm of $u^1_h$",
-                                        save_path=f"{directory_results}curl_velocity_{case}")
+                                        save_path=f"{directory_results}curl_velocity_{model}")
 
     
     plt.show()

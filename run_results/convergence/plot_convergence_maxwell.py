@@ -1,10 +1,9 @@
-import numpy as np
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from src.postprocessing import basic_plotting
 
-bc_case = "mixed" #input("Enter the boundary conditions (electric, magnetic, mixed):")
+bc_case = "mixed" 
 discretization = "hybrid"
 dim=3
 quad=False
