@@ -46,19 +46,19 @@ The numerical examples can be reproduced as follows:
       --quad      Boolean for quadrilateral or hexahedral mesh (true if specified, false otherwise)
       --save_out  Boolean to save possible output files (true if specified, false otherwise)
     ```
-  * For the discontinuous coefficient problem for the wave equation run (same usage as Fichera corner)
+  * for the discontinuous coefficient problem for the wave equation run (same usage as Fichera corner)
     ```
     python run_results/benchmarks/discontinuous_coeff_wave.py --help
     ```
-  * To run the convergence test run (this will take several hours on a laptop)
+  * to run the convergence test run (this will take several hours on a laptop)
     ```
     python run_results/convergence/collect_convergence_results.py
     ```
-  * To reproduce the convergence plot of the Maxwell equations run
+  * to reproduce the convergence plot of the Maxwell equations run
     ```
     python run_results/convergence/plot_convergence_maxwell.py
     ```
-  * To reproduce the convergence plot of the Wave equations run
+  * to reproduce the convergence plot of the Wave equations run
     ```
     python run_results/convergence/plot_convergence_wave.py
     ```
