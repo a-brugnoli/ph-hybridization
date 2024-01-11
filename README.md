@@ -5,6 +5,7 @@ Firedrake implementation for the article
 The numerical examples can be reproduced as follows:
 * install the Zenodo-archived release of firedrake hosted at https://zenodo.org/records/10047121
   ```
+  curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
   firedrake-install --doi 10.5281/zenodo.10047121
   ```
 * actiivate the environment and run ```pip install tqdm pandas gmsh``` to install required librairies
