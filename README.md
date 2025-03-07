@@ -1,6 +1,6 @@
 # Finite element hybridization of port-Hamiltonian systems
 Firedrake implementation for the article 
-* Brugnoli, Rashad, Zhang, Stramigioli [Finite element hybridization of port-Hamiltonian systems](https://arxiv.org/abs/2302.06239).
+* Brugnoli, Rashad, Zhang, Stramigioli [https://www.sciencedirect.com/science/article/abs/pii/S0096300325001043].
 
 The numerical examples can be reproduced as follows:
 * install the Zenodo-archived release of firedrake hosted at https://zenodo.org/records/10047121
