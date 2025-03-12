@@ -3,7 +3,7 @@ Firedrake implementation for the article
 * Brugnoli, Rashad, Zhang, Stramigioli [https://www.sciencedirect.com/science/article/abs/pii/S0096300325001043].
 
 The numerical examples can be reproduced as follows:
-* install the Zenodo-archived release of firedrake hosted at https://zenodo.org/records/10047121
+* install the Zenodo-archived release of firedrake hosted at [https://zenodo.org/records/10047121](https://zenodo.org/records/10047121)
   ```
   curl -O https://raw.githubusercontent.com/firedrakeproject/firedrake/master/scripts/firedrake-install
   firedrake-install --doi 10.5281/zenodo.10047121
