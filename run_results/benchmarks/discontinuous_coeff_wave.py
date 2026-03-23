@@ -162,18 +162,19 @@ basic_plotting.plot_signals(time_vec, energy_primal_vec, energy_dual_vec,\
                             legend=["primal", "dual"], title="Energy", save_path=f"{directory_matplotlib}energy.eps")
 
 
-# if save_output_file:
+save_animations = True
+if save_animations:
 
-#     interval = 1e3 * output_freq * time_step
+    interval = 1e3 * output_freq * time_step
 
-#     save_path_video = f"{directory_matplotlib}displacement_primal.mp4"
-#     basic_plotting.save_animation(frames_displacement_primal, problem.domain, interval, save_path_video)
+    save_path_video = f"{directory_matplotlib}displacement_primal.mp4"
+    basic_plotting.save_animation(frames_displacement_primal, problem.domain, interval, save_path_video)
 
-#     save_path_video = f"{directory_matplotlib}displacement_dual.mp4"
-#     basic_plotting.save_animation(frames_displacement_dual, problem.domain, interval, save_path_video)
+    save_path_video = f"{directory_matplotlib}displacement_dual.mp4"
+    basic_plotting.save_animation(frames_displacement_dual, problem.domain, interval, save_path_video)
 
-#     save_path_video = f"{directory_matplotlib}velocity_primal.mp4"
-#     basic_plotting.save_animation(frames_velocity_primal, problem.domain, interval, save_path_video)
+    save_path_video = f"{directory_matplotlib}velocity_primal.mp4"
+    basic_plotting.save_animation(frames_velocity_primal, problem.domain, interval, save_path_video)
 
-#     save_path_video = f"{directory_matplotlib}velocity_dual.mp4"
-#     basic_plotting.save_animation(frames_velocity_dual, problem.domain, interval, save_path_video)
+    save_path_video = f"{directory_matplotlib}velocity_dual.mp4"
+    basic_plotting.save_animation(frames_velocity_dual, problem.domain, interval, save_path_video)
